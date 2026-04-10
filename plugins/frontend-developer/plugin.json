@@ -1,0 +1,14 @@
+{
+  "name": "frontend-developer",
+  "description": "Builds Defra-compliant frontends following the GOV.UK Design System, WCAG 2.2 AA, and Defra software development standards (Hapi + Nunjucks + SCSS + Vitest).",
+  "version": "0.1.0",
+  "author": {
+    "name": "Defra",
+    "email": "AICapabilitiesEnablement@defra.gov.uk"
+  },
+  "license": "OGL-UK-3.0",
+  "homepage": "https://github.com/DEFRA/defra-ai-plugins/tree/main/plugins/frontend-developer",
+  "repository": "https://github.com/DEFRA/defra-ai-plugins",
+  "category": "development",
+  "keywords": ["defra", "gds", "govuk", "frontend", "accessibility", "nunjucks", "hapi"]
+}

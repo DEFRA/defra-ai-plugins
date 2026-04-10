@@ -1,0 +1,17 @@
+{
+  "name": "defra-ai-plugins",
+  "description": "Defra GitHub Copilot CLI plugins — agents and skills that encode Defra software development standards and GDS service standards.",
+  "version": "0.1.0",
+  "owner": {
+    "type": "organization",
+    "name": "DEFRA"
+  },
+  "plugins": [
+    {
+      "name": "frontend-developer",
+      "description": "Builds Defra-compliant frontends following the GOV.UK Design System, WCAG 2.2 AA, and Defra software development standards (Hapi + Nunjucks + SCSS + Vitest).",
+      "version": "0.1.0",
+      "source": "plugins/frontend-developer"
+    }
+  ]
+}
