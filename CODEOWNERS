@@ -1,0 +1,14 @@
+# CODEOWNERS for defra-ai-plugins
+#
+# Default reviewers for any change.
+# See https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-security/customizing-your-repository/about-code-owners
+*                              @DEFRA/ai-dev-team
+
+# Validation tooling, schemas and CI need extra care — same team for now.
+/scripts/                      @DEFRA/ai-dev-team
+/schemas/                      @DEFRA/ai-dev-team
+/.github/workflows/            @DEFRA/ai-dev-team
+/.github/plugin/               @DEFRA/ai-dev-team
+
+# Per-plugin codeowners can be added below as plugins gain dedicated maintainers.
+# /plugins/frontend-developer/ @DEFRA/some-frontend-team

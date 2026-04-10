@@ -1,4 +1,5 @@
 {
+  "$schema": "../../schemas/marketplace.schema.json",
   "name": "defra-ai-plugins",
   "description": "Defra GitHub Copilot CLI plugins — agents and skills that encode Defra software development standards and GDS service standards.",
   "version": "0.1.0",
