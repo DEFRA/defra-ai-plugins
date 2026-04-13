@@ -74,14 +74,14 @@ export function mapValidationErrors(error) {
 
 ## Field type quick reference
 
-| Input | Macro | Key props |
-|---|---|---|
-| Short text | `govukInput` | `id`, `name`, `label`, `hint`, `value`, `errorMessage` |
-| Long text | `govukTextarea` | `id`, `name`, `label`, `rows`, `value`, `errorMessage` |
-| Single choice | `govukRadios` | `idPrefix`, `name`, `fieldset.legend`, `items`, `value`, `errorMessage` |
+| Input           | Macro             | Key props                                                                |
+| --------------- | ----------------- | ------------------------------------------------------------------------ |
+| Short text      | `govukInput`      | `id`, `name`, `label`, `hint`, `value`, `errorMessage`                   |
+| Long text       | `govukTextarea`   | `id`, `name`, `label`, `rows`, `value`, `errorMessage`                   |
+| Single choice   | `govukRadios`     | `idPrefix`, `name`, `fieldset.legend`, `items`, `value`, `errorMessage`  |
 | Multiple choice | `govukCheckboxes` | `idPrefix`, `name`, `fieldset.legend`, `items`, `values`, `errorMessage` |
-| Date | `govukDateInput` | `id`, `namePrefix`, `fieldset.legend`, `hint`, `items`, `errorMessage` |
-| File | `govukFileUpload` | `id`, `name`, `label`, `errorMessage` |
+| Date            | `govukDateInput`  | `id`, `namePrefix`, `fieldset.legend`, `hint`, `items`, `errorMessage`   |
+| File            | `govukFileUpload` | `id`, `name`, `label`, `errorMessage`                                    |
 
 ## References
 

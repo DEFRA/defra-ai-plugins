@@ -11,6 +11,7 @@ Read the module under test first to understand its shape, then generate a test f
 ## File location
 
 Place the test file next to the module it tests:
+
 - `app/routes/my-route.test.js` alongside `app/routes/my-route.js`
 - Or in a `__tests__/` directory mirroring the source tree
 
