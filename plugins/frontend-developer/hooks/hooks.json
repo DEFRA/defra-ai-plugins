@@ -1,0 +1,52 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "FILE=$(cat | jq -r '.tool_input.file_path // empty'); case \"$FILE\" in *.js|*.mjs) cd \"$CLAUDE_PROJECT_DIR\" && npm run lint -- --fix \"$FILE\" 2>/dev/null; npm run format:fix -- \"$FILE\" 2>/dev/null;; esac; exit 0",
+            "statusMessage": "Linting and formatting...",
+            "async": true
+          }
+        ]
+      },
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "FILE=$(cat | jq -r '.tool_input.file_path // empty'); if [[ \"$FILE\" == *.scss && -f \"$FILE\" ]]; then cd \"$CLAUDE_PROJECT_DIR\" && npm run build 2>&1 | tail -5; fi; exit 0",
+            "statusMessage": "Building CSS...",
+            "async": true
+          }
+        ]
+      },
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "INPUT=$(cat); FILE=$(echo \"$INPUT\" | jq -r '.tool_input.file_path // empty'); if [[ \"$FILE\" == *.njk && -f \"$FILE\" ]]; then if grep -qE '<script[^>]*>|<style[^>]*>|\\bstyle=' \"$FILE\"; then echo \"Security: inline <script>, <style>, or style= attribute found in $(basename $FILE). Move scripts to external .js files and styles to external .scss files.\" >&2; exit 2; fi; COUNT=$(grep -c '| safe' \"$FILE\" 2>/dev/null || echo 0); if [[ \"$COUNT\" -gt 0 ]]; then echo \"Warning: $COUNT use(s) of '| safe' in $(basename $FILE) — only use on pre-sanitised trusted content, never on user-supplied data.\" >&2; fi; fi; exit 0",
+            "statusMessage": "Checking Nunjucks security...",
+            "async": false
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "CMD=$(cat | jq -r '.tool_input.command // empty'); if echo \"$CMD\" | grep -qE '^git (commit|push)'; then BRANCH=$(cd \"$CLAUDE_PROJECT_DIR\" && git rev-parse --abbrev-ref HEAD 2>/dev/null); if [[ \"$BRANCH\" == 'main' || \"$BRANCH\" == 'master' ]]; then echo \"Direct commits and pushes to '$BRANCH' are not allowed. Create a feature branch first (e.g. feature/my-change).\" >&2; exit 2; fi; fi; exit 0",
+            "statusMessage": "Checking git branch...",
+            "async": false
+          }
+        ]
+      }
+    ]
+  }
+}
