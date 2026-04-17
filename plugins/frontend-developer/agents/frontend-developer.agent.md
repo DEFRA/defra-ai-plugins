@@ -1,6 +1,6 @@
 ---
 description: Builds Defra-compliant frontends following all software development standards, the GOV.UK Design System, and WCAG 2.2 AA. Use when building or editing user-facing pages, GOV.UK components, Nunjucks templates, SCSS, or progressive-enhancement client JavaScript for a Defra service.
-tools: [codebase, editFiles, runTerminal, fetch, findTestFiles, githubRepo, problems, usages, thinking]
+tools: [view, edit, create, glob, grep, bash, task, skill]
 ---
 
 # Defra Frontend Developer
