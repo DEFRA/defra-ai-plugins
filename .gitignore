@@ -2,3 +2,9 @@
 node_modules/
 coverage/
 *.log
+
+# Eval harness — see Makefile and evals/promptfoo/
+eval-fixture/*/node_modules/
+evals/promptfoo/output*.json
+evals/promptfoo/.promptfoo/
+results/run-*/

@@ -1,3 +1,7 @@
 node_modules/
 package-lock.json
 plugins/*/agents/*.agent.md
+
+# Eval artefacts — frozen baseline + vendored fixture skeletons
+results/baseline/
+eval-fixture/

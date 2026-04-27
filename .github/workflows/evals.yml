@@ -1,0 +1,100 @@
+name: Evals
+
+# Behavioural eval for the plugins. Drives Copilot CLI in non-interactive mode
+# against the in-tree eval fixture (`eval-fixture/hapi-frontend/`) using
+# fixtures in `evals/promptfoo/`. Fails
+# the build if any fixture regresses.
+#
+# Schema/structural validation is in `validate.yml` and runs separately.
+#
+# Auth: this workflow needs the COPILOT_GITHUB_TOKEN repository secret. Create
+# a fine-grained PAT (or GitHub App token) with the "Copilot Requests"
+# permission and store it as COPILOT_GITHUB_TOKEN. See README §Evaluating.
+#
+# CI tests the plugin currently published at DEFRA/defra-ai-plugins (i.e. main).
+# A PR's plugin changes are not exercised in CI until merged. Run `make evals`
+# locally before opening a PR to catch behavioural regressions in your branch.
+
+on:
+  pull_request:
+    paths:
+      - 'plugins/**'
+      - 'evals/**'
+      - 'eval-fixture/**'
+      - '.github/workflows/evals.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  evals:
+    name: Behavioural eval (Copilot CLI)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      COPILOT_GITHUB_TOKEN: ${{ secrets.COPILOT_GITHUB_TOKEN }}
+      COPILOT_MODEL: claude-sonnet-4.5
+    steps:
+      - name: Check secret is configured
+        run: |
+          if [ -z "${COPILOT_GITHUB_TOKEN}" ]; then
+            echo "::error::COPILOT_GITHUB_TOKEN secret is not configured."
+            echo "::error::See README §Evaluating for setup instructions."
+            exit 1
+          fi
+
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
+          cache: npm
+
+      - name: Install root dependencies
+        run: npm ci
+
+      - name: Install eval-fixture dependencies
+        run: cd eval-fixture/hapi-frontend && npm install
+
+      - name: Install Copilot CLI
+        run: npm install -g @github/copilot
+
+      - name: Install frontend-developer plugin
+        run: |
+          copilot plugin marketplace add DEFRA/defra-ai-plugins
+          copilot plugin install frontend-developer@defra-ai-plugins
+
+      - name: Run eval suite
+        run: |
+          mkdir -p results/run-${{ github.sha }}
+          cd evals/promptfoo
+          npx promptfoo eval \
+            --no-cache \
+            --output ../../results/run-${{ github.sha }}/promptfoo-results.json
+
+      - name: Summarise
+        if: always()
+        run: |
+          RESULT=results/run-${{ github.sha }}/promptfoo-results.json
+          if [ ! -f "$RESULT" ]; then
+            echo "::error::No result file at $RESULT"
+            exit 1
+          fi
+          {
+            echo "## Eval results"
+            echo ""
+            jq -r '.results.stats |
+              "Pass: \(.successes)/\(.successes + .failures)  •  Tokens: \(.tokenUsage.total // "n/a")"' \
+              "$RESULT"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload result artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: eval-results-${{ github.sha }}
+          path: results/run-${{ github.sha }}/
+          retention-days: 30

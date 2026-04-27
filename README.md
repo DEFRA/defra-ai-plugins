@@ -1,6 +1,7 @@
 # defra-ai-plugins
 
 [![Validate](https://github.com/DEFRA/defra-ai-plugins/actions/workflows/validate.yml/badge.svg)](https://github.com/DEFRA/defra-ai-plugins/actions/workflows/validate.yml)
+[![Evals](https://github.com/DEFRA/defra-ai-plugins/actions/workflows/evals.yml/badge.svg)](https://github.com/DEFRA/defra-ai-plugins/actions/workflows/evals.yml)
 
 A marketplace of [GitHub Copilot CLI](https://docs.github.com/en/copilot/how-tos/copilot-cli/customize-copilot/plugins-finding-installing) plugins for Defra. Each plugin ships agents and skills that encode Defra's software development standards, the GOV.UK Design System, and GDS service standards so Copilot produces compliant code by default.
 
@@ -31,6 +32,10 @@ defra-ai-plugins/
 │   ├── marketplace.schema.json       # JSON Schema for marketplace.json
 │   └── plugin.schema.json            # JSON Schema for plugin manifests
 ├── scripts/                          # Node.js validators
+├── eval-fixture/                     # Skeleton apps the agent operates on during eval
+│   └── hapi-frontend/                #   minimal Hapi + govuk-frontend, target of frontend-developer
+├── evals/promptfoo/                  # Behavioural fixtures + provider scripts
+├── results/baseline/                 # Reference run for regression comparison
 └── plugins/
     └── frontend-developer/
         ├── plugin.json               # Plugin manifest
@@ -58,6 +63,91 @@ Run them locally:
 npm install     # first time only
 npm test
 ```
+
+## Evaluating the plugins
+
+Schema validation only checks that manifests are well-formed. A behavioural eval
+exercises each plugin against realistic Defra tasks (and a few adversarial ones)
+and asserts on what the agent actually produces — GOV.UK macros, Joi validation,
+CSRF tokens, refusal of forbidden technologies, lint passing.
+
+The harness uses [promptfoo](https://github.com/promptfoo/promptfoo) to drive
+Copilot CLI in non-interactive mode against a minimal Hapi + govuk-frontend
+skeleton in `eval-fixture/hapi-frontend/`. Fixtures live in
+`evals/promptfoo/promptfooconfig.yaml`. New plugins targeting different stacks
+should add a sibling skeleton (e.g. `eval-fixture/dotnet-api/`).
+
+### Run locally
+
+Prerequisites:
+
+```sh
+npm install -g @github/copilot
+copilot plugin marketplace add DEFRA/defra-ai-plugins
+copilot plugin install frontend-developer@defra-ai-plugins
+```
+
+Then:
+
+```sh
+make evals
+```
+
+Results land in `results/run-YYYY-MM-DD/promptfoo-results.json`. Compare against
+`results/baseline/promptfoo-results.json` to spot per-fixture regressions.
+
+To browse results in a UI:
+
+```sh
+make evals-view
+```
+
+The default model is pinned in `evals/promptfoo/run-copilot.sh`
+(`COPILOT_MODEL=claude-sonnet-4.5`). Override for ad-hoc experiments:
+
+```sh
+COPILOT_MODEL=claude-opus-4 make evals
+```
+
+Inside the provider script, the agent is invoked as
+`copilot --agent frontend-developer:frontend-developer`. The `<plugin>:<agent>`
+double-colon form is Copilot CLI's way of disambiguating an agent inside a
+plugin from a same-named built-in agent. For this plugin, both halves match;
+when adding a plugin, use `<your-plugin>:<your-agent>`.
+
+### CI
+
+The [`Evals`](.github/workflows/evals.yml) workflow runs the suite on every PR
+that touches `plugins/`, `evals/`, or `eval-fixture/`, and on
+`workflow_dispatch`. It
+fails the build on any fixture regression and uploads the result JSON as an
+artifact.
+
+CI requires a repository secret named `COPILOT_GITHUB_TOKEN` containing a
+fine-grained personal access token (or GitHub App token) with the
+**Copilot Requests** permission. This is distinct from the built-in
+`GITHUB_TOKEN`. To create one:
+
+1. Go to **Settings → Developer settings → Personal access tokens →
+   Fine-grained tokens** ([direct link](https://github.com/settings/personal-access-tokens)).
+2. Click **Generate new token**, set a name and expiry, and choose the
+   resource owner that has the Copilot subscription.
+3. Under **Account permissions**, find **Copilot Requests** and set it to
+   **Read and write**. (Account-level, not repository-level — easy to miss.)
+4. Save the token and add it to this repo as `COPILOT_GITHUB_TOKEN` under
+   **Settings → Secrets and variables → Actions**.
+
+See [GitHub's "Automate Copilot CLI with Actions"
+guide](https://docs.github.com/en/copilot/how-tos/copilot-cli/automate-copilot-cli/automate-with-actions)
+for the full reference.
+
+The token has a per-account premium-request budget — at
+`PR cadence × fixtures × repeats`, that budget is the rate-limit ceiling. Watch
+for it if eval volume increases.
+
+> **Caveat.** CI installs the plugin from `DEFRA/defra-ai-plugins` (i.e. the
+> currently-merged version), not from the PR branch. Run `make evals` locally
+> to test in-progress changes.
 
 ## Contributing
 

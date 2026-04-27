@@ -1,0 +1,28 @@
+{
+  "name": "defra-frontend-eval-fixture",
+  "version": "0.1.0",
+  "description": "Eval fixture — minimal Hapi + govuk-frontend skeleton for frontend-developer plugin evaluation",
+  "type": "module",
+  "scripts": {
+    "start": "node src/server.js",
+    "lint": "eslint src/",
+    "format": "prettier --check .",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@hapi/hapi": "^21.3.0",
+    "@hapi/vision": "^7.0.0",
+    "@hapi/inert": "^7.1.0",
+    "@hapi/crumb": "^9.0.0",
+    "nunjucks": "^3.2.0",
+    "govuk-frontend": "^5.0.0",
+    "joi": "^17.0.0",
+    "convict": "^6.2.0"
+  },
+  "devDependencies": {
+    "eslint": "^9.0.0",
+    "prettier": "^3.0.0",
+    "vitest": "^3.0.0",
+    "neostandard": "^0.12.0"
+  }
+}

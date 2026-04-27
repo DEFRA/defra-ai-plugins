@@ -59,7 +59,62 @@ Each plugin is a self-contained directory under `plugins/`. The marketplace regi
 
    All checks must pass before opening a PR.
 
-9. **Open a pull request** using the PR template and fill in the checklist.
+9. **Add behavioural fixtures.** The validators only check that manifests parse;
+   they do not check that your plugin actually produces compliant code. For each
+   new plugin, add at least three fixtures to `evals/promptfoo/promptfooconfig.yaml`:
+   - one realistic task the plugin should handle well,
+   - one anti-pattern check (security, accessibility, or standards violation
+     the plugin must avoid),
+   - one adversarial prompt the plugin should refuse with a standards-based
+     reason.
+
+   Fixture skeleton:
+
+   ```yaml
+   - description: 'Short description of what this fixture exercises'
+     vars:
+       prompt: 'The instruction the agent receives'
+     assert:
+       - type: contains
+         value: 'govukSomeComponent' # must use this macro
+       - type: not-contains
+         value: '| safe' # must not use unsafe filter
+       - type: contains
+         value: 'exit_code: 0' # lint must pass
+         metric: lint_passes
+   ```
+
+   The provider script (`evals/promptfoo/run-copilot.sh`) runs Copilot CLI
+   against a clean copy of `eval-fixture/hapi-frontend/` and emits a single
+   combined block:
+
+   ```
+   === COPILOT OUTPUT ===   (the agent's stdout/stderr)
+   === NJK TEMPLATES ===    (every src/views/**/*.njk after the run)
+   === JS ROUTES ===        (every src/routes/**/*.js after the run)
+   === FILES CHANGED ===    (new vs modified, by md5 diff)
+   === LINT ===             (exit_code: 0 + npm run lint output)
+   === TESTS ===            (exit_code: 0 + npm test output)
+   ```
+
+   `contains` / `not-contains` / `regex` / `icontains` match anywhere in this
+   block. That's why `value: 'exit_code: 0'` checks lint — it's matching the
+   string emitted under `=== LINT ===`. If your plugin targets paths outside
+   `src/views` and `src/routes`, edit `collect-and-report.sh` so the
+   relevant files appear in the block. Plugins targeting non-Hapi stacks
+   should add a sibling skeleton under `eval-fixture/` (e.g.
+   `eval-fixture/dotnet-api/`) and a matching provider script.
+
+   `metric:` is plain promptfoo — it labels the assertion so the report can
+   group named scores (e.g. all assertions tagged `lint_passes` aggregate
+   into a `lint_passes` score). It is not custom infrastructure; pick any
+   label that's useful for trending.
+
+   Run `make evals` locally to confirm your fixtures pass against the published
+   plugin before opening the PR. See README §Evaluating for the full setup
+   (Copilot CLI install, plugin install, model pinning).
+
+10. **Open a pull request** using the PR template and fill in the checklist.
 
 ## Naming conventions
 
@@ -69,7 +124,7 @@ Each plugin is a self-contained directory under `plugins/`. The marketplace regi
 
 ## Validation rules
 
-The CI workflow runs four checks. All must pass:
+The `Validate` workflow runs four schema/structural checks. All must pass:
 
 | Check                     | What it enforces                                                                     |
 | ------------------------- | ------------------------------------------------------------------------------------ |
@@ -83,6 +138,10 @@ To auto-fix sorting:
 ```sh
 npm run validate:fix
 ```
+
+The separate `Evals` workflow runs the behavioural fixtures from
+`evals/promptfoo/` against Copilot CLI on every PR that touches `plugins/`,
+`evals/`, or `eval-fixture/`. See README §Evaluating for details.
 
 ## Licence
 
