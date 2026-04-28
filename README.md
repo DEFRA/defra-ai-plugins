@@ -3,7 +3,11 @@
 [![Validate](https://github.com/DEFRA/defra-ai-plugins/actions/workflows/validate.yml/badge.svg)](https://github.com/DEFRA/defra-ai-plugins/actions/workflows/validate.yml)
 [![Evals](https://github.com/DEFRA/defra-ai-plugins/actions/workflows/evals.yml/badge.svg)](https://github.com/DEFRA/defra-ai-plugins/actions/workflows/evals.yml)
 
-A marketplace of [GitHub Copilot CLI](https://docs.github.com/en/copilot/how-tos/copilot-cli/customize-copilot/plugins-finding-installing) plugins for Defra. Each plugin ships agents and skills that encode Defra's software development standards, the GOV.UK Design System, and GDS service standards so Copilot produces compliant code by default.
+A marketplace of [GitHub Copilot
+CLI](https://docs.github.com/en/copilot/how-tos/copilot-cli/customize-copilot/plugins-finding-installing)
+plugins for Defra. Each plugin ships agents and skills that encode Defra's
+software development standards, the GOV.UK Design System, and GDS service
+standards so Copilot produces compliant code by default.
 
 > Primary target is GitHub Copilot CLI. The eval harness includes a
 > demonstration that the same fixtures run unchanged against Claude Code
@@ -55,7 +59,9 @@ defra-ai-plugins/
             └── baseline/             # Reference run for regression comparison
 ```
 
-Each plugin lives in its own directory under `plugins/` with a `plugin.json` manifest and an `agents/` directory containing one or more Copilot custom agents.
+Each plugin lives in its own directory under `plugins/` with a `plugin.json`
+manifest and an `agents/` directory containing one or more Copilot custom
+agents.
 
 ## Validation
 
