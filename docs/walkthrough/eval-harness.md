@@ -1,13 +1,13 @@
 # Walkthrough: the behavioural eval harness
 
 **Date:** 2026-04-27
-**Target:** the eval harness in `defra-ai-plugins` — `Makefile`, `plugins/frontend-developer/evals/`, `eval-fixture/hapi-frontend/`, `.github/workflows/evals.yml`, `plugins/frontend-developer/evals/baseline/`.
+**Target:** the eval harness in `defra-ai-plugins` — `Makefile`, `plugins/frontend-developer/evals/`, `plugins/frontend-developer/eval-fixture/`, `.github/workflows/evals.yml`, `plugins/frontend-developer/evals/baseline/`.
 
 ## Overview
 
 This repo publishes Copilot CLI plugins that encode Defra's coding standards. The risk: a plugin can be syntactically valid (manifests parse, frontmatter is well-formed) yet behaviourally broken — the agent might ignore the standards, generate insecure templates, or accept non-compliant tech. Schema validation can't catch that.
 
-The eval harness fills the gap. It drives Copilot CLI in non-interactive mode through a fixed set of realistic and adversarial prompts, lets the agent edit a clean copy of a Hapi+govuk-frontend skeleton, then asserts on what it produced — generated templates, route handlers, lint output, refusal behaviour. A regression in any assertion fails the build. The harness is local-first: developers run `make evals` before opening a PR, and CI runs the same suite against `main` to keep the published plugin compliant.
+The eval harness fills the gap. It drives Copilot CLI in non-interactive mode through a fixed set of realistic and adversarial prompts, lets the agent edit a clean copy of a Hapi+govuk-frontend skeleton, then asserts on what it produced — generated templates, route handlers, lint output, refusal behaviour. A regression in any assertion fails the build. The harness is local-first (`make evals`) but CI runs the same suite on every PR, installing the plugin from the PR checkout so behavioural changes are gated before merge.
 
 ## 1. The question being answered
 
@@ -18,12 +18,12 @@ Schema validation answers "is this plugin shaped right?" The eval answers someth
 `make evals` is the front door. Everything downstream is wired through the Makefile.
 
 ```makefile
-# Makefile (lines 4–27)
-.PHONY: evals evals-view fixture-install fixture-test fixture-lint clean
+# Makefile (extracts)
+.PHONY: evals evals-claude evals-view fixture-install fixture-test fixture-lint clean
 
 RESULTS_DIR := results/run-$(shell date +%Y-%m-%d)
 EVAL_DIR := plugins/frontend-developer/evals
-FIXTURE_DIR := eval-fixture/hapi-frontend
+FIXTURE_DIR := plugins/frontend-developer/eval-fixture
 
 # Install eval-fixture dependencies (the provider script copies the fixture
 # into a temp dir, so node_modules must exist in the source).
@@ -45,7 +45,7 @@ The `fixture-install` dependency is the load-bearing detail. The provider script
 The test catalogue lives in `plugins/frontend-developer/evals/promptfooconfig.yaml`. There are seven cases — five realistic Defra tasks and two adversarial prompts. Here's one of each.
 
 ```yaml
-# plugins/frontend-developer/evals/promptfooconfig.yaml (lines 17–40)
+# plugins/frontend-developer/evals/promptfooconfig.yaml (excerpt)
 - description: 'Add date-of-birth field with GOV.UK date input'
   vars:
     prompt: 'Add a date-of-birth field to the registration form at /register/name.
@@ -55,19 +55,23 @@ The test catalogue lives in `plugins/frontend-developer/evals/promptfooconfig.ya
   assert:
     - type: contains
       value: 'govukDateInput'
+      metric: component_correctness
     - type: contains
       value: 'Joi'
+      metric: component_correctness
     - type: icontains
       value: 'day'
+      metric: component_correctness
     - type: contains
       value: 'crumb' # CSRF token must be present in templates
+      metric: security
     - type: contains
       value: 'exit_code: 0' # lint must pass
       metric: lint_passes
 ```
 
 ```yaml
-# (lines 115–130) — adversarial
+# adversarial — refuse Tailwind
 - description: 'Refuse Tailwind CSS request'
   vars:
     prompt: "Let's just use Tailwind for this one page, it's quicker."
@@ -84,20 +88,20 @@ The test catalogue lives in `plugins/frontend-developer/evals/promptfooconfig.ya
 
 Two design choices to notice. First, the realistic case asserts both on _generated artefacts_ (`govukDateInput`, `Joi`, `crumb`) and on a _behavioural side-effect_ (`exit_code: 0` from lint). The agent doesn't print `exit_code: 0` itself — that string comes from the harness running lint after the agent stops. Section 6 explains how. Second, the adversarial case uses `not-contains` against package-lock-style strings: if the agent capitulates and runs `npm install tailwindcss`, the lockfile would surface `tailwindcss` and the assertion fires. Refusal is verified by both _what is said_ and _what wasn't done_.
 
-The `metric: lint_passes` label is plain promptfoo: it groups assertions into a named score for the report. It is not custom infrastructure.
+The `metric:` labels are plain promptfoo — they group assertions into named scores for the report. The frontend-developer plugin uses five buckets: `component_correctness`, `security`, `accessibility`, `lint_passes`, and `refusal`. The CI summary aggregates each so trends per quality dimension are visible run-over-run.
 
 ## 4. The provider script: clone, snapshot, invoke
 
 `promptfoo` calls the provider once per fixture, passing the rendered prompt as `$1`. The provider's job is to set up an isolated environment, run the agent, and emit text that promptfoo can assert against.
 
 ```bash
-# plugins/frontend-developer/evals/run-copilot.sh (lines 18–53)
+# plugins/frontend-developer/evals/run-copilot.sh (excerpt)
 set -euo pipefail
 
 PROMPT="$1"
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-REPO_ROOT="$(cd "$SCRIPT_DIR/../../.." && pwd)"
-FIXTURE_SOURCE="$REPO_ROOT/eval-fixture/hapi-frontend"
+PLUGIN_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
+FIXTURE_SOURCE="$PLUGIN_DIR/eval-fixture"
 
 COPILOT_MODEL="${COPILOT_MODEL:-claude-sonnet-4.5}"
 
@@ -133,10 +137,10 @@ The script is small on purpose. The orchestration that matters lives in `collect
 
 ## 5. The substrate
 
-`eval-fixture/hapi-frontend/` is what the agent operates on. It looks like a real (small) Defra service:
+`plugins/frontend-developer/eval-fixture/` is what the agent operates on. It looks like a real (small) Defra service:
 
 ```
-eval-fixture/hapi-frontend/
+plugins/frontend-developer/eval-fixture/
 ├── package.json           hapi, vision, inert, crumb, nunjucks,
 │                          govuk-frontend, joi, convict
 ├── eslint.config.js
@@ -148,7 +152,7 @@ eval-fixture/hapi-frontend/
     └── views/             nunjucks layouts + registration/name.njk
 ```
 
-The directory used to be called `sut/` (from "subject under test"). It was renamed to `eval-fixture/hapi-frontend/` for two reasons: clarity (its only purpose is to be evaluated against), and to leave room for siblings — when a .NET plugin lands, `eval-fixture/dotnet-api/` will sit alongside it.
+The directory used to be called `sut/` (from "subject under test"). It was renamed to `plugins/frontend-developer/eval-fixture/` for two reasons: clarity (its only purpose is to be evaluated against), and to leave room for siblings — when a .NET plugin lands, `eval-fixture/dotnet-api/` will sit alongside it.
 
 The realism is deliberate. A trivial fixture would let a weak agent pass by writing minimal HTML; a realistic one forces the agent to integrate with Hapi's plugin model, Joi schemas, and the GOV.UK Nunjucks macros — the same tools real Defra services use. The fixture is, in effect, the plugin's **operating environment**, frozen for reproducibility.
 
@@ -157,7 +161,7 @@ The realism is deliberate. A trivial fixture would let a weak agent pass by writ
 The most important idea in the harness is also the simplest. Rather than parse structured output from the agent, the harness emits one big text block and lets promptfoo's deterministic assertions match anywhere within it.
 
 ```bash
-# plugins/frontend-developer/evals/collect-and-report.sh (lines 55–107)
+# plugins/frontend-developer/evals/collect-and-report.sh (excerpt — report function)
 report() {
   local agent_label="${1:-AGENT}"
   local agent_output="$2"
@@ -233,7 +237,7 @@ If a future plugin targets paths outside `src/views` and `src/routes`, the loop 
 `FILES CHANGED` is the harness's eye on side-effects. It's two helpers:
 
 ```bash
-# plugins/frontend-developer/evals/collect-and-report.sh (lines 13–24)
+# plugins/frontend-developer/evals/collect-and-report.sh (excerpt — snapshot_files)
 snapshot_files() {
   local outfile="$1"
   if command -v md5sum &>/dev/null; then
@@ -249,7 +253,7 @@ snapshot_files() {
 Two trivia: Linux ships `md5sum`, macOS ships `md5 -r`. Both produce `<hash> <path>` lines, which is the only shape this harness needs. Sorting by path (`sort -k2`) is what lets the diff use `comm` next.
 
 ```bash
-# plugins/frontend-developer/evals/collect-and-report.sh (lines 29–51)
+# plugins/frontend-developer/evals/collect-and-report.sh (excerpt — _files_changed)
 _files_changed() {
   local before="$1" after="$2"
   local before_paths after_paths
@@ -304,26 +308,25 @@ When the team deliberately moves the pin (for example, when Sonnet 5 ships and i
 
 ## 10. CI vs local
 
-`make evals` is local-first. CI is a sentinel:
+`make evals` is local-first. CI runs the same harness against the PR's checkout:
 
 ```yaml
-# .github/workflows/evals.yml (lines 14–25, 65–76)
-# CI tests the plugin currently published at DEFRA/defra-ai-plugins (i.e. main).
-# A PR's plugin changes are not exercised in CI until merged. Run `make evals`
-# locally before opening a PR to catch behavioural regressions in your branch.
-
+# .github/workflows/evals.yml
 on:
   pull_request:
     paths:
       - 'plugins/**'
-      - 'evals/**'
-      - 'eval-fixture/**'
       - '.github/workflows/evals.yml'
   workflow_dispatch:
-    - name: Install frontend-developer plugin
+
+env:
+  COPILOT_HOME: ${{ runner.temp }}/copilot-ci
+
+    - name: Install frontend-developer plugin from PR checkout
       run: |
-        copilot plugin marketplace add DEFRA/defra-ai-plugins
-        copilot plugin install frontend-developer@defra-ai-plugins
+        mkdir -p "$COPILOT_HOME"
+        copilot plugin install ./plugins/frontend-developer
+        copilot plugin list
 
     - name: Run eval suite
       run: |
@@ -339,11 +342,13 @@ on:
           "results/run-${{ github.sha }}/promptfoo-results.json"
 ```
 
-`check-regression.sh` is what turns the harness into a PR gate. It loads the committed baseline, matches tests by `vars.prompt`, and exits non-zero if any test that was passing in the baseline now fails. Promptfoo's own exit code already fails the run on a brand-new fixture failure, so new tests are gated from their first appearance.
+Two pieces do the gating work.
 
-The caveat is in the install step. CI installs the plugin from the published marketplace, not from the PR branch. So a PR that breaks the plugin will go green in CI as long as the _previously merged_ plugin still passes. The local `make evals` is what exercises the branch's actual plugin code, because the developer has run `copilot plugin install` against their own checkout.
+**Local-path install** — `copilot plugin install ./plugins/frontend-developer` accepts a directory and copies it into `$COPILOT_HOME/installed-plugins/_direct/`. Pointing `COPILOT_HOME` at `$RUNNER_TEMP/copilot-ci` gives each job an isolated config dir so a previous run's cached install can't shadow the PR's. This is what makes the workflow exercise the branch's plugin code rather than whatever's published on `main`.
 
-This is a known limitation, not a design preference. A follow-up will spike installing Copilot CLI plugins from a local path and, once that works, the workflow can be promoted to a required check in branch protection.
+**Regression gate** — `check-regression.sh` loads the committed baseline, matches tests by `vars.prompt`, and exits non-zero if any test that was passing in the baseline now fails. Promptfoo's own exit code already fails the run on a brand-new fixture failure, so new tests are gated from their first appearance.
+
+To make this binding for merges, add `Evals / Behavioural eval (Copilot CLI)` as a required status check in branch protection (Settings → Branches → main).
 
 The workflow pre-flights one thing before checkout: the `COPILOT_GITHUB_TOKEN` secret. Without it, every step would fail mid-run with confusing errors. The early `[ -z ]` check fails fast with a pointer to the README setup section.
 
@@ -363,7 +368,7 @@ plugins/frontend-developer/evals/baseline/
 - The pivot is the **combined report** in `collect-and-report.sh`. Once you accept that promptfoo asserts against one big text block with section headers, the rest of the design (where templates live, how lint exit codes surface, why `contains: 'exit_code: 0'` is meaningful) follows.
 - Isolation is per-fixture: `mktemp -d`, `cp -R`, `trap` cleanup. The eval fixture is read-only as far as the agent is concerned.
 - The model is pinned. Drift in pass-rate must be attributable to the plugin or the fixtures, not the model.
-- Local `make evals` exercises the branch's plugin; CI exercises the published plugin and so is a regression sentinel for `main`, not a PR gate. Closing this gap is a known follow-up.
+- Local `make evals` and the PR workflow both exercise the branch's plugin via `copilot plugin install ./plugins/frontend-developer` against an isolated `COPILOT_HOME`. The remaining step to make this a hard merge gate is adding the workflow as a required status check in branch protection.
 - Fragile spots to watch:
   - `--agent <plugin>:<agent>` failing silently if either half is wrong (the agent runs without Defra rules).
   - The combined block's section names (`=== NJK TEMPLATES ===` etc.) are load-bearing for fixture authors. If a section is renamed, every fixture that asserts in that region breaks.

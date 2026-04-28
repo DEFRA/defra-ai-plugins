@@ -5,7 +5,10 @@
 
 A marketplace of [GitHub Copilot CLI](https://docs.github.com/en/copilot/how-tos/copilot-cli/customize-copilot/plugins-finding-installing) plugins for Defra. Each plugin ships agents and skills that encode Defra's software development standards, the GOV.UK Design System, and GDS service standards so Copilot produces compliant code by default.
 
-> Cross-CLI support (Claude Code, OpenAI Codex) is planned for a future iteration. For now, this marketplace targets GitHub Copilot CLI only.
+> Primary target is GitHub Copilot CLI. The eval harness includes a
+> demonstration that the same fixtures run unchanged against Claude Code
+> (`make evals-claude`); cross-CLI plugin distribution is a future
+> iteration.
 
 ## Add this marketplace
 
@@ -27,24 +30,28 @@ defra-ai-plugins/
 │   ├── plugin/
 │   │   └── marketplace.json          # Copilot CLI marketplace registry
 │   └── workflows/
-│       └── validate.yml              # CI: runs validators on every PR
+│       ├── validate.yml              # CI: runs validators on every PR
+│       └── evals.yml                 # CI: runs behavioural eval on every PR
 ├── schemas/
 │   ├── marketplace.schema.json       # JSON Schema for marketplace.json
 │   └── plugin.schema.json            # JSON Schema for plugin manifests
 ├── scripts/                          # Node.js validators
-├── eval-fixture/                     # Skeleton apps the agent operates on during eval
-│   └── hapi-frontend/                #   minimal Hapi + govuk-frontend, target of frontend-developer
 └── plugins/
     └── frontend-developer/
         ├── plugin.json               # Plugin manifest
         ├── README.md
         ├── agents/
         │   └── frontend-developer.agent.md
+        ├── skills/                   # Skill files (work across CLIs)
+        ├── hooks/                    # Plugin hooks
+        ├── eval-fixture/             # Skeleton app the agent operates on during eval
         └── evals/                    # Behavioural fixtures, provider scripts, baseline
             ├── promptfooconfig.yaml
-            ├── run-copilot.sh
-            ├── run-claude.sh
-            ├── check-regression.sh
+            ├── run-copilot.sh        # Default CI provider
+            ├── run-claude.sh         # Local-only demo of cross-provider support
+            ├── collect-and-report.sh # Shared snapshot/diff/lint/test helpers
+            ├── check-regression.sh   # Baseline regression gate
+            ├── summarise.sh          # Markdown summary for CI step output
             └── baseline/             # Reference run for regression comparison
 ```
 
@@ -76,12 +83,17 @@ and asserts on what the agent actually produces — GOV.UK macros, Joi validatio
 CSRF tokens, refusal of forbidden technologies, lint passing.
 
 The harness uses [promptfoo](https://github.com/promptfoo/promptfoo) to drive
-Copilot CLI (and optionally Claude Code) in non-interactive mode against a
-minimal Hapi + govuk-frontend skeleton in `eval-fixture/hapi-frontend/`.
-Fixtures live alongside the plugin they test, in
-`plugins/<plugin-name>/evals/promptfooconfig.yaml`. New plugins targeting
-different stacks should add a sibling skeleton (e.g. `eval-fixture/dotnet-api/`)
-and their own `plugins/<plugin-name>/evals/` directory.
+Copilot CLI in non-interactive mode against a minimal Hapi + govuk-frontend
+skeleton at `plugins/frontend-developer/eval-fixture/`. Both the fixtures
+(`promptfooconfig.yaml`) and the eval-target skeleton live under the plugin
+they test. New plugins should add their own
+`plugins/<plugin-name>/eval-fixture/` skeleton and
+`plugins/<plugin-name>/evals/` fixture set.
+
+A second provider, Claude Code, is wired up locally as a demonstration that
+the same fixtures port across CLIs unchanged (`make evals-claude`). It is
+**not** part of the CI gate — Copilot CLI is the only provider with a
+committed baseline and a regression gate.
 
 ### Run locally
 
@@ -118,10 +130,10 @@ make evals-view
 ```
 
 The default model is pinned in `plugins/frontend-developer/evals/run-copilot.sh`
-(`COPILOT_MODEL=claude-sonnet-4.5`). Override for ad-hoc experiments:
+(`COPILOT_MODEL=gpt-5-mini`). Override for ad-hoc experiments:
 
 ```sh
-COPILOT_MODEL=claude-opus-4 make evals
+COPILOT_MODEL=gpt-5 make evals
 ```
 
 Inside the provider script, the agent is invoked as
@@ -132,10 +144,19 @@ when adding a plugin, use `<your-plugin>:<your-agent>`.
 
 ### CI
 
-The [`Evals`](.github/workflows/evals.yml) workflow runs the suite on every PR
-that touches `plugins/` or `eval-fixture/`, and on `workflow_dispatch`. It
+The [`Evals`](.github/workflows/evals.yml) workflow runs the Copilot CLI
+provider on every PR that touches `plugins/`, and on `workflow_dispatch`. It
 runs `check-regression.sh` against the committed baseline and fails the build
-if any fixture that previously passed now fails. The result JSON is uploaded
+if any fixture that previously passed now fails. The Claude provider is
+filtered out of CI by `--filter-providers copilot-cli-frontend-developer` —
+it's local-only.
+
+`check-regression.sh` matches tests by `vars.prompt`, treats a test as
+passing only if **every** provider that ran it passed, and exits non-zero on
+any baseline-passing test that now fails. New tests added since the baseline
+are not retroactively gated — promptfoo's own exit code already fails the
+run on any fixture failure, so new fixtures are gated from their first
+appearance. The result JSON is uploaded
 as an artifact, and the GitHub Actions step summary publishes per-fixture
 pass/fail, named scores per quality dimension (component_correctness,
 security, accessibility, lint_passes, refusal), assertion-level failure
@@ -163,9 +184,11 @@ The token has a per-account premium-request budget — at
 `PR cadence × fixtures × repeats`, that budget is the rate-limit ceiling. Watch
 for it if eval volume increases.
 
-> **Caveat.** CI installs the plugin from `DEFRA/defra-ai-plugins` (i.e. the
-> currently-merged version), not from the PR branch. Run `make evals` locally
-> to test in-progress changes.
+CI installs the plugin from the PR checkout (`copilot plugin install
+./plugins/frontend-developer`), so behavioural changes on the branch are
+exercised before merge. `COPILOT_HOME` is pinned to a per-job temp dir to
+prevent any cross-run plugin cache reuse. Once `Evals` is added as a required
+status check in branch protection, regressions block merge automatically.
 
 ## Contributing
 

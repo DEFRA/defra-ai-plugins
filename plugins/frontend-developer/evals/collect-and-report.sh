@@ -66,16 +66,18 @@ report() {
   rm -f "$snap_after"
 
   local njk_content="" js_content="" f
-  for f in $(find src/views -name '*.njk' -type f 2>/dev/null); do
+  while IFS= read -r f; do
+    [ -z "$f" ] && continue
     njk_content="$njk_content
 --- $f ---
 $(cat "$f")"
-  done
-  for f in $(find src/routes -name '*.js' -type f 2>/dev/null); do
+  done < <(find src/views -name '*.njk' -type f 2>/dev/null)
+  while IFS= read -r f; do
+    [ -z "$f" ] && continue
     js_content="$js_content
 --- $f ---
 $(cat "$f")"
-  done
+  done < <(find src/routes -name '*.js' -type f 2>/dev/null)
 
   local lint_exit=0 lint_output
   lint_output=$(npm run lint --silent 2>&1) || lint_exit=$?

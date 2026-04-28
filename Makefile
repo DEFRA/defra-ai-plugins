@@ -5,7 +5,7 @@
 
 RESULTS_DIR := results/run-$(shell date +%Y-%m-%d)
 EVAL_DIR := plugins/frontend-developer/evals
-FIXTURE_DIR := eval-fixture/hapi-frontend
+FIXTURE_DIR := plugins/frontend-developer/eval-fixture
 
 # Install eval-fixture dependencies (the provider script copies the fixture
 # into a temp dir, so node_modules must exist in the source).

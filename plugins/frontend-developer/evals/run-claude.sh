@@ -20,8 +20,8 @@ set -euo pipefail
 
 PROMPT="$1"
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-REPO_ROOT="$(cd "$SCRIPT_DIR/../../.." && pwd)"
-FIXTURE_SOURCE="$REPO_ROOT/eval-fixture/hapi-frontend"
+PLUGIN_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
+FIXTURE_SOURCE="$PLUGIN_DIR/eval-fixture"
 
 CLAUDE_MODEL="${CLAUDE_MODEL:-claude-sonnet-4-6}"
 

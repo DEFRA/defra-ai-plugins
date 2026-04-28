@@ -19,10 +19,10 @@ set -euo pipefail
 
 PROMPT="$1"
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-REPO_ROOT="$(cd "$SCRIPT_DIR/../../.." && pwd)"
-FIXTURE_SOURCE="$REPO_ROOT/eval-fixture/hapi-frontend"
+PLUGIN_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
+FIXTURE_SOURCE="$PLUGIN_DIR/eval-fixture"
 
-COPILOT_MODEL="${COPILOT_MODEL:-claude-sonnet-4.5}"
+COPILOT_MODEL="${COPILOT_MODEL:-gpt-5-mini}"
 
 # Create an isolated working copy
 WORK_DIR=$(mktemp -d)

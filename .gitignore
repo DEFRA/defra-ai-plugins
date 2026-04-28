@@ -4,7 +4,6 @@ coverage/
 *.log
 
 # Eval harness — see Makefile and plugins/*/evals/
-eval-fixture/*/node_modules/
 plugins/*/evals/output*.json
 plugins/*/evals/.promptfoo/
 results/run-*/

@@ -11,15 +11,15 @@ name: Evals
 # a fine-grained PAT (or GitHub App token) with the "Copilot Requests"
 # permission and store it as COPILOT_GITHUB_TOKEN. See README §Evaluating.
 #
-# CI tests the plugin currently published at DEFRA/defra-ai-plugins (i.e. main).
-# A PR's plugin changes are not exercised in CI until merged. Run `make evals`
-# locally before opening a PR to catch behavioural regressions in your branch.
+# CI installs the plugin from the PR checkout (`copilot plugin install
+# ./plugins/frontend-developer`), so behavioural changes on the branch are
+# exercised before merge. `COPILOT_HOME` is pinned to a per-run temp dir to
+# defeat any cross-job plugin cache reuse.
 
 on:
   pull_request:
     paths:
       - 'plugins/**'
-      - 'eval-fixture/**'
       - '.github/workflows/evals.yml'
   workflow_dispatch:
 
@@ -33,7 +33,10 @@ jobs:
     timeout-minutes: 30
     env:
       COPILOT_GITHUB_TOKEN: ${{ secrets.COPILOT_GITHUB_TOKEN }}
-      COPILOT_MODEL: claude-sonnet-4.5
+      COPILOT_MODEL: gpt-5-mini
+      # Isolated config/plugin dir so the install in this job can't be
+      # served from a previous run's cache.
+      COPILOT_HOME: ${{ runner.temp }}/copilot-ci
     steps:
       - name: Check secret is configured
         run: |
@@ -56,15 +59,19 @@ jobs:
         run: npm ci
 
       - name: Install eval-fixture dependencies
-        run: cd eval-fixture/hapi-frontend && npm install
+        run: cd plugins/frontend-developer/eval-fixture && npm install
 
       - name: Install Copilot CLI
         run: npm install -g @github/copilot
 
-      - name: Install frontend-developer plugin
+      - name: Install frontend-developer plugin from PR checkout
         run: |
-          copilot plugin marketplace add DEFRA/defra-ai-plugins
-          copilot plugin install frontend-developer@defra-ai-plugins
+          mkdir -p "$COPILOT_HOME"
+          # Local-path install: Copilot CLI accepts a directory argument and
+          # copies it into $COPILOT_HOME/installed-plugins/_direct/. This is
+          # what makes the eval gate the PR's plugin code, not main's.
+          copilot plugin install ./plugins/frontend-developer
+          copilot plugin list
 
       - name: Run eval suite
         id: run
@@ -92,56 +99,9 @@ jobs:
       - name: Summarise
         if: always()
         run: |
-          RESULT=results/run-${{ github.sha }}/promptfoo-results.json
-          if [ ! -f "$RESULT" ]; then
-            echo "::error::No result file at $RESULT"
-            exit 1
-          fi
-          {
-            echo "## Eval results"
-            echo ""
-            jq -r '.results.stats |
-              "**Suite pass:** \(.successes)/\(.successes + .failures) tests"' "$RESULT"
-            echo ""
-            echo "### Per-fixture"
-            jq -r '
-              .results.results
-              | group_by(.vars.prompt)
-              | map({
-                  prompt: (.[0].vars.prompt | .[0:80]),
-                  pass: (all(.success == true))
-                })
-              | .[]
-              | "- \(if .pass then "✅" else "❌" end) \(.prompt)"
-            ' "$RESULT"
-            echo ""
-            echo "### Named scores"
-            jq -r '
-              .results.prompts[0].metrics.namedScores // {}
-              | to_entries
-              | map("- **\(.key)**: \(.value)")
-              | .[]
-            ' "$RESULT"
-            echo ""
-            echo "### Latency"
-            jq -r '
-              [.results.results[].latencyMs] | sort as $xs
-              | ($xs | length) as $n
-              | if $n == 0 then "no latency data" else
-                  "- p50: \($xs[($n/2|floor)])ms\n- p95: \($xs[(($n*0.95)|floor)])ms\n- max: \($xs[-1])ms"
-                end
-            ' "$RESULT"
-            echo ""
-            echo "### Assertion-level failures"
-            jq -r '
-              [.results.results[].gradingResult.componentResults[]?
-                | select(.pass == false)
-                | (.assertion.metric // "untagged")] as $fails
-              | if ($fails | length) == 0 then "_none_" else
-                  ($fails | group_by(.) | map("- \(.[0]): \(length)") | .[])
-                end
-            ' "$RESULT"
-          } >> "$GITHUB_STEP_SUMMARY"
+          ./plugins/frontend-developer/evals/summarise.sh \
+            "results/run-${{ github.sha }}/promptfoo-results.json" \
+            >> "$GITHUB_STEP_SUMMARY"
 
       - name: Upload result artifact
         if: always()

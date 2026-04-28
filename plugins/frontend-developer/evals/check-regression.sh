@@ -25,13 +25,14 @@ if [ ! -f "$BASELINE" ]; then
 fi
 
 # Build per-prompt success maps for baseline and new run.
-# A test is "passing" if any of its result rows succeeded (single provider,
-# multi-provider runs collapse to true if any provider passed — adjust if
-# we ever want stricter cross-provider gating).
+# A test is "passing" only if EVERY provider that ran it passed. With one
+# provider this is the obvious thing; with multiple, a regression on any
+# provider fails the gate. That's the strict reading: if Claude regresses
+# but Copilot doesn't, we still want to know.
 baseline_passing=$(jq -r '
   .results.results
   | group_by(.vars.prompt)
-  | map({prompt: .[0].vars.prompt, pass: (any(.success == true))})
+  | map({prompt: .[0].vars.prompt, pass: (all(.success == true))})
   | map(select(.pass)) | .[].prompt
 ' "$BASELINE")
 
@@ -41,7 +42,7 @@ while IFS= read -r prompt; do
   status=$(jq -r --arg p "$prompt" '
     [.results.results[] | select(.vars.prompt == $p) | .success] as $rs
     | if ($rs | length) == 0 then "missing"
-      elif (any($rs[]; . == true)) then "pass"
+      elif (all($rs[]; . == true)) then "pass"
       else "fail" end
   ' "$NEW")
   case "$status" in

@@ -4,4 +4,4 @@ plugins/*/agents/*.agent.md
 
 # Eval artefacts — frozen baseline + vendored fixture skeletons
 plugins/*/evals/baseline/
-eval-fixture/
+plugins/*/eval-fixture/
