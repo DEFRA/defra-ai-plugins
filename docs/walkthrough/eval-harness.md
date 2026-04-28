@@ -9,6 +9,122 @@ This repo publishes Copilot CLI plugins that encode Defra's coding standards. Th
 
 The eval harness fills the gap. It drives Copilot CLI in non-interactive mode through a fixed set of realistic and adversarial prompts, lets the agent edit a clean copy of a Hapi+govuk-frontend skeleton, then asserts on what it produced — generated templates, route handlers, lint output, refusal behaviour. A regression in any assertion fails the build. The harness is local-first (`make evals`) but CI runs the same suite on every PR, installing the plugin from the PR checkout so behavioural changes are gated before merge.
 
+## Pipeline at a glance
+
+```
+                        ┌──────────────────────────┐
+                        │   PR opened on plugins/  │
+                        └────────────┬─────────────┘
+                                     │
+                                     ▼
+                  ┌───────────────────────────────────────┐
+                  │  .github/workflows/evals.yml          │
+                  │  (job: evals — Ubuntu, Node lts)      │
+                  └────────────────┬──────────────────────┘
+                                   │
+       ┌───────────────────────────┼───────────────────────────┐
+       ▼                           ▼                           ▼
+ actions/checkout          npm ci (root)               install eval-fixture deps
+ (PR branch HEAD)         schema validators            plugins/frontend-developer/
+                          ready                        eval-fixture/ → npm install
+                                   │
+                                   ▼
+                  ┌───────────────────────────────────────┐
+                  │  install Copilot CLI                  │
+                  │  npm i -g @github/copilot             │
+                  └────────────────┬──────────────────────┘
+                                   ▼
+                  ┌───────────────────────────────────────┐
+                  │  COPILOT_HOME = $RUNNER_TEMP/         │
+                  │                  copilot-ci           │
+                  │  copilot plugin install \             │
+                  │    ./plugins/frontend-developer       │
+                  │  → cached under                       │
+                  │    $COPILOT_HOME/installed-plugins/   │
+                  │    _direct/<src-id>/                  │
+                  └────────────────┬──────────────────────┘
+                                   ▼
+                  ┌───────────────────────────────────────┐
+                  │  npx promptfoo eval --no-cache        │
+                  │  --filter-providers                   │
+                  │    copilot-cli-frontend-developer     │
+                  │  (Claude provider in YAML but         │
+                  │   filtered out — local-only demo)     │
+                  └────────────────┬──────────────────────┘
+                                   │
+                                   │  for each of 7 fixtures
+                                   ▼
+   ┌───────────────────────────────────────────────────────────┐
+   │  exec:./run-copilot.sh "<prompt>"                         │
+   │  ───────────────────────────────────                      │
+   │  WORK_DIR=$(mktemp -d)        ← fresh per fixture         │
+   │  cp -R eval-fixture/ → WORK_DIR                           │
+   │  snapshot_files (md5 of src/) ← BEFORE                    │
+   │                                                           │
+   │  copilot -p "$PROMPT" \                                   │
+   │     --agent frontend-developer:frontend-developer \       │
+   │     --model gpt-5-mini --yolo                             │
+   │  → AGENT_OUTPUT (stdout+stderr, never aborts the run)     │
+   │                                                           │
+   │  report() emits one combined block:                       │
+   │    === COPILOT OUTPUT ===                                 │
+   │    === NJK TEMPLATES ===     (every src/views/**/*.njk)   │
+   │    === JS ROUTES ===         (every src/routes/**/*.js)   │
+   │    === FILES CHANGED ===     (md5 diff vs BEFORE)         │
+   │    === LINT ===              (exit_code: N + output)      │
+   │    === TESTS ===             (exit_code: N + output)      │
+   └────────────────────────────┬──────────────────────────────┘
+                                │ stdout
+                                ▼
+   ┌───────────────────────────────────────────────────────────┐
+   │  promptfoo applies assertions to that block:              │
+   │    contains / not-contains / icontains / regex            │
+   │  Each assertion tagged with metric:                       │
+   │    component_correctness / security / accessibility /     │
+   │    lint_passes / refusal                                  │
+   │  → results/run-<sha>/promptfoo-results.json               │
+   └────────────────────────────┬──────────────────────────────┘
+                                ▼
+   ┌───────────────────────────────────────────────────────────┐
+   │  check-regression.sh                                      │
+   │  ───────────────────────                                  │
+   │  match tests by vars.prompt against committed baseline    │
+   │    (plugins/frontend-developer/evals/baseline/            │
+   │       promptfoo-results.json)                             │
+   │  pass = ALL providers that ran it succeeded               │
+   │  exit non-zero if any baseline-passing test now fails     │
+   │                                                           │
+   │  → regression: job fails → PR cannot merge                │
+   │  → clean    : job succeeds                                │
+   └────────────────────────────┬──────────────────────────────┘
+                                ▼
+   ┌───────────────────────────────────────────────────────────┐
+   │  summarise.sh → $GITHUB_STEP_SUMMARY                      │
+   │  ───────────────────────────────────                      │
+   │  • Suite pass: N/M                                        │
+   │  • Per-fixture PASS/FAIL                                  │
+   │  • Named scores per bucket                                │
+   │  • Latency p50 / p95 / max                                │
+   │  • Assertion-level failure counts by metric               │
+   └────────────────────────────┬──────────────────────────────┘
+                                ▼
+                  ┌───────────────────────────────────────┐
+                  │  upload-artifact: results/run-<sha>/  │
+                  │  retention 30 days                    │
+                  └───────────────────────────────────────┘
+
+  Branch-protection switch (one-time, repo Settings → Branches → main):
+    Require status check: "Evals / Behavioural eval (Copilot CLI)"
+    → only then is the gate a hard merge block
+
+  Local equivalent:
+    make evals          → same path, Copilot only
+    make evals-claude   → swaps run-copilot.sh for run-claude.sh
+                          (no CI, no baseline — portability demo only)
+```
+
+The sections below walk each piece in detail.
+
 ## 1. The question being answered
 
 Schema validation answers "is this plugin shaped right?" The eval answers something stricter: **"if a developer asks the agent to add a date-of-birth field, will it actually use `govukDateInput`, validate with Joi, wire up CSRF, and refuse to install Tailwind?"** Every fixture is a small experiment in that form. The harness exists because the answer would otherwise drift silently between releases of the plugin, the CLI, and the model behind it.
