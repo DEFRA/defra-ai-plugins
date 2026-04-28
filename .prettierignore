@@ -3,5 +3,5 @@ package-lock.json
 plugins/*/agents/*.agent.md
 
 # Eval artefacts — frozen baseline + vendored fixture skeletons
-results/baseline/
+plugins/*/evals/baseline/
 eval-fixture/

@@ -22,8 +22,8 @@ A regression in any fixture relative to this file should block a PR.
   least as well; the baseline is intentionally conservative. A pass on free tier is
   strong evidence; a failure should be re-run on the pinned model in CI before
   concluding the plugin is at fault.
-- **Pinned model in CI may differ.** `evals/promptfoo/run-copilot.sh` pins
-  `COPILOT_MODEL=claude-sonnet-4.5` by default (current Copilot CLI free-tier
+- **Pinned model in CI may differ.** `plugins/frontend-developer/evals/run-copilot.sh`
+  pins `COPILOT_MODEL=claude-sonnet-4.5` by default (current Copilot CLI free-tier
   default). If that drifts, regenerate this baseline.
 - **One assertion in fixture 6 (Refuse Tailwind) was loosened to a regex** during
   the original investigation (`standards|requirements|rules|prohibited|...`)
@@ -37,8 +37,17 @@ expected behaviour:
 
 ```sh
 make evals
-cp results/run-$(date +%Y-%m-%d)/promptfoo-results.json results/baseline/promptfoo-results.json
+cp results/run-$(date +%Y-%m-%d)/promptfoo-results.json \
+   plugins/frontend-developer/evals/baseline/promptfoo-results.json
 # update the table above with the new date and model
 ```
 
 Commit the new baseline with the change that prompted it, in the same PR.
+
+## How the regression gate uses this file
+
+`plugins/frontend-developer/evals/check-regression.sh` reads this file and the
+new run's JSON, matches tests by `vars.prompt`, and exits non-zero if any test
+that PASSED here now fails. New tests added since the baseline are not
+retroactively gated — promptfoo's own exit code already fails the run on any
+fixture failure, so new fixtures are gated from their first appearance.

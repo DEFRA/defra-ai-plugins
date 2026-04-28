@@ -34,14 +34,18 @@ defra-ai-plugins/
 ├── scripts/                          # Node.js validators
 ├── eval-fixture/                     # Skeleton apps the agent operates on during eval
 │   └── hapi-frontend/                #   minimal Hapi + govuk-frontend, target of frontend-developer
-├── evals/promptfoo/                  # Behavioural fixtures + provider scripts
-├── results/baseline/                 # Reference run for regression comparison
 └── plugins/
     └── frontend-developer/
         ├── plugin.json               # Plugin manifest
         ├── README.md
-        └── agents/
-            └── frontend-developer.agent.md
+        ├── agents/
+        │   └── frontend-developer.agent.md
+        └── evals/                    # Behavioural fixtures, provider scripts, baseline
+            ├── promptfooconfig.yaml
+            ├── run-copilot.sh
+            ├── run-claude.sh
+            ├── check-regression.sh
+            └── baseline/             # Reference run for regression comparison
 ```
 
 Each plugin lives in its own directory under `plugins/` with a `plugin.json` manifest and an `agents/` directory containing one or more Copilot custom agents.
@@ -72,10 +76,12 @@ and asserts on what the agent actually produces — GOV.UK macros, Joi validatio
 CSRF tokens, refusal of forbidden technologies, lint passing.
 
 The harness uses [promptfoo](https://github.com/promptfoo/promptfoo) to drive
-Copilot CLI in non-interactive mode against a minimal Hapi + govuk-frontend
-skeleton in `eval-fixture/hapi-frontend/`. Fixtures live in
-`evals/promptfoo/promptfooconfig.yaml`. New plugins targeting different stacks
-should add a sibling skeleton (e.g. `eval-fixture/dotnet-api/`).
+Copilot CLI (and optionally Claude Code) in non-interactive mode against a
+minimal Hapi + govuk-frontend skeleton in `eval-fixture/hapi-frontend/`.
+Fixtures live alongside the plugin they test, in
+`plugins/<plugin-name>/evals/promptfooconfig.yaml`. New plugins targeting
+different stacks should add a sibling skeleton (e.g. `eval-fixture/dotnet-api/`)
+and their own `plugins/<plugin-name>/evals/` directory.
 
 ### Run locally
 
@@ -93,8 +99,17 @@ Then:
 make evals
 ```
 
-Results land in `results/run-YYYY-MM-DD/promptfoo-results.json`. Compare against
-`results/baseline/promptfoo-results.json` to spot per-fixture regressions.
+Results land in `results/run-YYYY-MM-DD/promptfoo-results.json`. `make evals`
+also runs `check-regression.sh`, which compares against
+`plugins/frontend-developer/evals/baseline/promptfoo-results.json` and exits
+non-zero on any per-fixture regression.
+
+To run the same suite against Claude Code instead (requires
+`ANTHROPIC_API_KEY` and `claude` CLI installed):
+
+```sh
+make evals-claude
+```
 
 To browse results in a UI:
 
@@ -102,7 +117,7 @@ To browse results in a UI:
 make evals-view
 ```
 
-The default model is pinned in `evals/promptfoo/run-copilot.sh`
+The default model is pinned in `plugins/frontend-developer/evals/run-copilot.sh`
 (`COPILOT_MODEL=claude-sonnet-4.5`). Override for ad-hoc experiments:
 
 ```sh
@@ -118,10 +133,13 @@ when adding a plugin, use `<your-plugin>:<your-agent>`.
 ### CI
 
 The [`Evals`](.github/workflows/evals.yml) workflow runs the suite on every PR
-that touches `plugins/`, `evals/`, or `eval-fixture/`, and on
-`workflow_dispatch`. It
-fails the build on any fixture regression and uploads the result JSON as an
-artifact.
+that touches `plugins/` or `eval-fixture/`, and on `workflow_dispatch`. It
+runs `check-regression.sh` against the committed baseline and fails the build
+if any fixture that previously passed now fails. The result JSON is uploaded
+as an artifact, and the GitHub Actions step summary publishes per-fixture
+pass/fail, named scores per quality dimension (component_correctness,
+security, accessibility, lint_passes, refusal), assertion-level failure
+counts, and latency p50/p95/max.
 
 CI requires a repository secret named `COPILOT_GITHUB_TOKEN` containing a
 fine-grained personal access token (or GitHub App token) with the

@@ -1,7 +1,7 @@
 # Walkthrough: the behavioural eval harness
 
 **Date:** 2026-04-27
-**Target:** the eval harness in `defra-ai-plugins` — `Makefile`, `evals/promptfoo/`, `eval-fixture/hapi-frontend/`, `.github/workflows/evals.yml`, `results/baseline/`.
+**Target:** the eval harness in `defra-ai-plugins` — `Makefile`, `plugins/frontend-developer/evals/`, `eval-fixture/hapi-frontend/`, `.github/workflows/evals.yml`, `plugins/frontend-developer/evals/baseline/`.
 
 ## Overview
 
@@ -22,7 +22,7 @@ Schema validation answers "is this plugin shaped right?" The eval answers someth
 .PHONY: evals evals-view fixture-install fixture-test fixture-lint clean
 
 RESULTS_DIR := results/run-$(shell date +%Y-%m-%d)
-EVAL_DIR := evals/promptfoo
+EVAL_DIR := plugins/frontend-developer/evals
 FIXTURE_DIR := eval-fixture/hapi-frontend
 
 # Install eval-fixture dependencies (the provider script copies the fixture
@@ -42,10 +42,10 @@ The `fixture-install` dependency is the load-bearing detail. The provider script
 
 ## 3. A test case in YAML
 
-The test catalogue lives in `evals/promptfoo/promptfooconfig.yaml`. There are seven cases — five realistic Defra tasks and two adversarial prompts. Here's one of each.
+The test catalogue lives in `plugins/frontend-developer/evals/promptfooconfig.yaml`. There are seven cases — five realistic Defra tasks and two adversarial prompts. Here's one of each.
 
 ```yaml
-# evals/promptfoo/promptfooconfig.yaml (lines 17–40)
+# plugins/frontend-developer/evals/promptfooconfig.yaml (lines 17–40)
 - description: 'Add date-of-birth field with GOV.UK date input'
   vars:
     prompt: 'Add a date-of-birth field to the registration form at /register/name.
@@ -91,12 +91,12 @@ The `metric: lint_passes` label is plain promptfoo: it groups assertions into a 
 `promptfoo` calls the provider once per fixture, passing the rendered prompt as `$1`. The provider's job is to set up an isolated environment, run the agent, and emit text that promptfoo can assert against.
 
 ```bash
-# evals/promptfoo/run-copilot.sh (lines 18–53)
+# plugins/frontend-developer/evals/run-copilot.sh (lines 18–53)
 set -euo pipefail
 
 PROMPT="$1"
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
+REPO_ROOT="$(cd "$SCRIPT_DIR/../../.." && pwd)"
 FIXTURE_SOURCE="$REPO_ROOT/eval-fixture/hapi-frontend"
 
 COPILOT_MODEL="${COPILOT_MODEL:-claude-sonnet-4.5}"
@@ -157,7 +157,7 @@ The realism is deliberate. A trivial fixture would let a weak agent pass by writ
 The most important idea in the harness is also the simplest. Rather than parse structured output from the agent, the harness emits one big text block and lets promptfoo's deterministic assertions match anywhere within it.
 
 ```bash
-# evals/promptfoo/collect-and-report.sh (lines 55–107)
+# plugins/frontend-developer/evals/collect-and-report.sh (lines 55–107)
 report() {
   local agent_label="${1:-AGENT}"
   local agent_output="$2"
@@ -233,7 +233,7 @@ If a future plugin targets paths outside `src/views` and `src/routes`, the loop 
 `FILES CHANGED` is the harness's eye on side-effects. It's two helpers:
 
 ```bash
-# evals/promptfoo/collect-and-report.sh (lines 13–24)
+# plugins/frontend-developer/evals/collect-and-report.sh (lines 13–24)
 snapshot_files() {
   local outfile="$1"
   if command -v md5sum &>/dev/null; then
@@ -249,7 +249,7 @@ snapshot_files() {
 Two trivia: Linux ships `md5sum`, macOS ships `md5 -r`. Both produce `<hash> <path>` lines, which is the only shape this harness needs. Sorting by path (`sort -k2`) is what lets the diff use `comm` next.
 
 ```bash
-# evals/promptfoo/collect-and-report.sh (lines 29–51)
+# plugins/frontend-developer/evals/collect-and-report.sh (lines 29–51)
 _files_changed() {
   local before="$1" after="$2"
   local before_paths after_paths
@@ -300,7 +300,7 @@ COPILOT_MODEL="${COPILOT_MODEL:-claude-sonnet-4.5}"
 
 Copilot CLI has a default model that changes over time. If we let the eval inherit the default, a regression could mean any of: the plugin changed, the CLI changed, or the model changed. By pinning, _anything_ that moves pass-rates is attributable to one of the things we control — the plugin or the fixture. The override (`COPILOT_MODEL=claude-opus-4 make evals`) is for ad-hoc experiments; the committed value is the one the baseline corresponds to.
 
-When the team deliberately moves the pin (for example, when Sonnet 5 ships and is judged stable), the baseline result file under `results/baseline/` is regenerated and committed in the same PR. Plugin and model are both subject to change control; eval pass-rate is the unit of measurement.
+When the team deliberately moves the pin (for example, when Sonnet 5 ships and is judged stable), the baseline result file under `plugins/frontend-developer/evals/baseline/` is regenerated and committed in the same PR. Plugin and model are both subject to change control; eval pass-rate is the unit of measurement.
 
 ## 10. CI vs local
 
@@ -328,10 +328,18 @@ on:
     - name: Run eval suite
       run: |
         mkdir -p results/run-${{ github.sha }}
-        cd evals/promptfoo
+        cd plugins/frontend-developer/evals
         npx promptfoo eval --no-cache \
-          --output ../../results/run-${{ github.sha }}/promptfoo-results.json
+          --filter-providers copilot-cli-frontend-developer \
+          --output "$GITHUB_WORKSPACE/results/run-${{ github.sha }}/promptfoo-results.json"
+
+    - name: Regression gate vs baseline
+      run: |
+        ./plugins/frontend-developer/evals/check-regression.sh \
+          "results/run-${{ github.sha }}/promptfoo-results.json"
 ```
+
+`check-regression.sh` is what turns the harness into a PR gate. It loads the committed baseline, matches tests by `vars.prompt`, and exits non-zero if any test that was passing in the baseline now fails. Promptfoo's own exit code already fails the run on a brand-new fixture failure, so new tests are gated from their first appearance.
 
 The caveat is in the install step. CI installs the plugin from the published marketplace, not from the PR branch. So a PR that breaks the plugin will go green in CI as long as the _previously merged_ plugin still passes. The local `make evals` is what exercises the branch's actual plugin code, because the developer has run `copilot plugin install` against their own checkout.
 
@@ -342,12 +350,12 @@ The workflow pre-flights one thing before checkout: the `COPILOT_GITHUB_TOKEN` s
 ## 11. The baseline
 
 ```
-results/baseline/
+plugins/frontend-developer/evals/baseline/
 ├── promptfoo-results.json     31/31 pass, GPT-5 mini, 2026-04-22
 └── README.md                  provenance + regeneration instructions
 ```
 
-`results/baseline/` is the regression contract. Every run produces a dated `results/run-YYYY-MM-DD/promptfoo-results.json`; comparing per-fixture results against the baseline is how drift is detected. The baseline is committed; per-run results are gitignored. When the model pin or fixture set deliberately changes, the baseline is regenerated and committed in the same PR, and its README is updated with the new model/date. This keeps the audit trail aligned with the change that caused it.
+`plugins/frontend-developer/evals/baseline/` is the regression contract. Every run produces a dated `results/run-YYYY-MM-DD/promptfoo-results.json`; comparing per-fixture results against the baseline is how drift is detected. The baseline is committed; per-run results are gitignored. When the model pin or fixture set deliberately changes, the baseline is regenerated and committed in the same PR, and its README is updated with the new model/date. This keeps the audit trail aligned with the change that caused it.
 
 ## Summary
 
@@ -359,4 +367,4 @@ results/baseline/
 - Fragile spots to watch:
   - `--agent <plugin>:<agent>` failing silently if either half is wrong (the agent runs without Defra rules).
   - The combined block's section names (`=== NJK TEMPLATES ===` etc.) are load-bearing for fixture authors. If a section is renamed, every fixture that asserts in that region breaks.
-  - The pinned `COPILOT_MODEL` and `results/baseline/` must be updated together. They are paired by convention, not by tooling.
+  - The pinned `COPILOT_MODEL` and `plugins/frontend-developer/evals/baseline/` must be updated together. They are paired by convention, not by tooling.

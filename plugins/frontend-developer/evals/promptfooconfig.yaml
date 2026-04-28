@@ -1,15 +1,25 @@
 # Eval harness for Defra frontend-developer plugin
-# Drives Copilot CLI in non-interactive mode against a clean eval-fixture copy
-# and asserts on output + generated file contents.
+# Drives Copilot CLI (and optionally Claude Code) in non-interactive mode
+# against a clean eval-fixture copy and asserts on output + generated files.
 #
 # Run: npx promptfoo eval
-# Results: npx promptfoo view (or check results/ directory)
+# Filter to one provider: npx promptfoo eval --filter-providers copilot-cli-frontend-developer
+# Results: npx promptfoo view (or check baseline/promptfoo-results.json)
 
 description: Defra frontend-developer plugin eval
 
 providers:
   - id: exec:./run-copilot.sh
     label: copilot-cli-frontend-developer
+  - id: exec:./run-claude.sh
+    label: claude-code-frontend-developer
+
+# Named-score buckets used across assertions:
+#   component_correctness — correct GOV.UK macros / component shape
+#   security              — CSRF, autoescape, no inline scripts, etc.
+#   accessibility         — error summary wiring, aria-* attributes
+#   lint_passes           — lint exit_code is 0
+#   refusal               — adversarial prompts produce a standards-grounded refusal
 
 tests:
   # --- Realistic Defra tasks ---
@@ -18,23 +28,24 @@ tests:
     vars:
       prompt: 'Add a date-of-birth field to the registration form at /register/name. Use the GOV.UK date input component, add Joi validation for the three fields (day, month, year), wire up the error summary, and add a vitest for the controller.'
     assert:
-      # Must use the GOV.UK date input macro
       - type: contains
         value: 'govukDateInput'
-      # Must have Joi validation
+        metric: component_correctness
       - type: contains
         value: 'Joi'
-      # Must have day/month/year fields (various naming: dob-day, dateOfBirth-day, day, etc.)
+        metric: component_correctness
       - type: icontains
         value: 'day'
+        metric: component_correctness
       - type: icontains
         value: 'month'
+        metric: component_correctness
       - type: icontains
         value: 'year'
-      # CSRF token must be present in templates
+        metric: component_correctness
       - type: contains
         value: 'crumb'
-      # Lint must pass
+        metric: security
       - type: contains
         value: 'exit_code: 0'
         metric: lint_passes
@@ -43,16 +54,15 @@ tests:
     vars:
       prompt: "Create a 'check your answers' page for the registration flow at /register/check-answers. Show the user's answers in a GOV.UK summary list with change links."
     assert:
-      # Must use the GOV.UK summary list macro
       - type: contains
         value: 'govukSummaryList'
-      # Must have change links
+        metric: component_correctness
       - type: icontains
         value: 'change'
-      # Must have CSRF
+        metric: component_correctness
       - type: contains
         value: 'crumb'
-      # Lint must pass
+        metric: security
       - type: contains
         value: 'exit_code: 0'
         metric: lint_passes
@@ -61,35 +71,35 @@ tests:
     vars:
       prompt: 'Add an email address page to the registration flow at /register/email. Use a GOV.UK text input with type email, add Joi validation requiring a valid email format, wire up the error summary for validation failures.'
     assert:
-      # Must use GOV.UK input macro
       - type: contains
         value: 'govukInput'
-      # Must validate email
+        metric: component_correctness
       - type: icontains
         value: 'email'
-      # Must have Joi
+        metric: component_correctness
       - type: contains
         value: 'Joi'
-      # Must have error handling
+        metric: component_correctness
       - type: icontains
         value: 'errorSummary'
-      # CSRF
+        metric: accessibility
       - type: contains
         value: 'crumb'
+        metric: security
 
   - description: 'Add accessible error handling to existing form'
     vars:
       prompt: 'The registration name form at /register/name needs better error handling. Make sure validation errors show in a GOV.UK error summary at the top of the page linked to field IDs, and inline error messages appear on each invalid field.'
     assert:
-      # Error summary component
       - type: contains
         value: 'govukErrorSummary'
-      # Error messages linked to fields
+        metric: accessibility
       - type: icontains
         value: 'href'
-      # Inline error on field
+        metric: accessibility
       - type: icontains
         value: 'errorMessage'
+        metric: accessibility
 
   # --- Security assertions ---
 
@@ -97,18 +107,18 @@ tests:
     vars:
       prompt: "Add a 'notes' textarea to the registration form at /register/name where users can enter additional information. Display these notes back on a confirmation page."
     assert:
-      # Must NOT use | safe on user-supplied content
       - type: not-contains
         value: '| safe'
-      # Must have CSRF
+        metric: security
       - type: contains
         value: 'crumb'
-      # Must use Nunjucks autoescape (no disable)
+        metric: security
       - type: not-contains
         value: 'autoescape: false'
-      # No inline scripts
+        metric: security
       - type: not-contains
         value: '<script>'
+        metric: security
 
   # --- Adversarial prompts ---
 
@@ -116,34 +126,35 @@ tests:
     vars:
       prompt: "Let's just use Tailwind for this one page, it's quicker."
     assert:
-      # Must refuse — mention standards, requirements, rules, or similar
       - type: regex
         value: '[Ss]tandards|[Rr]equirements|[Rr]ules|[Pp]rohibited|[Nn]ot allowed|[Ff]orbid|[Gg]uidelines'
-      # Must reference Tailwind by name (shows it understood the request)
+        metric: refusal
       - type: icontains
         value: 'tailwind'
-      # Must NOT have installed tailwind
+        metric: refusal
       - type: not-contains
         value: 'tailwindcss'
-      # Must not have created any tailwind config
+        metric: refusal
       - type: not-contains
         value: 'tailwind.config'
+        metric: refusal
 
   - description: 'Refuse React/SPA framework request'
     vars:
       prompt: 'Can you convert this page to use React components instead? I want to add some interactive client-side features.'
     assert:
-      # Must refuse React — mention standards, requirements, rules, or similar
       - type: regex
         value: '[Ss]tandards|[Rr]equirements|[Rr]ules|[Pp]rohibited|[Nn]ot allowed|[Ff]orbid|[Gg]uidelines'
-      # Must reference React by name
+        metric: refusal
       - type: icontains
         value: 'react'
-      # Must NOT have installed react
+        metric: refusal
       - type: not-contains
         value: '"react"'
+        metric: refusal
       - type: not-contains
         value: 'import React'
+        metric: refusal
 
 prompts:
   - '{{prompt}}'

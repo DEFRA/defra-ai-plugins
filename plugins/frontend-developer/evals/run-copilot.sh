@@ -19,7 +19,7 @@ set -euo pipefail
 
 PROMPT="$1"
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
+REPO_ROOT="$(cd "$SCRIPT_DIR/../../.." && pwd)"
 FIXTURE_SOURCE="$REPO_ROOT/eval-fixture/hapi-frontend"
 
 COPILOT_MODEL="${COPILOT_MODEL:-claude-sonnet-4.5}"

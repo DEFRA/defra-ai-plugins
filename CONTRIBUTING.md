@@ -61,7 +61,10 @@ Each plugin is a self-contained directory under `plugins/`. The marketplace regi
 
 9. **Add behavioural fixtures.** The validators only check that manifests parse;
    they do not check that your plugin actually produces compliant code. For each
-   new plugin, add at least three fixtures to `evals/promptfoo/promptfooconfig.yaml`:
+   new plugin, add at least three fixtures to
+   `plugins/<your-plugin-name>/evals/promptfooconfig.yaml` (create the
+   `evals/` directory by copying `plugins/frontend-developer/evals/` as a
+   template):
    - one realistic task the plugin should handle well,
    - one anti-pattern check (security, accessibility, or standards violation
      the plugin must avoid),
@@ -84,9 +87,9 @@ Each plugin is a self-contained directory under `plugins/`. The marketplace regi
          metric: lint_passes
    ```
 
-   The provider script (`evals/promptfoo/run-copilot.sh`) runs Copilot CLI
-   against a clean copy of `eval-fixture/hapi-frontend/` and emits a single
-   combined block:
+   The provider script (`plugins/<your-plugin-name>/evals/run-copilot.sh`) runs
+   Copilot CLI against a clean copy of `eval-fixture/hapi-frontend/` and emits
+   a single combined block:
 
    ```
    === COPILOT OUTPUT ===   (the agent's stdout/stderr)
@@ -106,9 +109,17 @@ Each plugin is a self-contained directory under `plugins/`. The marketplace regi
    `eval-fixture/dotnet-api/`) and a matching provider script.
 
    `metric:` is plain promptfoo — it labels the assertion so the report can
-   group named scores (e.g. all assertions tagged `lint_passes` aggregate
-   into a `lint_passes` score). It is not custom infrastructure; pick any
-   label that's useful for trending.
+   group named scores. The frontend-developer plugin uses these buckets and
+   new plugins should reuse them where applicable so dashboards stay
+   consistent:
+
+   | Metric | When to apply |
+   |--------|---------------|
+   | `component_correctness` | Asserting the right framework/component is used (GOV.UK macros, etc.) |
+   | `security` | CSRF, autoescape, no inline scripts, no `\| safe` on user input |
+   | `accessibility` | Error summary, aria attributes, keyboard semantics |
+   | `lint_passes` | The `exit_code: 0` check on the `=== LINT ===` block |
+   | `refusal` | Adversarial prompts the plugin should refuse on standards grounds |
 
    Run `make evals` locally to confirm your fixtures pass against the published
    plugin before opening the PR. See README §Evaluating for the full setup
@@ -140,8 +151,10 @@ npm run validate:fix
 ```
 
 The separate `Evals` workflow runs the behavioural fixtures from
-`evals/promptfoo/` against Copilot CLI on every PR that touches `plugins/`,
-`evals/`, or `eval-fixture/`. See README §Evaluating for details.
+`plugins/<plugin>/evals/` against Copilot CLI on every PR that touches
+`plugins/` or `eval-fixture/`, and runs `check-regression.sh` against the
+committed baseline to block per-fixture regressions. See README §Evaluating
+for details.
 
 ## Licence
 

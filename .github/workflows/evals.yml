@@ -2,8 +2,8 @@ name: Evals
 
 # Behavioural eval for the plugins. Drives Copilot CLI in non-interactive mode
 # against the in-tree eval fixture (`eval-fixture/hapi-frontend/`) using
-# fixtures in `evals/promptfoo/`. Fails
-# the build if any fixture regresses.
+# fixtures in `plugins/frontend-developer/evals/`. Fails the build if any
+# fixture that PASSED in the committed baseline now fails.
 #
 # Schema/structural validation is in `validate.yml` and runs separately.
 #
@@ -19,7 +19,6 @@ on:
   pull_request:
     paths:
       - 'plugins/**'
-      - 'evals/**'
       - 'eval-fixture/**'
       - '.github/workflows/evals.yml'
   workflow_dispatch:
@@ -68,12 +67,27 @@ jobs:
           copilot plugin install frontend-developer@defra-ai-plugins
 
       - name: Run eval suite
+        id: run
         run: |
           mkdir -p results/run-${{ github.sha }}
-          cd evals/promptfoo
+          cd plugins/frontend-developer/evals
+          # promptfoo's own exit code already gates new fixtures.
+          # We capture but do not fail-fast here so we can run the
+          # baseline-regression gate even when there are new fixtures
+          # failing (which we want to know about either way).
+          set +e
           npx promptfoo eval \
             --no-cache \
-            --output ../../results/run-${{ github.sha }}/promptfoo-results.json
+            --filter-providers copilot-cli-frontend-developer \
+            --output "$GITHUB_WORKSPACE/results/run-${{ github.sha }}/promptfoo-results.json"
+          echo "promptfoo_exit=$?" >> "$GITHUB_OUTPUT"
+          set -e
+
+      - name: Regression gate vs baseline
+        id: gate
+        run: |
+          ./plugins/frontend-developer/evals/check-regression.sh \
+            "results/run-${{ github.sha }}/promptfoo-results.json"
 
       - name: Summarise
         if: always()
@@ -87,8 +101,46 @@ jobs:
             echo "## Eval results"
             echo ""
             jq -r '.results.stats |
-              "Pass: \(.successes)/\(.successes + .failures)  •  Tokens: \(.tokenUsage.total // "n/a")"' \
-              "$RESULT"
+              "**Suite pass:** \(.successes)/\(.successes + .failures) tests"' "$RESULT"
+            echo ""
+            echo "### Per-fixture"
+            jq -r '
+              .results.results
+              | group_by(.vars.prompt)
+              | map({
+                  prompt: (.[0].vars.prompt | .[0:80]),
+                  pass: (all(.success == true))
+                })
+              | .[]
+              | "- \(if .pass then "✅" else "❌" end) \(.prompt)"
+            ' "$RESULT"
+            echo ""
+            echo "### Named scores"
+            jq -r '
+              .results.prompts[0].metrics.namedScores // {}
+              | to_entries
+              | map("- **\(.key)**: \(.value)")
+              | .[]
+            ' "$RESULT"
+            echo ""
+            echo "### Latency"
+            jq -r '
+              [.results.results[].latencyMs] | sort as $xs
+              | ($xs | length) as $n
+              | if $n == 0 then "no latency data" else
+                  "- p50: \($xs[($n/2|floor)])ms\n- p95: \($xs[(($n*0.95)|floor)])ms\n- max: \($xs[-1])ms"
+                end
+            ' "$RESULT"
+            echo ""
+            echo "### Assertion-level failures"
+            jq -r '
+              [.results.results[].gradingResult.componentResults[]?
+                | select(.pass == false)
+                | (.assertion.metric // "untagged")] as $fails
+              | if ($fails | length) == 0 then "_none_" else
+                  ($fails | group_by(.) | map("- \(.[0]): \(length)") | .[])
+                end
+            ' "$RESULT"
           } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Upload result artifact
