@@ -53,6 +53,7 @@ Before writing, confirm:
 4. **Broader initiative** — what epic or project does this belong to?
 
 If still unclear, ask about:
+
 - The current "as is" process or pain point
 - Whether this is new functionality or an enhancement to something existing
 - Any regulatory, compliance, or policy considerations
@@ -67,11 +68,13 @@ Given: "Users need to be able to manage their notification preferences"
 **Background**: Users currently receive all system notifications with no ability to control frequency or type, leading to notification fatigue and missed critical alerts.
 
 **Story**:
+
 - **As a** registered user
 - **I want to** control which notifications I receive and how often
 - **so that** I only see alerts relevant to me and can avoid missing important updates
 
 **Acceptance Criteria**:
+
 - **AC1** - Users can view all available notification types on a preferences page
 - **AC2** - Users can enable or disable each notification type independently
 - **AC3** - Users can set frequency preferences (immediate, daily digest, weekly summary)

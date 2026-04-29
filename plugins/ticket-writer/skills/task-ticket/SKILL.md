@@ -50,6 +50,7 @@ Before writing, confirm:
 4. **Technical approach** — any specific patterns, frameworks, or architectural constraints?
 
 If still unclear, ask about:
+
 - The current technical state and pain points
 - Whether this builds new capability or enhances existing infrastructure
 - Integration points with other parts of the system
@@ -65,6 +66,7 @@ Given: "Set up automated database backups"
 **Background**: The production database currently has no automated backup process. A manual backup procedure exists but is unreliable and has caused data loss risk during incidents.
 
 **Acceptance Criteria**:
+
 - **AC1** - Automated daily backups run at a configurable scheduled time
 - **AC2** - Backups are stored in an off-site location with a minimum 30-day retention period
 - **AC3** - Backup success and failure events are logged and trigger alerts on failure
@@ -72,6 +74,7 @@ Given: "Set up automated database backups"
 - **AC5** - Backup age and storage usage are visible in the monitoring dashboard
 
 **Technical Notes**:
+
 - Use the existing cloud storage bucket for off-site retention
 - Encrypt backups at rest using the team's standard KMS key
 - Integrate backup alerts with the current on-call notification system

@@ -44,10 +44,10 @@ Then describe what you want to create. The agent will ask clarifying questions, 
 
 Default save locations:
 
-| Type | Path |
-|---|---|
+| Type  | Path                                    |
+| ----- | --------------------------------------- |
 | Story | `tickets/story/<feature-name>.story.md` |
-| Task | `tickets/task/<feature-name>.task.md` |
+| Task  | `tickets/task/<feature-name>.task.md`   |
 
 To use your own template, choose **custom** when prompted and supply a file path. The agent uses it for the rest of the session.
 
@@ -70,7 +70,7 @@ plugins/ticket-writer/skills/<your-skill-name>/
 
 ```yaml
 ---
-name: <your-skill-name>   # must match the directory name exactly
+name: <your-skill-name> # must match the directory name exactly
 description: <one sentence describing when to use this skill>
 license: OGL-UK-3.0
 ---
