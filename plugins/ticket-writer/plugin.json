@@ -1,0 +1,15 @@
+{
+  "$schema": "../../schemas/plugin.schema.json",
+  "name": "ticket-writer",
+  "description": "Creates well-structured JIRA tickets (stories and tasks) for any team. Ships default templates for user-facing stories and technical tasks, with support for custom templates at runtime.",
+  "version": "0.1.0",
+  "author": {
+    "name": "Defra",
+    "email": "AICapabilitiesEnablement@defra.gov.uk"
+  },
+  "license": "OGL-UK-3.0",
+  "homepage": "https://github.com/DEFRA/defra-ai-plugins/tree/main/plugins/ticket-writer",
+  "repository": "https://github.com/DEFRA/defra-ai-plugins",
+  "category": "productivity",
+  "keywords": ["jira", "tickets", "stories", "tasks", "agile", "planning"]
+}
