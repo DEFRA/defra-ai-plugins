@@ -34,9 +34,6 @@ jobs:
     env:
       COPILOT_GITHUB_TOKEN: ${{ secrets.COPILOT_GITHUB_TOKEN }}
       COPILOT_MODEL: gpt-5-mini
-      # Isolated config/plugin dir so the install in this job can't be
-      # served from a previous run's cache.
-      COPILOT_HOME: ${{ runner.temp }}/copilot-ci
     steps:
       - name: Check secret is configured
         run: |
@@ -45,6 +42,12 @@ jobs:
             echo "::error::See README §Evaluating for setup instructions."
             exit 1
           fi
+
+      - name: Set isolated COPILOT_HOME
+        # Isolated config/plugin dir so the install in this job can't be
+        # served from a previous run's cache. Set here (not in job-level
+        # `env`) because the `runner` context isn't available there.
+        run: echo "COPILOT_HOME=${RUNNER_TEMP}/copilot-ci" >> "$GITHUB_ENV"
 
       - name: Checkout
         uses: actions/checkout@v4
