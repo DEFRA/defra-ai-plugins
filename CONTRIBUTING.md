@@ -36,12 +36,14 @@ Each plugin is a self-contained directory under `plugins/`. The marketplace regi
 3. **Copy `plugins/frontend-developer/` as a template.** Rename the folder to `plugins/<your-plugin-name>/`.
 
 4. **Edit the manifest.** Update `plugins/<your-plugin-name>/plugin.json`:
+
    - `name` must match the directory name (kebab-case, ≤50 characters)
    - `description` is one sentence (≤500 characters)
    - `version` is `0.1.0` for a new plugin
    - `author`, `license` (`OGL-UK-3.0`), `homepage`, `repository`, `keywords`, `category` as appropriate
 
 5. **Edit the entry-point file.** Rename `agents/frontend-developer.agent.md` to match your plugin and rewrite the body. The validators support three entry-point formats — pick the one that matches your target CLI:
+
    - **Copilot custom agent** — `agents/<your-plugin-name>.agent.md`. Frontmatter must include `description` and a non-empty `tools` array.
    - **Claude Code agent** — `agents/<your-plugin-name>.md` (no `.agent` infix). Frontmatter must include `description`. `tools` is optional but, if present, must be an array of strings.
    - **Skill** (works for Claude Code, Codex, and Copilot CLI) — `skills/<your-plugin-name>/SKILL.md`. Frontmatter must include `name` (matching the parent directory) and `description`.

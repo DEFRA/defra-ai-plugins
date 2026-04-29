@@ -13,6 +13,12 @@
       "description": "Builds Defra-compliant frontends following the GOV.UK Design System, WCAG 2.2 AA, and Defra software development standards (Hapi + Nunjucks + SCSS + Vitest).",
       "version": "0.1.0",
       "source": "plugins/frontend-developer"
+    },
+    {
+      "name": "ticket-writer",
+      "description": "Creates well-structured JIRA tickets (stories and tasks) for any team. Ships default templates for user-facing stories and technical tasks, with support for custom templates at runtime.",
+      "version": "0.1.0",
+      "source": "plugins/ticket-writer"
     }
   ]
 }
