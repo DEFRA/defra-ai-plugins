@@ -5,3 +5,8 @@ plugins/*/agents/*.agent.md
 # Eval artefacts — frozen baseline + vendored fixture skeletons
 plugins/*/evals/baseline/
 plugins/*/eval-fixture/
+
+# Prettier 3.3.3 mangles nested numbered-list continuations and fenced
+# code blocks inside list items in this file. Re-evaluate when prettier
+# is upgraded.
+CONTRIBUTING.md
