@@ -43,20 +43,16 @@ source of truth for what's installable.
 
 4. **Edit the manifest.** Update `plugins/<your-plugin-name>/plugin.json`:
 
-   - `name` must match the directory name (kebab-case, ≤50 characters)    -
-   `description` is one sentence (≤500 characters)    - `version` is `0.1.0` for
-   a new plugin    - `author`, `license` (`OGL-UK-3.0`), `homepage`,
-   `repository`, `keywords`, `category` as appropriate
+   - `name` must match the directory name (kebab-case, ≤50 characters)
+   - `description` is one sentence (≤500 characters)
+   - `version` is `0.1.0` for a new plugin
+   - `author`, `license` (`OGL-UK-3.0`), `homepage`, `repository`, `keywords`, `category` as appropriate
 
 5. **Edit the entry-point file.** Rename `agents/frontend-developer.agent.md` to match your plugin and rewrite the body. The validators support three entry-point formats — pick the one that matches your target CLI:
 
-   - **Copilot custom agent** — `agents/<your-plugin-name>.agent.md`.
-   Frontmatter must include `description` and a non-empty `tools` array.    -
-   **Claude Code agent** — `agents/<your-plugin-name>.md` (no `.agent` infix).
-   Frontmatter must include `description`. `tools` is optional but, if present,
-   must be an array of strings.    - **Skill** (works for Claude Code, Codex,
-   and Copilot CLI) — `skills/<your-plugin-name>/SKILL.md`. Frontmatter must
-   include `name` (matching the parent directory) and `description`.
+   - **Copilot custom agent** — `agents/<your-plugin-name>.agent.md`. Frontmatter must include `description` and a non-empty `tools` array.
+   - **Claude Code agent** — `agents/<your-plugin-name>.md` (no `.agent` infix). Frontmatter must include `description`. `tools` is optional but, if present, must be an array of strings.
+   - **Skill** (works for Claude Code, Codex, and Copilot CLI) — `skills/<your-plugin-name>/SKILL.md`. Frontmatter must include `name` (matching the parent directory) and `description`.
 
 6. **Edit the plugin README.** Update `plugins/<your-plugin-name>/README.md` with what the plugin does, when to switch to it, and the install commands.
 
@@ -64,7 +60,10 @@ source of truth for what's installable.
 
 8. **Run the validators locally:**
 
-   ```sh    npm install     # first time only    npm test    ```
+   ```sh
+   npm install     # first time only
+   npm test
+   ```
 
    All checks must pass before opening a PR.
 
@@ -85,7 +84,8 @@ source of truth for what's installable.
 
    Fixture skeleton (each assertion gets a metric tag — see the table below):
 
-   ```yaml    - description: 'Short description of what this fixture exercises'
+   ```yaml
+   - description: 'Short description of what this fixture exercises'
      vars:
        prompt: 'The instruction the agent receives'
      assert:
@@ -104,36 +104,35 @@ source of truth for what's installable.
    Copilot CLI against a clean copy of
    `plugins/<your-plugin-name>/eval-fixture/` and emits a single combined block:
 
-   ```    === COPILOT OUTPUT ===   (the agent's stdout/stderr)    === NJK
-   TEMPLATES ===    (every src/views/**/*.njk after the run)    === JS ROUTES
-   ===        (every src/routes/**/*.js after the run)    === FILES CHANGED ===
-   (new vs modified, by md5 diff)    === LINT ===             (exit_code: 0 +
-   npm run lint output)    === TESTS ===            (exit_code: 0 + npm test
-   output)    ```
+   ```
+   === COPILOT OUTPUT ===   (the agent's stdout/stderr)
+   === NJK TEMPLATES ===    (every src/views/**/*.njk after the run)
+   === JS ROUTES ===        (every src/routes/**/*.js after the run)
+   === FILES CHANGED ===    (new vs modified, by md5 diff)
+   === LINT ===             (exit_code: 0 + npm run lint output)
+   === TESTS ===            (exit_code: 0 + npm test output)
+   ```
 
    `contains` / `not-contains` / `regex` / `icontains` match anywhere in this
    block. That's why `value: 'exit_code: 0'` checks lint — it's matching the
    string emitted under `=== LINT ===`. If your plugin targets paths outside
-   `src/views` and `src/routes`, edit `collect-and-report.sh` so the    relevant
-   files appear in the block. Plugins targeting non-Hapi stacks    should add
-   their own `plugins/<plugin-name>/eval-fixture/` skeleton and a    matching
-   provider script.
+   `src/views` and `src/routes`, edit `collect-and-report.sh` so the
+   relevant files appear in the block. Plugins targeting non-Hapi stacks
+   should add their own `plugins/<plugin-name>/eval-fixture/` skeleton and a
+   matching provider script.
 
    `metric:` is plain promptfoo — it labels the assertion so the report can
    group named scores. The frontend-developer plugin uses these buckets and
    new plugins should reuse them where applicable so dashboards stay
    consistent:
 
-   | Metric                  | When to apply
-   |    | ----------------------- |
-   --------------------------------------------------------------------- |    |
-   `component_correctness` | Asserting the right framework/component is used
-   (GOV.UK macros, etc.) |    | `security`              | CSRF, autoescape, no
-   inline scripts, no `\| safe` on user input       |    | `accessibility`
-   | Error summary, aria attributes, keyboard semantics                    |
-   | `lint_passes`           | The `exit_code: 0` check on the `=== LINT ===`
-   block                  |    | `refusal`               | Adversarial prompts
-   the plugin should refuse on standards grounds     |
+   | Metric                  | When to apply                                                         |
+   | ----------------------- | --------------------------------------------------------------------- |
+   | `component_correctness` | Asserting the right framework/component is used (GOV.UK macros, etc.) |
+   | `security`              | CSRF, autoescape, no inline scripts, no `\| safe` on user input       |
+   | `accessibility`         | Error summary, aria attributes, keyboard semantics                    |
+   | `lint_passes`           | The `exit_code: 0` check on the `=== LINT ===` block                  |
+   | `refusal`               | Adversarial prompts the plugin should refuse on standards grounds     |
 
    Run `make evals` locally to confirm your fixtures pass against the published
    plugin before opening the PR. See README §Evaluating for the full setup
@@ -141,9 +140,9 @@ source of truth for what's installable.
 
    To sanity-check that the same fixtures port to a second provider, run
    `make evals-claude` (Claude Code, requires `ANTHROPIC_API_KEY` and the
-   `claude` CLI). The Claude provider is local-only — there is no CI gate    or
-   committed baseline for it; it exists to demonstrate that the harness    is
-   portable across CLIs.
+   `claude` CLI). The Claude provider is local-only — there is no CI gate
+   or committed baseline for it; it exists to demonstrate that the harness
+   is portable across CLIs.
 
 10. **Open a pull request** using the PR template and fill in the checklist.
 
