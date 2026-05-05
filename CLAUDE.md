@@ -20,16 +20,15 @@ entry-point file (`agents/<name>.agent.md`, `agents/<name>.md`, or
 `skills/<name>/SKILL.md`). `hooks/`, `evals/`, and `eval-fixture/` are optional
 today.
 
-## Two CI workflows, distinct concerns
+## CI workflows
 
 - `validate.yml` — schema and structural checks (manifests parse,
   marketplace.json sorted, frontmatter shapes match the format). Fast,
   deterministic, runs on every PR.
-- `evals.yml` — behavioural eval. Runs the plugin against realistic prompts
-  and asserts on what it actually produces. Slow, LLM-driven, runs only when
-  `plugins/**` changes.
-
-The two are intentionally separate. Don't merge them.
+- `evals.yml` (forthcoming, separate PR) — behavioural eval. Drives Copilot
+  CLI in non-interactive mode against the committed baseline. Held back
+  until `COPILOT_GITHUB_TOKEN` is provisioned. The two workflows are
+  intentionally separate concerns — don't merge them when `evals.yml` lands.
 
 ## Eval harness conventions
 

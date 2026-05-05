@@ -169,10 +169,10 @@ To auto-fix sorting:
 npm run validate:fix
 ```
 
-The separate `Evals` workflow runs the behavioural fixtures from
-`plugins/<plugin>/evals/` against Copilot CLI on every PR that touches
-`plugins/`, and runs `check-regression.sh` against the committed baseline to
-block per-fixture regressions. See README §Evaluating for details.
+A separate `Evals` workflow that drives Copilot CLI against the committed
+baseline on every PR is forthcoming — it's blocked on provisioning a
+`COPILOT_GITHUB_TOKEN` repository secret. Until it lands, run the harness
+locally with `make evals`. See README §Evaluating for the local flow.
 
 ## Licence
 

@@ -1,7 +1,6 @@
 # defra-ai-plugins
 
 [![Validate](https://github.com/DEFRA/defra-ai-plugins/actions/workflows/validate.yml/badge.svg)](https://github.com/DEFRA/defra-ai-plugins/actions/workflows/validate.yml)
-[![Evals](https://github.com/DEFRA/defra-ai-plugins/actions/workflows/evals.yml/badge.svg)](https://github.com/DEFRA/defra-ai-plugins/actions/workflows/evals.yml)
 
 A marketplace of [GitHub Copilot
 CLI](https://docs.github.com/en/copilot/how-tos/copilot-cli/customize-copilot/plugins-finding-installing)
@@ -35,8 +34,7 @@ defra-ai-plugins/
 │   ├── plugin/
 │   │   └── marketplace.json          # Copilot CLI marketplace registry
 │   └── workflows/
-│       ├── validate.yml              # CI: runs validators on every PR
-│       └── evals.yml                 # CI: runs behavioural eval on every PR
+│       └── validate.yml              # CI: runs validators on every PR
 ├── schemas/
 │   ├── marketplace.schema.json       # JSON Schema for marketplace.json
 │   └── plugin.schema.json            # JSON Schema for plugin manifests
@@ -159,51 +157,12 @@ plugin, use `<your-plugin>:<your-agent>`.
 
 ### CI
 
-The [`Evals`](.github/workflows/evals.yml) workflow runs the Copilot CLI
-provider on every PR that touches `plugins/`, and on `workflow_dispatch`. It
-runs `check-regression.sh` against the committed baseline and fails the build if
-any fixture that previously passed now fails. The Claude provider is filtered
-out of CI by `--filter-providers copilot-cli-frontend-developer` — it's
-local-only.
-
-`check-regression.sh` matches tests by `vars.prompt`, treats a test as passing
-only if **every** provider that ran it passed, and exits non-zero on any
-baseline-passing test that now fails. New tests added since the baseline are not
-retroactively gated — promptfoo's own exit code already fails the run on any
-fixture failure, so new fixtures are gated from their first appearance. The
-result JSON is uploaded as an artifact, and the GitHub Actions step summary
-publishes per-fixture pass/fail, named scores per quality dimension
-(component_correctness, security, accessibility, lint_passes, refusal),
-assertion-level failure counts, and latency p50/p95/max.
-
-CI requires a repository secret named `COPILOT_GITHUB_TOKEN` containing a
-fine-grained personal access token (or GitHub App token) with the **Copilot
-Requests** permission. This is distinct from the built-in `GITHUB_TOKEN`. To
-create one:
-
-1. Go to **Settings → Developer settings → Personal access tokens →
-   Fine-grained tokens** ([direct
-   link](https://github.com/settings/personal-access-tokens)).
-2. Click **Generate new token**, set a name and expiry, and choose the
-   resource owner that has the Copilot subscription.
-3. Under **Account permissions**, find **Copilot Requests** and set it to
-   **Read and write**. (Account-level, not repository-level — easy to miss.)
-4. Save the token and add it to this repo as `COPILOT_GITHUB_TOKEN` under
-   **Settings → Secrets and variables → Actions**.
-
-See [GitHub's "Automate Copilot CLI with Actions"
-guide](https://docs.github.com/en/copilot/how-tos/copilot-cli/automate-copilot-cli/automate-with-actions)
-for the full reference.
-
-The token has a per-account premium-request budget — at `PR cadence × fixtures ×
-repeats`, that budget is the rate-limit ceiling. Watch for it if eval volume
-increases.
-
-CI installs the plugin from the PR checkout (`copilot plugin install
-./plugins/frontend-developer`), so behavioural changes on the branch are
-exercised before merge. `COPILOT_HOME` is pinned to a per-job temp dir to
-prevent any cross-run plugin cache reuse. Once `Evals` is added as a required
-status check in branch protection, regressions block merge automatically.
+CI automation for the eval harness is forthcoming — it depends on a
+`COPILOT_GITHUB_TOKEN` repository secret (a fine-grained PAT with the
+**Copilot Requests** permission) which has not yet been provisioned. The
+workflow definition, baseline regression gate, token-setup instructions, and
+GitHub Actions step-summary reporting will land in a follow-up PR. Until
+then, run the harness locally with `make evals` (see above).
 
 ## Contributing
 
