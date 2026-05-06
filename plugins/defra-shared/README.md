@@ -39,9 +39,11 @@ copilot plugin marketplace add DEFRA/defra-ai-plugins
 copilot plugin install defra-shared@defra-ai-plugins
 ```
 
-```sh
-claude plugin marketplace add DEFRA/defra-ai-plugins
-claude plugin install defra-shared@defra-ai-plugins
+For Claude Code, run these inside an interactive session (they are slash commands, not shell commands):
+
+```text
+/plugin marketplace add DEFRA/defra-ai-plugins
+/plugin install defra-shared@defra-ai-plugins
 ```
 
 From a local checkout (for development):
