@@ -1,0 +1,184 @@
+# Eval harness for the defra-shared plugin.
+#
+# This plugin ships **no agent** — its surface area is five SKILL.md files
+# plus a hooks.json. The eval suite therefore drives the *hooks* end-to-end
+# against the eval-fixture, asserting that:
+#
+#   - blocking guardrails (branch-guard, commit-message-format, secret-scan)
+#     refuse the planted anti-pattern with exit_code 2 and a stderr message;
+#   - async warnings (pii-scan, coverage-floor) report the planted issue
+#     without blocking;
+#   - skills are present on disk (correctness — skills-correctly-loaded);
+#   - the combined report contains no PII / secret patterns leaked back
+#     into stdout (security);
+#   - accessibility-relevant skill content is loaded and discoverable.
+#
+# Run: npx promptfoo eval
+# Filter to one provider: npx promptfoo eval --filter-providers copilot-cli-defra-shared
+#
+# Metric names follow ../docs/design/eval_taxonomy.md:
+#   correctness, security, lint_passes, accessibility, refusal.
+
+description: defra-shared plugin eval
+
+providers:
+  - id: exec:./run-copilot.sh
+    label: copilot-cli-defra-shared
+  - id: exec:./run-claude.sh
+    label: claude-code-defra-shared
+
+prompts:
+  - '{{prompt}}'
+
+# All test cases share one provider invocation per provider — the run-*.sh
+# scripts produce a single combined report that every assertion below
+# matches against. This is the same pattern as frontend-developer.
+
+tests:
+  # --- correctness: skills + hooks are loaded and discoverable -----------
+  - description: 'correctness — all five shared skills load'
+    vars:
+      prompt: 'defra-shared eval'
+    assert:
+      - type: contains
+        value: 'skills/defra-branching/SKILL.md'
+        metric: correctness
+      - type: contains
+        value: 'skills/defra-commit-messages/SKILL.md'
+        metric: correctness
+      - type: contains
+        value: 'skills/defra-quality-gates/SKILL.md'
+        metric: correctness
+      - type: contains
+        value: 'skills/defra-security-pii/SKILL.md'
+        metric: correctness
+      - type: contains
+        value: 'skills/defra-accessibility/SKILL.md'
+        metric: correctness
+
+  - description: 'correctness — all five hooks defined in catalogue'
+    vars:
+      prompt: 'defra-shared eval'
+    assert:
+      - type: contains
+        value: 'branch-guard'
+        metric: correctness
+      - type: contains
+        value: 'commit-message-format'
+        metric: correctness
+      - type: contains
+        value: 'secret-scan'
+        metric: correctness
+      - type: contains
+        value: 'pii-scan'
+        metric: correctness
+      - type: contains
+        value: 'coverage-floor'
+        metric: correctness
+
+  # --- refusal: blocking guardrails fire on anti-patterns ----------------
+  - description: 'refusal — branch-guard blocks commit on main'
+    vars:
+      prompt: 'defra-shared eval'
+    assert:
+      - type: contains
+        value: 'HOOK RUN branch-guard main+commit'
+        metric: refusal
+      - type: regex
+        value: 'branch-guard:.*not allowed'
+        metric: refusal
+
+  - description: 'refusal — commit-message-format blocks WIP subject'
+    vars:
+      prompt: 'defra-shared eval'
+    assert:
+      - type: contains
+        value: 'HOOK RUN commit-message-format WIP'
+        metric: refusal
+      - type: regex
+        value: 'commit-message-format:.*does not match Conventional Commits'
+        metric: refusal
+
+  - description: 'refusal — commit-message-format permits a conforming subject'
+    vars:
+      prompt: 'defra-shared eval'
+    assert:
+      - type: contains
+        value: 'HOOK RUN commit-message-format valid-feat'
+        metric: refusal
+      # The valid-feat case must NOT have produced a stderr complaint.
+      - type: not-contains
+        value: "subject 'feat(api): add endpoint' does not match"
+        metric: refusal
+
+  # --- security: secret-scan + pii-scan ----------------------------------
+  - description: 'security — secret-scan blocks a planted AWS access key'
+    vars:
+      prompt: 'defra-shared eval'
+    assert:
+      - type: contains
+        value: 'HOOK RUN secret-scan AWS-key'
+        metric: security
+      - type: regex
+        value: 'secret-scan:.*AWS access key id'
+        metric: security
+      # The combined report must not echo a real-looking secret back unredacted.
+      # The fixture's planted key contains 'EXAMPLE' as its tail — make sure
+      # nothing lacking 'EXAMPLE' but matching AKIA[0-9A-Z]{16} appears.
+      - type: not-contains
+        value: 'AKIAREALSECRETXXXX'
+        metric: security
+
+  - description: 'security — pii-scan warns on planted UK PII'
+    vars:
+      prompt: 'defra-shared eval'
+    assert:
+      - type: contains
+        value: 'HOOK RUN pii-scan planted-pii'
+        metric: security
+      - type: regex
+        value: 'pii-scan:.*UK-NI-number'
+        metric: security
+      - type: regex
+        value: 'pii-scan:.*UK-postcode'
+        metric: security
+
+  # --- lint_passes: hooks.json is valid JSON, plugin.json validates ------
+  # The hooks-defined section enumerates statusMessages parsed by jq from
+  # hooks.json — if jq couldn't parse it, this assertion would fail.
+  - description: 'lint_passes — hooks.json parses as valid JSON'
+    vars:
+      prompt: 'defra-shared eval'
+    assert:
+      - type: contains
+        value: 'HOOKS DEFINED'
+        metric: lint_passes
+      - type: contains
+        value: 'branch-guard: checking git branch'
+        metric: lint_passes
+
+  # --- accessibility: skill content is loaded ----------------------------
+  # The defra-shared plugin doesn't generate UI; "accessibility" for it
+  # means: the accessibility skill ships and is discoverable so role
+  # plugins can reference it.
+  - description: 'accessibility — defra-accessibility skill is shipped'
+    vars:
+      prompt: 'defra-shared eval'
+    assert:
+      - type: contains
+        value: 'skills/defra-accessibility/SKILL.md'
+        metric: accessibility
+
+  # --- coverage-floor warning is observed (correctness:hooks) -----------
+  - description: 'correctness — coverage-floor warns below threshold'
+    vars:
+      prompt: 'defra-shared eval'
+    assert:
+      - type: contains
+        value: 'HOOK RUN coverage-floor low-coverage'
+        metric: correctness
+      - type: regex
+        value: 'coverage-floor:.*below the 80% threshold'
+        metric: correctness
+
+outputPath: ./output.json
