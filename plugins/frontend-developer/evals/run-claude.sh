@@ -11,7 +11,7 @@
 #   - The frontend-developer plugin installed:
 #       claude plugin marketplace add DEFRA/defra-ai-plugins
 #       claude plugin install frontend-developer@defra-ai-plugins
-#   - Eval-fixture dependencies installed (`make fixture-install`)
+#   - Eval-fixture dependencies installed (`make frontend-fixture-install`)
 #
 # Pin the model to keep results comparable across runs.
 # Override with CLAUDE_MODEL=<id> for local experimentation.

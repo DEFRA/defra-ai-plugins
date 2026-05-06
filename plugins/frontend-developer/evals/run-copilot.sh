@@ -10,7 +10,7 @@
 #   - The frontend-developer plugin installed:
 #       copilot plugin marketplace add DEFRA/defra-ai-plugins
 #       copilot plugin install frontend-developer@defra-ai-plugins
-#   - Eval-fixture dependencies installed (`make fixture-install`)
+#   - Eval-fixture dependencies installed (`make frontend-fixture-install`)
 #
 # Pin the model to keep results comparable across runs.
 # Override with COPILOT_MODEL=<id> for local experimentation.

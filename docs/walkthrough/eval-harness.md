@@ -128,8 +128,8 @@ PR checkout so behavioural changes are gated before merge.
     → only then is the gate a hard merge block
 
   Local equivalent:
-    make evals          → same path, Copilot only
-    make evals-claude   → swaps run-copilot.sh for run-claude.sh
+    make frontend-evals          → same path, Copilot only
+    make frontend-evals-claude   → swaps run-copilot.sh for run-claude.sh
                           (no CI, no baseline — portability demo only)
 ```
 
@@ -146,11 +146,13 @@ between releases of the plugin, the CLI, and the model behind it.
 
 ## 2. One command, one entry point
 
-`make evals` is the front door. Everything downstream is wired through the Makefile.
+`make frontend-evals` is the front door. Everything downstream is wired through the Makefile.
 
 ```makefile
 # Makefile (extracts)
-.PHONY: evals evals-claude evals-view fixture-install fixture-test fixture-lint clean
+.PHONY: frontend-evals frontend-evals-claude frontend-evals-view \
+        frontend-fixture-install frontend-fixture-test frontend-fixture-lint \
+        frontend-clean
 
 RESULTS_DIR := results/run-$(shell date +%Y-%m-%d)
 EVAL_DIR := plugins/frontend-developer/evals
@@ -158,16 +160,16 @@ FIXTURE_DIR := plugins/frontend-developer/eval-fixture
 
 # Install eval-fixture dependencies (the provider script copies the fixture
 # into a temp dir, so node_modules must exist in the source).
-fixture-install:
+frontend-fixture-install:
 	cd $(FIXTURE_DIR) && npm install
 
-evals: fixture-install
+frontend-evals: frontend-fixture-install
 	mkdir -p $(RESULTS_DIR)
 	cd $(EVAL_DIR) && npx promptfoo eval --no-cache
 	cp $(EVAL_DIR)/output.json $(RESULTS_DIR)/promptfoo-results.json
 ```
 
-The `fixture-install` dependency is the load-bearing detail. The provider script
+The `frontend-fixture-install` dependency is the load-bearing detail. The provider script
 (next section) creates a temp working copy of the eval fixture for _every_ test
 case. If `node_modules/` doesn't exist in the source, the agent's eventual `npm
 run lint`/`npm test` calls inside that temp copy will fail for the wrong reason.
@@ -500,7 +502,7 @@ Copilot CLI has a default model that changes over time. If we let the eval
 inherit the default, a regression could mean any of: the plugin changed, the CLI
 changed, or the model changed. By pinning, _anything_ that moves pass-rates is
 attributable to one of the things we control — the plugin or the fixture. The
-override (`COPILOT_MODEL=claude-opus-4 make evals`) is for ad-hoc experiments;
+override (`COPILOT_MODEL=claude-opus-4 make frontend-evals`) is for ad-hoc experiments;
 the committed value is the one the baseline corresponds to.
 
 When the team deliberately moves the pin (for example, when Sonnet 5 ships and
@@ -511,7 +513,7 @@ the unit of measurement.
 
 ## 10. CI vs local
 
-`make evals` is local-first. CI runs the same harness against the PR's checkout:
+`make frontend-evals` is local-first. CI runs the same harness against the PR's checkout:
 
 ```yaml
 # .github/workflows/evals.yml
@@ -594,7 +596,7 @@ aligned with the change that caused it.
   fixture is read-only as far as the agent is concerned.
 - The model is pinned. Drift in pass-rate must be attributable to the plugin or
   the fixtures, not the model.
-- Local `make evals` and the PR workflow both exercise the branch's plugin via
+- Local `make frontend-evals` and the PR workflow both exercise the branch's plugin via
   `copilot plugin install ./plugins/frontend-developer` against an isolated
   `COPILOT_HOME`. The remaining step to make this a hard merge gate is adding
   the workflow as a required status check in branch protection.

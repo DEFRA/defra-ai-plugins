@@ -40,7 +40,7 @@ When the pinned model is updated, or after a deliberate change to the plugin's
 expected behaviour:
 
 ```sh
-make evals
+make frontend-evals
 cp results/run-$(date +%Y-%m-%d)/promptfoo-results.json \
    plugins/frontend-developer/evals/baseline/promptfoo-results.json
 # update the provenance table above with the new date and model

@@ -10,7 +10,7 @@ standards so Copilot produces compliant code by default.
 
 > Primary target is GitHub Copilot CLI. The eval harness includes a
 > demonstration that the same fixtures run unchanged against Claude Code
-> (`make evals-claude`); cross-CLI plugin distribution is a future
+> (`make frontend-evals-claude`); cross-CLI plugin distribution is a future
 > iteration.
 
 ## Add this marketplace
@@ -104,7 +104,7 @@ follow the same `plugins/<plugin-name>/eval-fixture/` skeleton +
 `plugins/<plugin-name>/evals/` fixture set layout.
 
 A second provider, Claude Code, is wired up locally as a demonstration that the
-same fixtures port across CLIs unchanged (`make evals-claude`). It is **not**
+same fixtures port across CLIs unchanged (`make frontend-evals-claude`). It is **not**
 part of the CI gate — Copilot CLI is the only provider with a committed baseline
 and a regression gate.
 
@@ -121,10 +121,10 @@ copilot plugin install frontend-developer@defra-ai-plugins
 Then:
 
 ```sh
-make evals
+make frontend-evals
 ```
 
-Results land in `results/run-YYYY-MM-DD/promptfoo-results.json`. `make evals`
+Results land in `results/run-YYYY-MM-DD/promptfoo-results.json`. `make frontend-evals`
 also runs `check-regression.sh`, which compares against
 `plugins/frontend-developer/evals/baseline/promptfoo-results.json` and exits
 non-zero on any per-fixture regression.
@@ -133,20 +133,20 @@ To run the same suite against Claude Code instead (requires `ANTHROPIC_API_KEY`
 and `claude` CLI installed):
 
 ```sh
-make evals-claude
+make frontend-evals-claude
 ```
 
 To browse results in a UI:
 
 ```sh
-make evals-view
+make frontend-evals-view
 ```
 
 The default model is pinned in `plugins/frontend-developer/evals/run-copilot.sh`
 (`COPILOT_MODEL=gpt-5-mini`). Override for ad-hoc experiments:
 
 ```sh
-COPILOT_MODEL=gpt-5 make evals
+COPILOT_MODEL=gpt-5 make frontend-evals
 ```
 
 Inside the provider script, the agent is invoked as `copilot --agent
@@ -162,7 +162,7 @@ CI automation for the eval harness is forthcoming — it depends on a
 **Copilot Requests** permission) which has not yet been provisioned. The
 workflow definition, baseline regression gate, token-setup instructions, and
 GitHub Actions step-summary reporting will land in a follow-up PR. Until
-then, run the harness locally with `make evals` (see above).
+then, run the harness locally with `make frontend-evals` (see above).
 
 ## Contributing
 
