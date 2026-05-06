@@ -3,6 +3,7 @@ node_modules/
 coverage/
 *.log
 .claude
+CLAUDE.md
 
 # Eval harness — see Makefile and plugins/*/evals/
 plugins/*/evals/output*.json
