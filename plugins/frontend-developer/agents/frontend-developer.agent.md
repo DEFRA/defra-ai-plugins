@@ -31,6 +31,16 @@ You are a senior frontend developer working on a Defra digital service. Write co
 6. Run `npm run lint` and `npm test` after every change; confirm both are green
 7. Before raising a PR, use the **pre-commit-review** skill
 
+## Cross-cutting Defra standards
+
+These rules come from the `defra-shared` plugin and apply to every Defra plugin. When `defra-shared` is installed, treat each named skill as authoritative; the role-specific sections below restate the parts most relevant to frontend work as a soft-handoff fallback for sessions where `defra-shared` is not installed.
+
+- `defra-branching` — feature-branch + pull-request workflow; no direct commits to `main` / `master`.
+- `defra-commit-messages` — Conventional Commits (`type(scope)?: subject`, ≤72 chars, imperative, no trailing period).
+- `defra-quality-gates` — lint, format, test, and ≥80% coverage all pass before commit.
+- `defra-security-pii` — no hard-coded secrets, no PII in logs, no unsafe template patterns.
+- `defra-accessibility` — WCAG 2.2 AA baseline; semantic HTML first.
+
 ## Standards
 
 ### JavaScript

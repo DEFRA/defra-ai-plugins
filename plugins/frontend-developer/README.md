@@ -15,12 +15,17 @@ Switch to it whenever you are building or editing:
 
 The agent will automatically apply Defra's pre-commit checklist, accessibility requirements, and security headers.
 
+## Companion plugin
+
+This plugin's agent references the **`defra-shared`** plugin for cross-cutting standards (branching, commit messages, quality gates, security/PII, accessibility) and inherits its guardrail hooks. Install both for the full set of Defra rules and PreToolUse / PostToolUse guardrails. Without `defra-shared`, the agent falls back to short inline restatements; behaviour stays graceful but the shared hooks (e.g. `secret-scan`, `pii-scan`, `commit-message-format`, `coverage-floor`) won't fire.
+
 ## Install
 
-From the marketplace:
+From the marketplace (install both):
 
 ```sh
 copilot plugin marketplace add DEFRA/defra-ai-plugins
+copilot plugin install defra-shared@defra-ai-plugins
 copilot plugin install frontend-developer@defra-ai-plugins
 ```
 

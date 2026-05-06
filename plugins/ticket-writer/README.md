@@ -11,12 +11,17 @@ A custom agent (**`ticket-writer`**) backed by two skills:
 
 At the start of every session the agent lists the available skills and asks whether to use the built-in default templates or a custom template file you provide.
 
+## Companion plugin
+
+This plugin's agent references the **`defra-shared`** plugin for cross-cutting standards (branching, commit messages, security/PII, documentation accessibility) and inherits its guardrail hooks. Install both for the full set of Defra rules and PreToolUse / PostToolUse guardrails. Without `defra-shared`, the agent falls back to short inline restatements; behaviour stays graceful but the shared hooks (e.g. `pii-scan`, `commit-message-format`, `branch-guard`) won't fire when the agent saves or commits ticket files.
+
 ## Install
 
-From the marketplace:
+From the marketplace (install both):
 
 ```sh
 copilot plugin marketplace add DEFRA/defra-ai-plugins
+copilot plugin install defra-shared@defra-ai-plugins
 copilot plugin install ticket-writer@defra-ai-plugins
 ```
 
