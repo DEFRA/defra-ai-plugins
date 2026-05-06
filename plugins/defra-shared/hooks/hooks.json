@@ -1,0 +1,63 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "CMD=$(cat | jq -r '.tool_input.command // empty'); if echo \"$CMD\" | grep -qE '^[[:space:]]*git[[:space:]]+(commit|push)\\b'; then BRANCH=$(cd \"$CLAUDE_PROJECT_DIR\" 2>/dev/null && git rev-parse --abbrev-ref HEAD 2>/dev/null); if [[ \"$BRANCH\" == 'main' || \"$BRANCH\" == 'master' ]]; then echo \"branch-guard: direct commits and pushes to '$BRANCH' are not allowed. Create a feature branch first (e.g. feature/my-change). See skill defra-branching.\" >&2; exit 2; fi; fi; exit 0",
+            "statusMessage": "branch-guard: checking git branch...",
+            "async": false
+          }
+        ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "CMD=$(cat | jq -r '.tool_input.command // empty'); if echo \"$CMD\" | grep -qE '^[[:space:]]*git[[:space:]]+commit\\b.*-m'; then MSG=$(echo \"$CMD\" | sed -nE \"s/.*-m[[:space:]]+(\\\"([^\\\"]*)\\\"|'([^']*)'|([^[:space:]]+)).*/\\2\\3\\4/p\"); if [[ -z \"$MSG\" ]]; then echo \"commit-message-format: could not parse commit subject from -m argument.\" >&2; exit 2; fi; SUBJECT=$(printf '%s' \"$MSG\" | head -n1); if ! echo \"$SUBJECT\" | grep -qE '^(feat|fix|chore|docs|refactor|test|build|ci|perf|style|revert)(\\([a-z0-9-]+\\))?(!)?: [^[:space:]].{0,70}[^.[:space:]]$'; then echo \"commit-message-format: subject '$SUBJECT' does not match Conventional Commits (type(scope)?: subject, ≤72 chars, no trailing period). See skill defra-commit-messages.\" >&2; exit 2; fi; fi; exit 0",
+            "statusMessage": "commit-message-format: validating commit subject...",
+            "async": false
+          }
+        ]
+      },
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "INPUT=$(cat); FILE=$(echo \"$INPUT\" | jq -r '.tool_input.file_path // empty'); CONTENT=$(echo \"$INPUT\" | jq -r '.tool_input.content // .tool_input.new_string // empty'); SCAN_TARGET=$(mktemp); printf '%s' \"$CONTENT\" > \"$SCAN_TARGET\"; HIT=''; if grep -qE 'AKIA[0-9A-Z]{16}' \"$SCAN_TARGET\"; then HIT='AWS access key id'; fi; if [[ -z \"$HIT\" ]] && grep -qE -e '-----BEGIN ((RSA|EC|DSA|OPENSSH|PGP) )?PRIVATE KEY' \"$SCAN_TARGET\"; then HIT='private key block'; fi; if [[ -z \"$HIT\" ]] && grep -qiE '(api[_-]?key|secret|password|token|bearer)[[:space:]]*[:=][[:space:]]*[\"'\\''][A-Za-z0-9_\\-]{16,}[\"'\\'']' \"$SCAN_TARGET\"; then HIT='hard-coded credential'; fi; if [[ -z \"$HIT\" ]] && grep -qE 'gh[ps]_[A-Za-z0-9]{30,}' \"$SCAN_TARGET\"; then HIT='GitHub token'; fi; if [[ -z \"$HIT\" ]] && grep -qE 'xox[abpr]-[A-Za-z0-9-]{10,}' \"$SCAN_TARGET\"; then HIT='Slack token'; fi; rm -f \"$SCAN_TARGET\"; if [[ -n \"$HIT\" ]]; then echo \"secret-scan: $HIT detected in change to $(basename \"$FILE\"). Move the secret to an environment variable or the platform secret manager. See skill defra-security-pii.\" >&2; exit 2; fi; exit 0",
+            "statusMessage": "secret-scan: scanning for hard-coded secrets...",
+            "async": false
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "INPUT=$(cat); FILE=$(echo \"$INPUT\" | jq -r '.tool_input.file_path // empty'); if [[ -z \"$FILE\" || ! -f \"$FILE\" ]]; then exit 0; fi; case \"$FILE\" in *.lock|*lock.json|*.snap|eval-fixture/fixtures/*) exit 0;; esac; HITS=''; if grep -qE '\\b[A-CEGHJ-PR-TW-Z]{2}[0-9]{6}[A-D]\\b' \"$FILE\"; then HITS=\"$HITS UK-NI-number\"; fi; if grep -qE '\\b[0-9]{3}[ -]?[0-9]{3}[ -]?[0-9]{4}\\b' \"$FILE\"; then HITS=\"$HITS NHS-number-shape\"; fi; if grep -qE '\\b[A-Z]{1,2}[0-9R][0-9A-Z]?[ ]?[0-9][ABD-HJLNP-UW-Z]{2}\\b' \"$FILE\"; then HITS=\"$HITS UK-postcode\"; fi; if grep -qE '\\b(0[1-9]|[12][0-9]|3[01])[/-](0[1-9]|1[0-2])[/-](19|20)[0-9]{2}\\b' \"$FILE\"; then HITS=\"$HITS DoB\"; fi; if [[ -n \"$HITS\" ]]; then echo \"pii-scan: possible PII in $(basename \"$FILE\"):$HITS. Review and redact before logging or persisting. See skill defra-security-pii.\" >&2; fi; exit 0",
+            "statusMessage": "pii-scan: scanning for PII patterns...",
+            "async": true
+          }
+        ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "INPUT=$(cat); CMD=$(echo \"$INPUT\" | jq -r '.tool_input.command // empty'); OUTPUT=$(echo \"$INPUT\" | jq -r '.tool_response.stdout // .tool_response.output // empty'); if ! echo \"$CMD\" | grep -qE '\\b(test|vitest|jest|pytest|dotnet test)\\b'; then exit 0; fi; THRESHOLD=${COVERAGE_FLOOR:-80}; PCT=$(echo \"$OUTPUT\" | grep -oE '([0-9]+(\\.[0-9]+)?)[[:space:]]*%' | head -n1 | grep -oE '[0-9]+(\\.[0-9]+)?' | head -n1); if [[ -z \"$PCT\" ]]; then PCT=$(echo \"$OUTPUT\" | grep -iE '^[[:space:]]*(All files|TOTAL)' | grep -oE '[0-9]+\\.[0-9]+|[0-9]{2,}' | head -n1); fi; if [[ -z \"$PCT\" ]]; then exit 0; fi; INT=${PCT%%.*}; if [[ \"$INT\" -lt \"$THRESHOLD\" ]]; then echo \"coverage-floor: coverage ${PCT}% is below the ${THRESHOLD}% threshold. Add tests for the changed files before merging. See skill defra-quality-gates.\" >&2; fi; exit 0",
+            "statusMessage": "coverage-floor: checking coverage threshold...",
+            "async": true
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,8 @@
+# scripts/extract-hooks.sh writes hook command bodies here on first run.
+# These are deterministic copies of hooks/hooks.json — the hooks.json file
+# is the source of truth, so don't track the extracted copies.
+hooks-under-test/
+
+# scripts/init-git.sh stages the fixture into a tmp dir, but defensive in
+# case anyone runs `git init` in this directory directly.
+.git/
