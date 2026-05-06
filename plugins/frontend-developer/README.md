@@ -23,11 +23,11 @@ This plugin's agent references the **`defra-shared`** plugin for cross-cutting s
 
 The PostToolUse hooks in this plugin call the **target project's** npm scripts after edits to JS, SCSS, and Nunjucks files. If the target project uses different script names, the hooks silently no-op — they don't fail loudly. Make sure your `package.json` defines:
 
-| Script            | When it runs                                  |
-| ----------------- | --------------------------------------------- |
-| `npm run lint`    | After `Edit`/`Write` on `*.js` / `*.mjs` (`-- --fix <file>`). |
-| `npm run format:fix` | Same trigger as above (`-- <file>`).      |
-| `npm run build`   | After `Edit`/`Write` on `*.scss`.             |
+| Script               | When it runs                                                  |
+| -------------------- | ------------------------------------------------------------- |
+| `npm run lint`       | After `Edit`/`Write` on `*.js` / `*.mjs` (`-- --fix <file>`). |
+| `npm run format:fix` | Same trigger as above (`-- <file>`).                          |
+| `npm run build`      | After `Edit`/`Write` on `*.scss`.                             |
 
 If your project uses `lint:fix`, `prettier`, `compile`, or similar, either rename your scripts or fork `hooks/hooks.json` for your project.
 
