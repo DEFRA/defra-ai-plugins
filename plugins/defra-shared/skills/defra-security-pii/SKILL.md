@@ -82,7 +82,7 @@ Agent response:
 >     route: request.path,
 >     method: request.method,
 >     fields: Object.keys(request.payload ?? {}), // shape only, not values
->     userId: request.auth?.credentials?.userId   // identifier, not PII
+>     userId: request.auth?.credentials?.userId // identifier, not PII
 >   },
 >   'registration form submitted'
 > )

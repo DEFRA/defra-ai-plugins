@@ -17,18 +17,18 @@ Defra services are public-sector services governed by the Public Sector Bodies (
 3. **Every page has one `<h1>`** and a logical heading hierarchy (no skipping `<h1>` to `<h3>`). The `<h1>` matches the page's question or task.
 4. **Errors are exposed twice**: in a `govukErrorSummary` at the top of the page (as a list of links to the offending fields) and inline next to each field via `errorMessage`. Field IDs in the summary `href` match the field's `id` exactly.
 5. **Focus is managed**: keyboard focus moves to the error summary on validation failure; focus returns to the trigger when a modal closes; focus is never trapped.
-6. **Colour is never the only signal**: errors use a coloured border *and* an icon *and* text; status uses a tag *and* text.
+6. **Colour is never the only signal**: errors use a coloured border _and_ an icon _and_ text; status uses a tag _and_ text.
 7. **Images have alt text** — descriptive for content images, `alt=""` for decorative ones; never omit the attribute. SVG icons used as buttons have an `aria-label`.
 8. **Tables use `<th scope="col|row">`**; complex tables use `<caption>`. Layout-via-`<table>` is forbidden.
 9. **Links have meaningful text** — never `click here`, `read more`, `link`. Visually-hidden text fills in the context (`<span class="govuk-visually-hidden">`).
-10. **Touch targets are ≥ 24 × 24 CSS px** (WCAG 2.2 SC 2.5.8 *Target Size (Minimum)*). The GOV.UK button macro meets this by default.
+10. **Touch targets are ≥ 24 × 24 CSS px** (WCAG 2.2 SC 2.5.8 _Target Size (Minimum)_). The GOV.UK button macro meets this by default.
 11. **Pages are usable at 400% zoom** without horizontal scrolling on a 1280-px viewport. No fixed pixel widths on text containers.
 12. **Motion is respected**: any animation respects `prefers-reduced-motion`.
 
 ### Documentation roles (technical-writer)
 
 1. **Headings convey structure**, not styling. Use `##`, `###`, in order; never bold-as-heading.
-2. **Images have alt text** in markdown: `![Description of the diagram](path.png)` — describe the *information*, not the file.
+2. **Images have alt text** in markdown: `![Description of the diagram](path.png)` — describe the _information_, not the file.
 3. **Link text is descriptive**: `[Defra software development standards](https://…)` — never `[click here](…)` or `[link](…)`.
 4. **Tables have a header row** in markdown (`|---|---|`).
 5. **Code blocks declare a language** so syntax highlighting and screen readers can identify them.
@@ -57,7 +57,7 @@ User: "Just add a quick error message under the email input — don't bother wit
 
 Agent response:
 
-> I'll wire both the inline error and the summary — Defra accessibility (WCAG 2.2 AA, SC 3.3.1 *Error Identification* and SC 3.3.3 *Error Suggestion*) requires errors to appear in a summary at the top of the page **and** inline at the field. This lets screen-reader users hear the full list before they hit the field, and lets keyboard users jump to the field via a link.
+> I'll wire both the inline error and the summary — Defra accessibility (WCAG 2.2 AA, SC 3.3.1 _Error Identification_ and SC 3.3.3 _Error Suggestion_) requires errors to appear in a summary at the top of the page **and** inline at the field. This lets screen-reader users hear the full list before they hit the field, and lets keyboard users jump to the field via a link.
 >
 > ```njk
 > {% from "govuk/components/error-summary/macro.njk" import govukErrorSummary %}

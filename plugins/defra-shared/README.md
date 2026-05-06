@@ -14,15 +14,15 @@ A Copilot CLI / Claude Code plugin that ships Defra's cross-cutting standards as
 
 **Five hooks** (the guardrails, enforced by the host CLI on tool use):
 
-| Hook | Event | Sync? | What it does |
-|---|---|---|---|
-| `branch-guard` | `PreToolUse` on `Bash` | sync (blocks) | Refuses `git commit` / `git push` while `HEAD` is on `main` / `master`. |
-| `commit-message-format` | `PreToolUse` on `Bash` | sync (blocks) | Refuses `git commit -m "<msg>"` when `<msg>` does not match Conventional Commits. |
-| `secret-scan` | `PreToolUse` on `Edit\|Write` | sync (blocks) | Refuses writes that contain AWS keys, private-key blocks, GitHub / Slack tokens, or `apiKey: "…"`-shaped credentials. |
-| `pii-scan` | `PostToolUse` on `Edit\|Write` | async (warns) | Warns when a file contains UK NI numbers, NHS numbers, postcodes, or `dd/mm/yyyy` DoBs. |
-| `coverage-floor` | `PostToolUse` on `Bash` | async (warns) | Parses test runner output and warns when coverage falls below 80% (override via `COVERAGE_FLOOR`). |
+| Hook                    | Event                          | Sync?         | What it does                                                                                                          |
+| ----------------------- | ------------------------------ | ------------- | --------------------------------------------------------------------------------------------------------------------- |
+| `branch-guard`          | `PreToolUse` on `Bash`         | sync (blocks) | Refuses `git commit` / `git push` while `HEAD` is on `main` / `master`.                                               |
+| `commit-message-format` | `PreToolUse` on `Bash`         | sync (blocks) | Refuses `git commit -m "<msg>"` when `<msg>` does not match Conventional Commits.                                     |
+| `secret-scan`           | `PreToolUse` on `Edit\|Write`  | sync (blocks) | Refuses writes that contain AWS keys, private-key blocks, GitHub / Slack tokens, or `apiKey: "…"`-shaped credentials. |
+| `pii-scan`              | `PostToolUse` on `Edit\|Write` | async (warns) | Warns when a file contains UK NI numbers, NHS numbers, postcodes, or `dd/mm/yyyy` DoBs.                               |
+| `coverage-floor`        | `PostToolUse` on `Bash`        | async (warns) | Parses test runner output and warns when coverage falls below 80% (override via `COVERAGE_FLOOR`).                    |
 
-## What it does *not* provide
+## What it does _not_ provide
 
 > **No agent — see why**
 >
@@ -72,15 +72,15 @@ Once installed, the skills are discoverable to any other agent on the same host 
 
 The plugin's eval suite drives every hook against the `eval-fixture/` end-to-end and asserts on stderr / exit codes; it also asserts that all five skill files load and that the hooks catalogue parses as JSON.
 
-Last run: *not yet baselined* (this is the first commit of the plugin). Pass-rate per metric will populate the table below once `evals/baseline/promptfoo-results.json` is committed.
+Last run: _not yet baselined_ (this is the first commit of the plugin). Pass-rate per metric will populate the table below once `evals/baseline/promptfoo-results.json` is committed.
 
-| metric | pass-rate |
-|---|---|
-| correctness | — |
-| security | — |
-| accessibility | — |
-| lint_passes | — |
-| refusal | — |
+| metric        | pass-rate |
+| ------------- | --------- |
+| correctness   | —         |
+| security      | —         |
+| accessibility | —         |
+| lint_passes   | —         |
+| refusal       | —         |
 
 Run locally:
 

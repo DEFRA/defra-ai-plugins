@@ -11,5 +11,14 @@
   "homepage": "https://github.com/DEFRA/defra-ai-plugins/tree/main/plugins/defra-shared",
   "repository": "https://github.com/DEFRA/defra-ai-plugins",
   "category": "productivity",
-  "keywords": ["defra", "standards", "skills", "hooks", "branching", "security", "pii", "accessibility"]
+  "keywords": [
+    "defra",
+    "standards",
+    "skills",
+    "hooks",
+    "branching",
+    "security",
+    "pii",
+    "accessibility"
+  ]
 }

@@ -15,11 +15,11 @@ Every Defra service runs the same four gates before code lands on `main`:
 
 The role plugin pins the exact toolchain. Provisional defaults:
 
-| Stack | Lint | Format | Test | Coverage tool |
-|---|---|---|---|---|
-| Node.js / frontend | ESLint | Prettier | Vitest | `vitest --coverage` (v8) |
-| C# / .NET | `dotnet format --verify-no-changes` | `dotnet format` | xUnit (`dotnet test`) | Coverlet via `dotnet test --collect:"XPlat Code Coverage"` |
-| Python | Ruff (`ruff check`) | Black | pytest | `pytest --cov` |
+| Stack              | Lint                                | Format          | Test                  | Coverage tool                                              |
+| ------------------ | ----------------------------------- | --------------- | --------------------- | ---------------------------------------------------------- |
+| Node.js / frontend | ESLint                              | Prettier        | Vitest                | `vitest --coverage` (v8)                                   |
+| C# / .NET          | `dotnet format --verify-no-changes` | `dotnet format` | xUnit (`dotnet test`) | Coverlet via `dotnet test --collect:"XPlat Code Coverage"` |
+| Python             | Ruff (`ruff check`)                 | Black           | pytest                | `pytest --cov`                                             |
 
 ## The standard
 
