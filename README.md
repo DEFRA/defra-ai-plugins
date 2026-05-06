@@ -13,6 +13,25 @@ standards so Copilot produces compliant code by default.
 > (`make frontend-evals-claude`); cross-CLI plugin distribution is a future
 > iteration.
 
+## Prerequisites
+
+To use the plugins as a Copilot CLI user:
+
+| Tool                    | Why                                                                                                       |
+| ----------------------- | --------------------------------------------------------------------------------------------------------- |
+| `copilot` CLI           | Host that loads the plugins (`npm install -g @github/copilot`).                                           |
+| `jq`                    | Every plugin hook parses tool-use JSON via `jq`. Without it, hooks fail.                                  |
+| `bash`                  | Hooks are bash scripts. macOS/Linux native; Windows users need WSL or Git Bash.                           |
+| `git`                   | Required by the `branch-guard` and `commit-message-format` hooks shipped with `defra-shared`.             |
+
+Additionally, to develop in this repo or run the eval harness:
+
+| Tool                    | Why                                                                                                       |
+| ----------------------- | --------------------------------------------------------------------------------------------------------- |
+| Node.js + `npm`         | Repo validators (`npm test`) and the eval harness.                                                        |
+| `make`                  | Eval entry points (`make frontend-evals`, `make frontend-evals-claude`).                                  |
+| `claude` CLI + `ANTHROPIC_API_KEY` | Only for `make frontend-evals-claude`; not required for Copilot-only use.                      |
+
 ## Add this marketplace
 
 ```sh
