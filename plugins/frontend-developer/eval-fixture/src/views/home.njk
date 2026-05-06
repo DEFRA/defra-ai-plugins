@@ -1,0 +1,17 @@
+{% extends "layouts/base.njk" %}
+
+{% from "govuk/components/button/macro.njk" import govukButton %}
+
+{% block pageContent %}
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+      <h1 class="govuk-heading-xl">Register your details</h1>
+      <p class="govuk-body">Use this service to register your details.</p>
+      {{ govukButton({
+        text: "Start now",
+        href: "/register/name",
+        isStartButton: true
+      }) }}
+    </div>
+  </div>
+{% endblock %}

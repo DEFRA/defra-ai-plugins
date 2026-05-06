@@ -1,3 +1,19 @@
 node_modules/
 package-lock.json
 plugins/*/agents/*.agent.md
+
+# Frozen golden outputs (e.g. promptfoo-results.json). Eval comparisons
+# diff against these byte-for-byte; reformatting would invalidate the
+# baseline.
+plugins/*/evals/baseline/
+
+# Self-contained sample projects used as eval inputs. They have their
+# own toolchain (eslint, package.json) and represent realistic external
+# code — reformatting to our house style would change what the evals
+# actually measure.
+plugins/*/eval-fixture/
+
+# Prettier 3.3.3 mangles nested numbered-list continuations and fenced
+# code blocks inside list items in this file. Re-evaluate when prettier
+# is upgraded.
+CONTRIBUTING.md

@@ -1,8 +1,12 @@
 # Contributing to defra-ai-plugins
 
-Thanks for your interest in contributing. This repository is the Defra GitHub Copilot CLI plugin marketplace. It ships agents and skills that encode Defra software development standards, the GOV.UK Design System, and GDS service standards so Copilot produces compliant code by default.
+Thanks for your interest in contributing. This repository is the Defra GitHub
+Copilot CLI plugin marketplace. It ships agents and skills that encode Defra
+software development standards, the GOV.UK Design System, and GDS service
+standards so Copilot produces compliant code by default.
 
-Anyone can propose and contribute a plugin. All changes go through GitHub pull requests and are reviewed by the Defra AI dev team.
+Anyone can propose and contribute a plugin. All changes go through GitHub pull
+requests and are reviewed by the Defra AI dev team.
 
 ## How the marketplace is organised
 
@@ -25,7 +29,9 @@ defra-ai-plugins/
             └── <plugin-name>.agent.md
 ```
 
-Each plugin is a self-contained directory under `plugins/`. The marketplace registry (`.github/plugin/marketplace.json`) lists every plugin and is the source of truth for what's installable.
+Each plugin is a self-contained directory under `plugins/`. The marketplace
+registry (`.github/plugin/marketplace.json`) lists every plugin and is the
+source of truth for what's installable.
 
 ## Adding a new plugin
 
@@ -61,7 +67,84 @@ Each plugin is a self-contained directory under `plugins/`. The marketplace regi
 
    All checks must pass before opening a PR.
 
-9. **Open a pull request** using the PR template and fill in the checklist.
+9. **Add behavioural fixtures (optional today, will become mandatory).** The
+   validators only check that manifests parse; they do not check that your
+   plugin actually produces compliant code. Evals are not currently required
+   to merge — `ticket-writer` ships without them — but new plugins are
+   strongly encouraged to add them, and a future change will gate merge on
+   their presence. If you add fixtures, add at least three to
+   `plugins/<your-plugin-name>/evals/promptfooconfig.yaml` (create the
+   `evals/` directory by copying `plugins/frontend-developer/evals/` as a
+   template):
+   - one realistic task the plugin should handle well,
+   - one anti-pattern check (security, accessibility, or standards violation
+     the plugin must avoid),
+   - one adversarial prompt the plugin should refuse with a standards-based
+     reason.
+
+   Fixture skeleton (each assertion gets a metric tag — see the table below):
+
+   ```yaml
+   - description: 'Short description of what this fixture exercises'
+     vars:
+       prompt: 'The instruction the agent receives'
+     assert:
+       - type: contains
+         value: 'govukSomeComponent' # must use this macro
+         metric: component_correctness
+       - type: not-contains
+         value: '| safe' # must not use unsafe filter
+         metric: security
+       - type: contains
+         value: 'exit_code: 0' # lint must pass
+         metric: lint_passes
+   ```
+
+   The provider script (`plugins/<your-plugin-name>/evals/run-copilot.sh`) runs
+   Copilot CLI against a clean copy of
+   `plugins/<your-plugin-name>/eval-fixture/` and emits a single combined block:
+
+   ```
+   === COPILOT OUTPUT ===   (the agent's stdout/stderr)
+   === NJK TEMPLATES ===    (every src/views/**/*.njk after the run)
+   === JS ROUTES ===        (every src/routes/**/*.js after the run)
+   === FILES CHANGED ===    (new vs modified, by md5 diff)
+   === LINT ===             (exit_code: 0 + npm run lint output)
+   === TESTS ===            (exit_code: 0 + npm test output)
+   ```
+
+   `contains` / `not-contains` / `regex` / `icontains` match anywhere in this
+   block. That's why `value: 'exit_code: 0'` checks lint — it's matching the
+   string emitted under `=== LINT ===`. If your plugin targets paths outside
+   `src/views` and `src/routes`, edit `collect-and-report.sh` so the
+   relevant files appear in the block. Plugins targeting non-Hapi stacks
+   should add their own `plugins/<plugin-name>/eval-fixture/` skeleton and a
+   matching provider script.
+
+   `metric:` is plain promptfoo — it labels the assertion so the report can
+   group named scores. The frontend-developer plugin uses these buckets and
+   new plugins should reuse them where applicable so dashboards stay
+   consistent:
+
+   | Metric                  | When to apply                                                         |
+   | ----------------------- | --------------------------------------------------------------------- |
+   | `component_correctness` | Asserting the right framework/component is used (GOV.UK macros, etc.) |
+   | `security`              | CSRF, autoescape, no inline scripts, no `\| safe` on user input       |
+   | `accessibility`         | Error summary, aria attributes, keyboard semantics                    |
+   | `lint_passes`           | The `exit_code: 0` check on the `=== LINT ===` block                  |
+   | `refusal`               | Adversarial prompts the plugin should refuse on standards grounds     |
+
+   Run `make frontend-evals` locally to confirm your fixtures pass against the published
+   plugin before opening the PR. See README §Evaluating for the full setup
+   (Copilot CLI install, plugin install, model pinning).
+
+   To sanity-check that the same fixtures port to a second provider, run
+   `make frontend-evals-claude` (Claude Code, requires `ANTHROPIC_API_KEY` and the
+   `claude` CLI). The Claude provider is local-only — there is no CI gate
+   or committed baseline for it; it exists to demonstrate that the harness
+   is portable across CLIs.
+
+10. **Open a pull request** using the PR template and fill in the checklist.
 
 ## Naming conventions
 
@@ -71,7 +154,7 @@ Each plugin is a self-contained directory under `plugins/`. The marketplace regi
 
 ## Validation rules
 
-The CI workflow runs four checks. All must pass:
+The `Validate` workflow runs four schema/structural checks. All must pass:
 
 | Check                     | What it enforces                                                                     |
 | ------------------------- | ------------------------------------------------------------------------------------ |
@@ -86,18 +169,27 @@ To auto-fix sorting:
 npm run validate:fix
 ```
 
+A separate `Evals` workflow that drives Copilot CLI against the committed
+baseline on every PR is forthcoming — it's blocked on provisioning a
+`COPILOT_GITHUB_TOKEN` repository secret. Until it lands, run the harness
+locally with `make frontend-evals`. See README §Evaluating for the local flow.
+
 ## Licence
 
-By contributing, you agree that your contribution is licensed under the [Open Government Licence v3.0](LICENSE), the default Defra licence.
+By contributing, you agree that your contribution is licensed under the [Open
+Government Licence v3.0](LICENSE), the default Defra licence.
 
 ## Code of Conduct
 
-This project follows the [Contributor Covenant v2.1](CODE_OF_CONDUCT.md). Please be respectful and constructive in all interactions.
+This project follows the [Contributor Covenant v2.1](CODE_OF_CONDUCT.md). Please
+be respectful and constructive in all interactions.
 
 ## Reporting security issues
 
-Do NOT open a public issue for security vulnerabilities. See [SECURITY.md](SECURITY.md) for the disclosure process.
+Do NOT open a public issue for security vulnerabilities. See
+[SECURITY.md](SECURITY.md) for the disclosure process.
 
 ## Questions
 
-Open an issue tagged `question` or contact the AI dev team at `AICapabilitiesEnablement@defra.gov.uk`.
+Open an issue tagged `question` or contact the AI dev team at
+`AICapabilitiesEnablement@defra.gov.uk`.

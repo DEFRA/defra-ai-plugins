@@ -2,9 +2,16 @@
 
 [![Validate](https://github.com/DEFRA/defra-ai-plugins/actions/workflows/validate.yml/badge.svg)](https://github.com/DEFRA/defra-ai-plugins/actions/workflows/validate.yml)
 
-A marketplace of [GitHub Copilot CLI](https://docs.github.com/en/copilot/how-tos/copilot-cli/customize-copilot/plugins-finding-installing) plugins for Defra. Each plugin ships agents and skills that encode Defra's software development standards, the GOV.UK Design System, and GDS service standards so Copilot produces compliant code by default.
+A marketplace of [GitHub Copilot
+CLI](https://docs.github.com/en/copilot/how-tos/copilot-cli/customize-copilot/plugins-finding-installing)
+plugins for Defra. Each plugin ships agents and skills that encode Defra's
+software development standards, the GOV.UK Design System, and GDS service
+standards so Copilot produces compliant code by default.
 
-> Cross-CLI support (Claude Code, OpenAI Codex) is planned for a future iteration. For now, this marketplace targets GitHub Copilot CLI only.
+> Primary target is GitHub Copilot CLI. The eval harness includes a
+> demonstration that the same fixtures run unchanged against Claude Code
+> (`make frontend-evals-claude`); cross-CLI plugin distribution is a future
+> iteration.
 
 ## Add this marketplace
 
@@ -17,6 +24,7 @@ copilot plugin marketplace add DEFRA/defra-ai-plugins
 | Plugin                                             | Description                                                                                                                                                   | Install                                                      |
 | -------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------ |
 | [`frontend-developer`](plugins/frontend-developer) | Builds Defra-compliant frontends following the GOV.UK Design System, WCAG 2.2 AA, and Defra software development standards (Hapi + Nunjucks + SCSS + Vitest). | `copilot plugin install frontend-developer@defra-ai-plugins` |
+| [`ticket-writer`](plugins/ticket-writer)           | Creates well-structured JIRA tickets (stories and tasks) for any team. Ships default templates with support for custom templates at runtime.                  | `copilot plugin install ticket-writer@defra-ai-plugins`      |
 
 ## Repository layout
 
@@ -32,14 +40,34 @@ defra-ai-plugins/
 │   └── plugin.schema.json            # JSON Schema for plugin manifests
 ├── scripts/                          # Node.js validators
 └── plugins/
-    └── frontend-developer/
-        ├── plugin.json               # Plugin manifest
+    ├── frontend-developer/
+    │   ├── plugin.json               # Plugin manifest
+    │   ├── README.md
+    │   ├── agents/
+    │   │   └── frontend-developer.agent.md
+    │   ├── skills/                   # Skill files (work across CLIs)
+    │   ├── hooks/                    # Plugin hooks
+    │   ├── eval-fixture/             # Skeleton app the agent operates on during eval
+    │   └── evals/                    # Behavioural fixtures, provider scripts, baseline
+    │       ├── promptfooconfig.yaml
+    │       ├── run-copilot.sh        # Default CI provider
+    │       ├── run-claude.sh         # Local-only demo of cross-provider support
+    │       ├── collect-and-report.sh # Shared snapshot/diff/lint/test helpers
+    │       ├── check-regression.sh   # Baseline regression gate
+    │       ├── summarise.sh          # Markdown summary for CI step output
+    │       └── baseline/             # Reference run for regression comparison
+    └── ticket-writer/
+        ├── plugin.json
         ├── README.md
-        └── agents/
-            └── frontend-developer.agent.md
+        ├── agents/
+        │   └── ticket-writer.agent.md
+        └── skills/                   # story-ticket, task-ticket (+ custom skills)
 ```
 
-Each plugin lives in its own directory under `plugins/` with a `plugin.json` manifest and an `agents/` directory containing one or more Copilot custom agents.
+Each plugin lives in its own directory under `plugins/` with a `plugin.json`
+manifest and an entry-point file (`agents/<name>.agent.md`, `agents/<name>.md`,
+or `skills/<name>/SKILL.md`). `hooks/`, `evals/`, and `eval-fixture/` are
+optional — see [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Validation
 
@@ -59,9 +87,87 @@ npm install     # first time only
 npm test
 ```
 
+## Evaluating the plugins
+
+Schema validation only checks that manifests are well-formed. A behavioural eval
+exercises each plugin against realistic Defra tasks (and a few adversarial ones)
+and asserts on what the agent actually produces — GOV.UK macros, Joi validation,
+CSRF tokens, refusal of forbidden technologies, lint passing.
+
+The harness uses [promptfoo](https://github.com/promptfoo/promptfoo) to drive
+Copilot CLI in non-interactive mode against a minimal Hapi + govuk-frontend
+skeleton at `plugins/frontend-developer/eval-fixture/`. Both the fixtures
+(`promptfooconfig.yaml`) and the eval-target skeleton live under the plugin they
+test. Evals are currently optional for new plugins (only `frontend-developer`
+ships them today) but will become mandatory — plugins that add them should
+follow the same `plugins/<plugin-name>/eval-fixture/` skeleton +
+`plugins/<plugin-name>/evals/` fixture set layout.
+
+A second provider, Claude Code, is wired up locally as a demonstration that the
+same fixtures port across CLIs unchanged (`make frontend-evals-claude`). It is **not**
+part of the CI gate — Copilot CLI is the only provider with a committed baseline
+and a regression gate.
+
+### Run locally
+
+Prerequisites:
+
+```sh
+npm install -g @github/copilot
+copilot plugin marketplace add DEFRA/defra-ai-plugins
+copilot plugin install frontend-developer@defra-ai-plugins
+```
+
+Then:
+
+```sh
+make frontend-evals
+```
+
+Results land in `results/run-YYYY-MM-DD/promptfoo-results.json`. `make frontend-evals`
+also runs `check-regression.sh`, which compares against
+`plugins/frontend-developer/evals/baseline/promptfoo-results.json` and exits
+non-zero on any per-fixture regression.
+
+To run the same suite against Claude Code instead (requires `ANTHROPIC_API_KEY`
+and `claude` CLI installed):
+
+```sh
+make frontend-evals-claude
+```
+
+To browse results in a UI:
+
+```sh
+make frontend-evals-view
+```
+
+The default model is pinned in `plugins/frontend-developer/evals/run-copilot.sh`
+(`COPILOT_MODEL=gpt-5-mini`). Override for ad-hoc experiments:
+
+```sh
+COPILOT_MODEL=gpt-5 make frontend-evals
+```
+
+Inside the provider script, the agent is invoked as `copilot --agent
+frontend-developer:frontend-developer`. The `<plugin>:<agent>` double-colon form
+is Copilot CLI's way of disambiguating an agent inside a plugin from a
+same-named built-in agent. For this plugin, both halves match; when adding a
+plugin, use `<your-plugin>:<your-agent>`.
+
+### CI
+
+CI automation for the eval harness is forthcoming — it depends on a
+`COPILOT_GITHUB_TOKEN` repository secret (a fine-grained PAT with the
+**Copilot Requests** permission) which has not yet been provisioned. The
+workflow definition, baseline regression gate, token-setup instructions, and
+GitHub Actions step-summary reporting will land in a follow-up PR. Until
+then, run the harness locally with `make frontend-evals` (see above).
+
 ## Contributing
 
-Contributions are welcome from anyone. See [CONTRIBUTING.md](CONTRIBUTING.md) for the full guide. In short:
+Contributions are welcome from anyone. See [CONTRIBUTING.md](CONTRIBUTING.md)
+for the full guide. In short:
 
 1. Open a [plugin proposal issue](.github/ISSUE_TEMPLATE/plugin-proposal.md)
 2. Copy `plugins/frontend-developer/` as a template
@@ -69,7 +175,9 @@ Contributions are welcome from anyone. See [CONTRIBUTING.md](CONTRIBUTING.md) fo
 4. Add the plugin to `.github/plugin/marketplace.json` (alphabetical order)
 5. Run `npm test` and open a PR
 
-This project follows the [Contributor Covenant 2.1](CODE_OF_CONDUCT.md) and accepts contributions under the [Open Government Licence v3.0](LICENSE). To report a security issue, see [SECURITY.md](SECURITY.md).
+This project follows the [Contributor Covenant 2.1](CODE_OF_CONDUCT.md) and
+accepts contributions under the [Open Government Licence v3.0](LICENSE). To
+report a security issue, see [SECURITY.md](SECURITY.md).
 
 ## References
 
