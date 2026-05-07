@@ -32,6 +32,13 @@ Additionally, to develop in this repo or run the eval harness:
 | `make`                             | Eval entry points (`make frontend-evals`, `make frontend-evals-claude`).  |
 | `claude` CLI + `ANTHROPIC_API_KEY` | Only for `make frontend-evals-claude`; not required for Copilot-only use. |
 
+Optional — activate the tracked pre-commit hook so Prettier formats the
+repo on every commit (one-time, per checkout):
+
+```sh
+git config core.hooksPath .githooks
+```
+
 ## Add this marketplace
 
 ```sh
