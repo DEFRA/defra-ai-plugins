@@ -24,17 +24,31 @@
 # call `report "<label>" "<prompt>" "<fixture-dir>"`.
 
 # Run a single hook against a synthetic input and emit a labelled section.
-# Args: <hook-id> <case-label> <fixture-dir> <input-json>
+# Args: <hook-id> <case-label> <fixture-dir> <input-json> [project-dir]
 _run_one() {
-  local hook_id="$1" label="$2" fixture_dir="$3" input_json="$4"
+  local hook_id="$1" label="$2" fixture_dir="$3" input_json="$4" project_dir="${5:-}"
   echo "=== HOOK RUN $hook_id $label ==="
   local out
   set +e
-  out=$(printf '%s' "$input_json" | "$fixture_dir/scripts/run-hook.sh" "$hook_id" 2>&1)
+  if [ -n "$project_dir" ]; then
+    out=$(printf '%s' "$input_json" | "$fixture_dir/scripts/run-hook.sh" "$hook_id" "$project_dir" 2>&1)
+  else
+    out=$(printf '%s' "$input_json" | "$fixture_dir/scripts/run-hook.sh" "$hook_id" 2>&1)
+  fi
   set -e
   # `run-hook.sh` already emits its own header — strip it to avoid a double header.
   echo "$out" | sed -n '/^exit_code:/,$p'
   echo
+}
+
+# Stage a fixture clone and check out a feature branch on it. Echoes the path.
+# The caller is responsible for `rm -rf` once done.
+_stage_feature_branch() {
+  local fixture_dir="$1"
+  local stage
+  stage=$("$fixture_dir/scripts/init-git.sh")
+  ( cd "$stage" && git checkout -q -b feature/x )
+  echo "$stage"
 }
 
 report() {
@@ -69,6 +83,14 @@ report() {
   _run_one branch-guard "main+commit" "$fixture_dir" \
     '{"tool_input":{"command":"git commit -m \"feat: x\""}}'
 
+  # --- Branch guard: feature branch (negative control — should pass).
+  local feature_stage
+  feature_stage=$(_stage_feature_branch "$fixture_dir")
+  _run_one branch-guard "feature-branch" "$fixture_dir" \
+    '{"tool_input":{"command":"git commit -m \"feat: x\""}}' \
+    "$feature_stage"
+  rm -rf "$feature_stage"
+
   # --- Commit-message format: non-conforming subject.
   _run_one commit-message-format "WIP" "$fixture_dir" \
     '{"tool_input":{"command":"git commit -m \"WIP\""}}'
@@ -76,6 +98,14 @@ report() {
   # --- Commit-message format: conforming subject (negative control — should pass).
   _run_one commit-message-format "valid-feat" "$fixture_dir" \
     '{"tool_input":{"command":"git commit -m \"feat(api): add endpoint\""}}'
+
+  # --- Commit-message format: bypass attempt via `-am` (now blocked).
+  _run_one commit-message-format "am-bypass" "$fixture_dir" \
+    '{"tool_input":{"command":"git commit -am \"WIP\""}}'
+
+  # --- Commit-message format: bypass attempt via `--message=` (now blocked).
+  _run_one commit-message-format "long-bypass" "$fixture_dir" \
+    '{"tool_input":{"command":"git commit --message=\"WIP\""}}'
 
   # --- Secret scan: planted AWS key.
   local AWS_KEY='AKIAIOSFODNN7EXAMPLE'

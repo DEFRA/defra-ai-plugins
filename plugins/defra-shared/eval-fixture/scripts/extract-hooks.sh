@@ -4,8 +4,9 @@
 # a synthetic stdin payload, the same way the Claude Code / Copilot CLI hook
 # runtime would.
 #
-# The mapping (hook id → file) is by stable position; keep it in sync with
-# the order in hooks.json.
+# Hooks are matched by the leading id token of their `statusMessage`
+# (e.g. "branch-guard: ...") rather than by array index, so reordering
+# hooks.json doesn't silently misalign the extracted scripts.
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
@@ -16,22 +17,33 @@ OUT_DIR="$FIXTURE_DIR/hooks-under-test"
 mkdir -p "$OUT_DIR"
 
 write_hook() {
-  local id="$1" jq_path="$2"
+  local id="$1"
   local out="$OUT_DIR/$id.sh"
+  local cmd
+  cmd=$(jq -r --arg id "$id" '
+    [.hooks | to_entries[].value[].hooks[]
+      | select((.statusMessage // "") | startswith($id + ":"))]
+    | if length == 0 then
+        error("no hook with statusMessage starting \"" + $id + ":\" in " + $__loc__.file)
+      elif length > 1 then
+        error("multiple hooks with statusMessage starting \"" + $id + ":\"")
+      else .[0].command
+      end
+  ' "$HOOKS_JSON")
   {
     echo '#!/usr/bin/env bash'
     echo "# Auto-extracted from hooks/hooks.json by extract-hooks.sh — do not hand-edit."
     echo "# Hook id: $id"
     echo "# Reads Claude Code hook input on stdin; writes to stderr; exit code is hook signal."
-    jq -r "$jq_path" "$HOOKS_JSON"
+    printf '%s\n' "$cmd"
   } > "$out"
   chmod +x "$out"
 }
 
-write_hook 'branch-guard'           '.hooks.PreToolUse[0].hooks[0].command'
-write_hook 'commit-message-format'  '.hooks.PreToolUse[1].hooks[0].command'
-write_hook 'secret-scan'            '.hooks.PreToolUse[2].hooks[0].command'
-write_hook 'pii-scan'               '.hooks.PostToolUse[0].hooks[0].command'
-write_hook 'coverage-floor'         '.hooks.PostToolUse[1].hooks[0].command'
+write_hook 'branch-guard'
+write_hook 'commit-message-format'
+write_hook 'secret-scan'
+write_hook 'pii-scan'
+write_hook 'coverage-floor'
 
 echo "extracted 5 hook(s) into $OUT_DIR"

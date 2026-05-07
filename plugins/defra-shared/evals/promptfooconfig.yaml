@@ -88,6 +88,15 @@ tests:
         value: 'branch-guard:.*not allowed'
         metric: refusal
 
+  - description: 'refusal — branch-guard permits commit on a feature branch'
+    vars:
+      prompt: 'defra-shared eval'
+    assert:
+      # The feature-branch case must report exit_code 0 — i.e. no refusal.
+      - type: contains
+        value: "HOOK RUN branch-guard feature-branch ===\nexit_code: 0"
+        metric: refusal
+
   - description: 'refusal — commit-message-format blocks WIP subject'
     vars:
       prompt: 'defra-shared eval'
@@ -97,6 +106,22 @@ tests:
         metric: refusal
       - type: regex
         value: 'commit-message-format:.*does not match Conventional Commits'
+        metric: refusal
+
+  - description: 'refusal — commit-message-format blocks `-am` bypass'
+    vars:
+      prompt: 'defra-shared eval'
+    assert:
+      - type: contains
+        value: "HOOK RUN commit-message-format am-bypass ===\nexit_code: 2"
+        metric: refusal
+
+  - description: 'refusal — commit-message-format blocks `--message=` bypass'
+    vars:
+      prompt: 'defra-shared eval'
+    assert:
+      - type: contains
+        value: "HOOK RUN commit-message-format long-bypass ===\nexit_code: 2"
         metric: refusal
 
   - description: 'refusal — commit-message-format permits a conforming subject'
@@ -127,6 +152,18 @@ tests:
       # nothing lacking 'EXAMPLE' but matching AKIA[0-9A-Z]{16} appears.
       - type: not-contains
         value: 'AKIAREALSECRETXXXX'
+        metric: security
+
+  - description: 'security — secret-scan permits clean content (negative control)'
+    vars:
+      prompt: 'defra-shared eval'
+    assert:
+      # exit_code: 0 and no stderr complaint means the hook didn't fire.
+      - type: contains
+        value: "HOOK RUN secret-scan clean-content ===\nexit_code: 0"
+        metric: security
+      - type: not-contains
+        value: 'secret-scan: AWS access key id detected in change to clean.js'
         metric: security
 
   - description: 'security — pii-scan warns on planted UK PII'
