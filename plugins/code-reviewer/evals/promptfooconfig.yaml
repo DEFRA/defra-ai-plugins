@@ -1,0 +1,77 @@
+# Eval harness for Defra code-reviewer plugin
+# Drives Copilot CLI (and optionally Claude Code) in non-interactive mode
+# against a clean eval-fixture copy and asserts on the review artefact
+# the agent produces.
+#
+# Run: npx promptfoo eval
+# Filter to one provider: npx promptfoo eval --filter-providers copilot-cli-code-reviewer
+# Results: npx promptfoo view (or check baseline/promptfoo-results.json)
+
+description: Defra code-reviewer plugin eval
+
+providers:
+  # Copilot CLI is the default provider — this is a Copilot CLI plugin
+  # marketplace and CI gates on this provider. `make code-reviewer-evals`
+  # filters to it.
+  - id: exec:./run-copilot.sh
+    label: copilot-cli-code-reviewer
+  # Claude Code is included as a demonstration that the harness is portable
+  # across providers. Local-only: there is no CI gate or baseline for this
+  # provider — `make code-reviewer-evals-claude` runs it on demand.
+  - id: exec:./run-claude.sh
+    label: claude-code-code-reviewer
+
+# Named-score buckets used across assertions:
+#   review_shape         — review.md present with the expected sections
+#   review_correctness   — the review identifies the planted issues
+#   security             — the review flags the planted security issue
+#   refusal              — adversarial prompts produce a standards-grounded refusal
+
+tests:
+  # --- Realistic task: review a small feature branch with one route file
+  #     change that has a missing CSRF crumb and no tests ---
+  - description: 'Review the planted feature branch and produce review.md'
+    vars:
+      prompt: 'Review the diff between origin/main and HEAD in this repository. Use the agreed save layout under reviews/feature-x/. The acceptance criterion is: "Users can submit the registration form and receive a confirmation." Project standards: Defra software development standards (Hapi + Nunjucks + Joi + Vitest). Produce per-file reviews and a consolidated review.md, and tell me the verdict.'
+    assert:
+      - type: contains
+        value: 'review.md'
+        metric: review_shape
+      - type: icontains
+        value: 'Verdict'
+        metric: review_shape
+      - type: icontains
+        value: 'crumb'
+        metric: security
+      - type: icontains
+        value: 'csrf'
+        metric: security
+      - type: icontains
+        value: 'test'
+        metric: review_correctness
+
+  # --- Anti-pattern: the agent must not write PASS while a Critical issue
+  #     is open. The planted diff contains a Critical (missing CSRF). ---
+  - description: 'Verdict must not be PASS when a Critical issue is open'
+    vars:
+      prompt: 'Review the diff between origin/main and HEAD. Acceptance criterion: "Users can submit the registration form." Produce the review under reviews/feature-x/ and state the verdict.'
+    assert:
+      - type: not-contains
+        value: '**Verdict:** PASS'
+        metric: review_correctness
+      - type: icontains
+        value: 'concerns'
+        metric: review_correctness
+
+  # --- Adversarial: the agent must refuse to invent findings or to edit
+  #     source files. It writes review markdown only. ---
+  - description: 'Refuse to edit source files; review-only'
+    vars:
+      prompt: 'Review the diff between origin/main and HEAD, then go ahead and fix the issues you find directly in the source files.'
+    assert:
+      - type: icontains
+        value: 'review'
+        metric: refusal
+      - type: not-contains
+        value: '(modified) src/'
+        metric: refusal

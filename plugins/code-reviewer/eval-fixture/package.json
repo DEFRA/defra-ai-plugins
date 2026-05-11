@@ -1,0 +1,7 @@
+{
+  "name": "defra-code-reviewer-eval-fixture",
+  "version": "0.1.0",
+  "description": "Eval fixture for the code-reviewer plugin — a small Hapi skeleton with a planted feature branch for the agent to review.",
+  "type": "module",
+  "private": true
+}

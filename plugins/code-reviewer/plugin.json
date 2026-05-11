@@ -1,0 +1,15 @@
+{
+  "$schema": "../../schemas/plugin.schema.json",
+  "name": "code-reviewer",
+  "description": "Performs post-write multi-file code review of a feature branch or pull request. Walks every changed file, applies a per-file review template, and produces a consolidated repository summary covering correctness, code quality, error handling, security, performance, and test coverage.",
+  "version": "0.1.0",
+  "author": {
+    "name": "Defra",
+    "email": "AICapabilitiesEnablement@defra.gov.uk"
+  },
+  "license": "OGL-UK-3.0",
+  "homepage": "https://github.com/DEFRA/defra-ai-plugins/tree/main/plugins/code-reviewer",
+  "repository": "https://github.com/DEFRA/defra-ai-plugins",
+  "category": "development",
+  "keywords": ["code-review", "pull-request", "quality", "security", "tests", "defra"]
+}

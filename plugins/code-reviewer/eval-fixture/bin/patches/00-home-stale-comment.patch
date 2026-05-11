@@ -1,0 +1,9 @@
+diff --git a/src/routes/home.js b/src/routes/home.js
+--- a/src/routes/home.js
++++ b/src/routes/home.js
+@@ -1,4 +1,4 @@
+-// Home page — read-only GET. Already covered by tests.
++// Home page — read-only GET. Already covered by tests. TODO: refactor.
+ const homeRoutes = [
+   {
+     method: 'GET',

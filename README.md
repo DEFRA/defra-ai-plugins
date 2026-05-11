@@ -21,10 +21,11 @@ copilot plugin marketplace add DEFRA/defra-ai-plugins
 
 ## Plugins
 
-| Plugin                                             | Description                                                                                                                                                   | Install                                                      |
-| -------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------ |
-| [`frontend-developer`](plugins/frontend-developer) | Builds Defra-compliant frontends following the GOV.UK Design System, WCAG 2.2 AA, and Defra software development standards (Hapi + Nunjucks + SCSS + Vitest). | `copilot plugin install frontend-developer@defra-ai-plugins` |
-| [`ticket-writer`](plugins/ticket-writer)           | Creates well-structured JIRA tickets (stories and tasks) for any team. Ships default templates with support for custom templates at runtime.                  | `copilot plugin install ticket-writer@defra-ai-plugins`      |
+| Plugin                                             | Description                                                                                                                                                      | Install                                                      |
+| -------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------ |
+| [`code-reviewer`](plugins/code-reviewer)           | Performs post-write multi-file code review of a feature branch or pull request, producing per-file reviews and a consolidated repository summary with a verdict. | `copilot plugin install code-reviewer@defra-ai-plugins`      |
+| [`frontend-developer`](plugins/frontend-developer) | Builds Defra-compliant frontends following the GOV.UK Design System, WCAG 2.2 AA, and Defra software development standards (Hapi + Nunjucks + SCSS + Vitest).    | `copilot plugin install frontend-developer@defra-ai-plugins` |
+| [`ticket-writer`](plugins/ticket-writer)           | Creates well-structured JIRA tickets (stories and tasks) for any team. Ships default templates with support for custom templates at runtime.                     | `copilot plugin install ticket-writer@defra-ai-plugins`      |
 
 ## Repository layout
 

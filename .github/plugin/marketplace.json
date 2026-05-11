@@ -9,6 +9,12 @@
   },
   "plugins": [
     {
+      "name": "code-reviewer",
+      "description": "Performs post-write multi-file code review of a feature branch or pull request. Walks every changed file, applies a per-file review template, and produces a consolidated repository summary covering correctness, code quality, error handling, security, performance, and test coverage.",
+      "version": "0.1.0",
+      "source": "plugins/code-reviewer"
+    },
+    {
       "name": "frontend-developer",
       "description": "Builds Defra-compliant frontends following the GOV.UK Design System, WCAG 2.2 AA, and Defra software development standards (Hapi + Nunjucks + SCSS + Vitest).",
       "version": "0.1.0",
