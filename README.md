@@ -32,8 +32,8 @@ Additionally, to develop in this repo or run the eval harness:
 | `make`                             | Eval entry points (`make frontend-evals`, `make frontend-evals-claude`).  |
 | `claude` CLI + `ANTHROPIC_API_KEY` | Only for `make frontend-evals-claude`; not required for Copilot-only use. |
 
-Optional — activate the tracked pre-commit hook so Prettier formats the
-repo on every commit (one-time, per checkout):
+Optional — activate the tracked pre-commit hook so Prettier formats the repo on
+every commit (one-time, per checkout):
 
 ```sh
 git config core.hooksPath .githooks
@@ -131,15 +131,16 @@ follow the same `plugins/<plugin-name>/eval-fixture/` skeleton +
 `plugins/<plugin-name>/evals/` fixture set layout.
 
 A second provider, Claude Code, is wired up locally as a demonstration that the
-same fixtures port across CLIs unchanged (`make frontend-evals-claude`). It is **not**
-part of the CI gate — Copilot CLI is the only provider with a committed baseline
-and a regression gate.
+same fixtures port across CLIs unchanged (`make frontend-evals-claude`). It is
+**not** part of the CI gate — Copilot CLI is the only provider with a committed
+baseline and a regression gate.
 
 ### Run locally
 
 Prerequisites:
 
 ```sh
+npm install                              # installs promptfoo (pinned) and other devDependencies
 npm install -g @github/copilot
 copilot plugin marketplace add DEFRA/defra-ai-plugins
 copilot plugin install frontend-developer@defra-ai-plugins
@@ -151,10 +152,22 @@ Then:
 make frontend-evals
 ```
 
-Results land in `results/run-YYYY-MM-DD/promptfoo-results.json`. `make frontend-evals`
-also runs `check-regression.sh`, which compares against
+Results land in `results/run-YYYY-MM-DD/promptfoo-results.json`. `make
+frontend-evals` also runs `check-regression.sh`, which compares against
 `plugins/frontend-developer/evals/baseline/promptfoo-results.json` and exits
 non-zero on any per-fixture regression.
+
+> **Node 24 / `better-sqlite3` native-binding gotcha** — promptfoo persists
+> results to SQLite via `better-sqlite3`. As of `better-sqlite3@12.9.0` there
+> is no prebuilt binary for Node 24's ABI, and `npm install` may complete
+> without compiling one from source. If `make frontend-evals` fails with
+> _"Could not locate the bindings file"_, run a one-off rebuild:
+>
+> ```sh
+> (cd node_modules/better-sqlite3 && npx node-gyp rebuild)
+> ```
+>
+> This is unnecessary on Node 22 (prebuild is available).
 
 To run the same suite against Claude Code instead (requires `ANTHROPIC_API_KEY`
 and `claude` CLI installed):
@@ -185,11 +198,11 @@ plugin, use `<your-plugin>:<your-agent>`.
 ### CI
 
 CI automation for the eval harness is forthcoming — it depends on a
-`COPILOT_GITHUB_TOKEN` repository secret (a fine-grained PAT with the
-**Copilot Requests** permission) which has not yet been provisioned. The
-workflow definition, baseline regression gate, token-setup instructions, and
-GitHub Actions step-summary reporting will land in a follow-up PR. Until
-then, run the harness locally with `make frontend-evals` (see above).
+`COPILOT_GITHUB_TOKEN` repository secret (a fine-grained PAT with the **Copilot
+Requests** permission) which has not yet been provisioned. The workflow
+definition, baseline regression gate, token-setup instructions, and GitHub
+Actions step-summary reporting will land in a follow-up PR. Until then, run the
+harness locally with `make frontend-evals` (see above).
 
 ## Contributing
 

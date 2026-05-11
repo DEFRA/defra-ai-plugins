@@ -27,7 +27,7 @@ frontend-fixture-lint:
 #   - The frontend-developer plugin installed (see README §Evaluating)
 frontend-evals: frontend-fixture-install
 	mkdir -p $(RESULTS_DIR)
-	cd $(EVAL_DIR) && npx promptfoo eval --no-cache \
+	cd $(EVAL_DIR) && npx --no-install promptfoo eval --no-cache \
 	  --filter-providers copilot-cli-frontend-developer
 	cp $(EVAL_DIR)/output.json $(RESULTS_DIR)/promptfoo-results.json
 	./$(EVAL_DIR)/check-regression.sh $(RESULTS_DIR)/promptfoo-results.json
@@ -41,7 +41,7 @@ frontend-evals: frontend-fixture-install
 #   - The frontend-developer plugin installed for Claude Code
 frontend-evals-claude: frontend-fixture-install
 	mkdir -p $(RESULTS_DIR)
-	cd $(EVAL_DIR) && npx promptfoo eval --no-cache \
+	cd $(EVAL_DIR) && npx --no-install promptfoo eval --no-cache \
 	  --filter-providers claude-code-frontend-developer
 	cp $(EVAL_DIR)/output.json $(RESULTS_DIR)/promptfoo-results-claude.json
 	./$(EVAL_DIR)/check-regression.sh $(RESULTS_DIR)/promptfoo-results-claude.json
@@ -49,7 +49,7 @@ frontend-evals-claude: frontend-fixture-install
 	@echo "Results saved to $(RESULTS_DIR)/promptfoo-results-claude.json"
 
 frontend-evals-view:
-	cd $(EVAL_DIR) && npx promptfoo view
+	cd $(EVAL_DIR) && npx --no-install promptfoo view
 
 frontend-clean:
 	rm -rf $(EVAL_DIR)/output.json
