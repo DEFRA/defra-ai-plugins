@@ -160,14 +160,11 @@ non-zero on any per-fixture regression.
 > **Node 24 / `better-sqlite3` native-binding gotcha** — promptfoo persists
 > results to SQLite via `better-sqlite3`. As of `better-sqlite3@12.9.0` there
 > is no prebuilt binary for Node 24's ABI, and `npm install` may complete
-> without compiling one from source. If `make frontend-evals` fails with
-> _"Could not locate the bindings file"_, run a one-off rebuild:
->
-> ```sh
-> (cd node_modules/better-sqlite3 && npx node-gyp rebuild)
-> ```
->
-> This is unnecessary on Node 22 (prebuild is available).
+> without compiling one from source. The `make frontend-evals` and
+> `make frontend-evals-claude` targets depend on `evals-setup`, which runs
+> `npm run evals:setup` — an idempotent script that rebuilds the binding if
+> the file is missing and no-ops otherwise. If you run promptfoo by hand
+> rather than via `make`, run `npm run evals:setup` first.
 
 To run the same suite against Claude Code instead (requires `ANTHROPIC_API_KEY`
 and `claude` CLI installed):
