@@ -28,7 +28,7 @@ Optional footers (one per line) include:
 - `Refs: CAIT-123` — link to the Jira ticket the work tracks.
 - `Co-authored-by: Name <email>` — for pair work.
 
-The companion hook `commit-message-format` enforces the subject regex on every `git commit -m`.
+The companion hook `commit-message-format` enforces the subject regex on every `git commit -m` / `--message`. It additionally refuses forms that bypass subject inspection — `-F` / `--file`, `--template`, `-C` / `--reuse-message`, `--fixup`, `--squash`, and editor-driven commits (no `-m`) — and tells the agent to use `-m "type(scope): subject"` instead. `git commit --amend --no-edit` is explicitly allowed, since it reuses an already-validated message.
 
 ## Anti-patterns the agent must refuse
 
@@ -39,6 +39,7 @@ The companion hook `commit-message-format` enforces the subject regex on every `
 - Type missing (`add date-of-birth field` instead of `feat: add date-of-birth field`).
 - Mixing several unrelated changes in one commit. Split into one commit per logical change.
 - Putting the ticket ID in the subject; it belongs in the footer (`Refs: CAIT-123`).
+- Bypassing subject validation via `git commit -F <file>`, `--template`, `-C <hash>`, `--reuse-message`, `--fixup`, `--squash`, or by letting the editor open. Use `-m "type(scope): subject"` so the hook can read it.
 
 If a user asks the agent to commit with a non-conforming message, the agent rewrites the message and explains why.
 

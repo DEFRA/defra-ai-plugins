@@ -25,7 +25,7 @@ Defra repositories use a feature-branch workflow. Direct commits to `main` (or `
 3. Push the branch to `origin` and open a pull request. Never `git push` directly to `main` / `master`.
 4. Merge only via pull request, after review and after CI is green.
 
-The companion hook `branch-guard` enforces this: any `git commit` or `git push` while `HEAD` is on `main` / `master` is blocked.
+The companion hook `branch-guard` enforces this: any `git commit` or `git push` while `HEAD` is on `main` / `master` is blocked, and any `git push -f` / `--force` / `--force-with-lease` whose args mention `main` / `master` is blocked from any branch (force-push to a protected branch is refused even when you are not currently on it).
 
 ## Anti-patterns the agent must refuse
 

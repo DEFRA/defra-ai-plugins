@@ -14,13 +14,13 @@ A Copilot CLI / Claude Code plugin that ships Defra's cross-cutting standards as
 
 **Five hooks** (the guardrails, enforced by the host CLI on tool use):
 
-| Hook                    | Event                          | Sync?         | What it does                                                                                                          |
-| ----------------------- | ------------------------------ | ------------- | --------------------------------------------------------------------------------------------------------------------- |
-| `branch-guard`          | `PreToolUse` on `Bash`         | sync (blocks) | Refuses `git commit` / `git push` while `HEAD` is on `main` / `master`.                                               |
-| `commit-message-format` | `PreToolUse` on `Bash`         | sync (blocks) | Refuses `git commit -m "<msg>"` when `<msg>` does not match Conventional Commits.                                     |
-| `secret-scan`           | `PreToolUse` on `Edit\|Write`  | sync (blocks) | Refuses writes that contain AWS keys, private-key blocks, GitHub / Slack tokens, or `apiKey: "…"`-shaped credentials. |
-| `pii-scan`              | `PostToolUse` on `Edit\|Write` | async (warns) | Warns when a file contains UK NI numbers, NHS numbers, postcodes, or `dd/mm/yyyy` DoBs.                               |
-| `coverage-floor`        | `PostToolUse` on `Bash`        | async (warns) | Parses test runner output and warns when coverage falls below 80% (override via `COVERAGE_FLOOR`).                    |
+| Hook                    | Event                          | Sync?         | What it does                                                                                                                                                                                                                   |
+| ----------------------- | ------------------------------ | ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `branch-guard`          | `PreToolUse` on `Bash`         | sync (blocks) | Refuses `git commit` / `git push` while `HEAD` is on `main` / `master`, and refuses any `git push -f` / `--force` / `--force-with-lease` whose args mention `main` / `master` from any branch.                                 |
+| `commit-message-format` | `PreToolUse` on `Bash`         | sync (blocks) | Validates the Conventional Commits subject on `git commit -m` / `--message`. Refuses `-F` / `--file` / `--template` / `-C` / `--reuse-message` / `--fixup` / `--squash` and editor-driven commits. Allows `--amend --no-edit`. |
+| `secret-scan`           | `PreToolUse` on `Edit\|Write`  | sync (blocks) | Refuses writes containing AWS keys, private-key blocks, GitHub / Slack tokens, Anthropic / OpenAI / Stripe / Google API keys, JWTs, or `apiKey: "…"`-shaped credentials (including base64 values).                             |
+| `pii-scan`              | `PostToolUse` on `Edit\|Write` | async (warns) | Warns when a file contains UK NI numbers, NHS numbers (Mod-11 validated), postcodes, or `dd/mm/yyyy` DoBs. Paths under `*/eval-fixture/fixtures/*` are skipped.                                                                |
+| `coverage-floor`        | `PostToolUse` on `Bash`        | async (warns) | Parses test runner output and warns when coverage falls below 80% (override via `COVERAGE_FLOOR`).                                                                                                                             |
 
 ## What it does _not_ provide
 
@@ -64,9 +64,9 @@ Once installed, the skills are discoverable to any other agent on the same host 
 
 ## Anti-patterns it refuses
 
-- `git commit` / `git push` on `main` / `master` (branch-guard, sync).
-- Commit subjects like `WIP`, `update`, past-tense, or > 72 chars (commit-message-format, sync).
-- Hard-coded AWS keys, private-key blocks, GitHub / Slack tokens, `apiKey: "…"`-shaped credentials (secret-scan, sync).
+- `git commit` / `git push` on `main` / `master`, or `git push --force*` targeting `main` / `master` from any branch (branch-guard, sync).
+- Commit subjects like `WIP`, `update`, past-tense, or > 72 chars; `-F` / `--file` / `--template` / `-C` / `--reuse-message` / `--fixup` / `--squash` / editor-driven commits that bypass subject validation (commit-message-format, sync).
+- Hard-coded AWS keys, private-key blocks, GitHub / Slack tokens, Anthropic / OpenAI / Stripe / Google API keys, JWTs, or `apiKey: "…"`-shaped credentials (secret-scan, sync).
 - Files containing UK NI numbers, NHS numbers, postcodes, or `dd/mm/yyyy` DoBs in non-fixture paths (pii-scan, async).
 - Test runs that drop coverage below 80% (coverage-floor, async).
 

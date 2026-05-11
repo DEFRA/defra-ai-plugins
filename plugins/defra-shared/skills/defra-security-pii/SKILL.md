@@ -14,7 +14,7 @@ Defra services handle data from members of the public. The agent treats every st
 
 - **Never hard-code secrets** in source. That includes API keys, database connection strings with embedded passwords, JWT signing keys, OAuth client secrets, AWS access keys, private TLS keys, SSH keys, basic-auth headers, and bearer tokens.
 - Secrets come from environment variables, the platform secret manager (CDP, AWS Secrets Manager, Azure Key Vault), or a sealed `.env` file that is git-ignored.
-- The companion hook `secret-scan` runs on every `Write` / `Edit` and blocks the change when a known secret pattern matches. The provisional scanner is `gitleaks`.
+- The companion hook `secret-scan` runs on every `Write` / `Edit` and blocks the change when a known secret pattern matches. It currently flags AWS access key ids, PEM private-key blocks, GitHub tokens (`ghp_…` / `gho_…` / `ghs_…` / `ghu_…` / `ghr_…`), Slack tokens (`xox[abpr]-…`), Anthropic API keys (`sk-ant-…`), OpenAI API keys (`sk-proj-…` / `sk-svcacct-…` / `sk-admin-…`), Stripe live/test keys, Google API keys (`AIza…`), JWTs (`eyJ….eyJ….…`), and any `<keyword>… = "<value>"` assignment whose keyword is `apiKey` / `secret` / `password` / `passwd` / `token` / `bearer` and whose value is a quoted alphanumeric or base64 string of ≥ 16 characters. The provisional full-scan tool is `gitleaks`.
 
 ### PII
 
