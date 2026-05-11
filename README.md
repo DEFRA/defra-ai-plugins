@@ -173,6 +173,26 @@ and `claude` CLI installed):
 make frontend-evals-claude
 ```
 
+### Iterating on the plugin without reinstalling
+
+By default `claude` loads the plugin that was installed via
+`claude plugin install frontend-developer@defra-ai-plugins`, so edits to
+`plugins/frontend-developer/` are only picked up after a fresh
+`claude plugin install`. To skip that step while you iterate locally, set
+`CLAUDE_PLUGIN_DIR` to the absolute path of the plugin checkout — the
+Claude-provider eval script passes it through as `--plugin-dir`, which
+overrides the installed copy for that session only:
+
+```sh
+export CLAUDE_PLUGIN_DIR=/abs/path/to/plugins/frontend-developer
+npx --no-install promptfoo eval \
+  --filter-providers claude-code-frontend-developer \
+  --filter-pattern 'Refuse'
+```
+
+Leave the env var unset for CI or baseline runs against the installed
+plugin.
+
 To browse results in a UI:
 
 ```sh

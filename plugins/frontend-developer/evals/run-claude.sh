@@ -15,6 +15,13 @@
 #
 # Pin the model to keep results comparable across runs.
 # Override with CLAUDE_MODEL=<id> for local experimentation.
+#
+# For iterating on plugin files without `claude plugin install` each time:
+#   export CLAUDE_PLUGIN_DIR=/abs/path/to/plugins/frontend-developer
+# When set, this script passes `--plugin-dir $CLAUDE_PLUGIN_DIR` to claude,
+# which loads the plugin from the local checkout for this session only and
+# overrides any installed copy. Leave the env var unset for CI / baseline
+# runs against the published / installed plugin.
 
 set -euo pipefail
 
@@ -24,6 +31,11 @@ PLUGIN_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 FIXTURE_SOURCE="$PLUGIN_DIR/eval-fixture"
 
 CLAUDE_MODEL="${CLAUDE_MODEL:-claude-sonnet-4-6}"
+
+CLAUDE_EXTRA_ARGS=()
+if [[ -n "${CLAUDE_PLUGIN_DIR:-}" ]]; then
+  CLAUDE_EXTRA_ARGS+=(--plugin-dir "$CLAUDE_PLUGIN_DIR")
+fi
 
 # Create an isolated working copy
 WORK_DIR=$(mktemp -d)
@@ -48,6 +60,7 @@ AGENT_OUTPUT=$(claude -p "$PROMPT" \
   --model "$CLAUDE_MODEL" \
   --permission-mode bypassPermissions \
   --output-format text \
+  ${CLAUDE_EXTRA_ARGS[@]+"${CLAUDE_EXTRA_ARGS[@]}"} \
   2>&1) || true
 
 report "CLAUDE" "$AGENT_OUTPUT" "$SNAP_BEFORE"
