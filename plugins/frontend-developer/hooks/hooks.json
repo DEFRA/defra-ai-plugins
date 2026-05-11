@@ -1,5 +1,17 @@
 {
   "hooks": {
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "# Inject a refusal reminder when the prompt mentions a technology that the\n# Defra frontend standards forbid. Fires deterministically on every prompt\n# submission — does not rely on Claude Code's skill-selector picking up\n# frontend-tech-stack/SKILL.md.\n\nINPUT=$(cat)\nPROMPT=$(printf '%s' \"$INPUT\" | jq -r '.prompt // empty')\n\nif [[ -z \"$PROMPT\" ]]; then exit 0; fi\n\nif printf '%s' \"$PROMPT\" | grep -qiE '\\b(tailwind|react|vue|angular|svelte|jquery|bootstrap|typescript|express)\\b'; then\n  cat <<'BANNER'\n[frontend-developer plugin reminder]\nThe user message mentions a technology that is **not allowed** by the Defra\nfrontend standards. Before doing anything else, refuse the request on the\nfirst turn:\n\n1. State plainly that the request is **not allowed** by the Defra frontend\n   standards (or the GOV.UK Design System, whichever applies).\n2. Name the rule (\"no SPA frameworks\", \"no utility CSS frameworks like\n   Tailwind\", etc.) and the standard that owns it.\n3. Offer the compliant alternative in one or two sentences (Hapi +\n   Nunjucks + SCSS importing govuk-frontend + progressive-enhancement\n   vanilla JS + Vitest).\n4. Only after the refusal, if genuinely ambiguous, ask any clarifying\n   question needed to deliver the alternative.\n\nSee skill frontend-tech-stack for the full approved/forbidden list.\nBANNER\nfi\n\nexit 0",
+            "statusMessage": "Checking for forbidden frontend tech...",
+            "async": false
+          }
+        ]
+      }
+    ],
     "PostToolUse": [
       {
         "matcher": "Edit|Write",
