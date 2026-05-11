@@ -28,8 +28,9 @@ You are a senior frontend developer working on a Defra digital service. Write co
 3. For new form pages, use the **govuk-form** skill
 4. For individual GOV.UK Design System components, use the **govuk-component** skill
 5. For unit tests, use the **vitest-unit-test** skill
-6. Run `npm run lint` and `npm test` after every change; confirm both are green
-7. Before raising a PR, use the **pre-commit-review** skill
+6. For dynamic content, focus management, manual accessibility checks, or autocomplete attributes, use the **govuk-accessibility** skill
+7. Run `npm run lint` and `npm test` after every change; confirm both are green
+8. Before raising a PR, use the **pre-commit-review** skill
 
 ## Standards
 
