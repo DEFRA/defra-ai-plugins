@@ -4,10 +4,11 @@ A GitHub Copilot CLI plugin that creates well-structured JIRA tickets for any te
 
 ## What it provides
 
-A custom agent (**`ticket-writer`**) backed by two skills:
+A custom agent (**`ticket-writer`**) backed by three skills:
 
 - **`story-ticket`** — user-facing features in _As a / I want to / so that_ format with Acceptance Criteria
 - **`task-ticket`** — technical implementation, infrastructure, or developer tasks
+- **`refine-ticket`** — review an existing ticket draft and produce a readiness verdict for team refinement
 
 At the start of every session the agent lists the available skills and asks whether to use the built-in default templates or a custom template file you provide.
 
@@ -44,10 +45,11 @@ Then describe what you want to create. The agent will ask clarifying questions, 
 
 Default save locations:
 
-| Type  | Path                                    |
-| ----- | --------------------------------------- |
-| Story | `tickets/story/<feature-name>.story.md` |
-| Task  | `tickets/task/<feature-name>.task.md`   |
+| Type   | Path                                         |
+| ------ | -------------------------------------------- |
+| Story  | `tickets/story/<feature-name>.story.md`      |
+| Task   | `tickets/task/<feature-name>.task.md`        |
+| Review | `tickets/refinement/<ticket-name>.review.md` |
 
 To use your own template, choose **custom** when prompted and supply a file path. The agent uses it for the rest of the session.
 
@@ -93,6 +95,7 @@ Run `npm test` from the repository root to confirm the new skill passes all stru
 - [`agents/ticket-writer.agent.md`](agents/ticket-writer.agent.md) — the full agent prompt
 - [`skills/story-ticket/SKILL.md`](skills/story-ticket/SKILL.md) — story formatting rules and default template
 - [`skills/task-ticket/SKILL.md`](skills/task-ticket/SKILL.md) — task formatting rules and default template
+- [`skills/refine-ticket/SKILL.md`](skills/refine-ticket/SKILL.md) — refinement-readiness checklist and review template
 
 ## Licence
 
