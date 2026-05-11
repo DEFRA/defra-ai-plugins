@@ -91,6 +91,27 @@ report() {
     "$feature_stage"
   rm -rf "$feature_stage"
 
+  # --- Branch guard: force-push to main from a feature branch (now blocked).
+  feature_stage=$(_stage_feature_branch "$fixture_dir")
+  _run_one branch-guard "force-push-main" "$fixture_dir" \
+    '{"tool_input":{"command":"git push --force origin main"}}' \
+    "$feature_stage"
+  rm -rf "$feature_stage"
+
+  # --- Branch guard: --force-with-lease to main:HEAD form (now blocked).
+  feature_stage=$(_stage_feature_branch "$fixture_dir")
+  _run_one branch-guard "force-with-lease-main" "$fixture_dir" \
+    '{"tool_input":{"command":"git push --force-with-lease origin HEAD:main"}}' \
+    "$feature_stage"
+  rm -rf "$feature_stage"
+
+  # --- Branch guard: force-push to a feature branch (negative control — should pass).
+  feature_stage=$(_stage_feature_branch "$fixture_dir")
+  _run_one branch-guard "force-push-feature" "$fixture_dir" \
+    '{"tool_input":{"command":"git push --force origin feature/x"}}' \
+    "$feature_stage"
+  rm -rf "$feature_stage"
+
   # --- Commit-message format: non-conforming subject.
   _run_one commit-message-format "WIP" "$fixture_dir" \
     '{"tool_input":{"command":"git commit -m \"WIP\""}}'
@@ -107,6 +128,18 @@ report() {
   _run_one commit-message-format "long-bypass" "$fixture_dir" \
     '{"tool_input":{"command":"git commit --message=\"WIP\""}}'
 
+  # --- Commit-message format: `-F` file bypass (now blocked).
+  _run_one commit-message-format "F-bypass" "$fixture_dir" \
+    '{"tool_input":{"command":"git commit -F /tmp/msg.txt"}}'
+
+  # --- Commit-message format: editor-driven commit, no -m (now blocked).
+  _run_one commit-message-format "editor-bypass" "$fixture_dir" \
+    '{"tool_input":{"command":"git commit"}}'
+
+  # --- Commit-message format: --amend --no-edit reuses validated message (allowed).
+  _run_one commit-message-format "amend-no-edit" "$fixture_dir" \
+    '{"tool_input":{"command":"git commit --amend --no-edit"}}'
+
   # --- Secret scan: planted AWS key.
   local AWS_KEY='AKIAIOSFODNN7EXAMPLE'
   _run_one secret-scan "AWS-key" "$fixture_dir" \
@@ -118,8 +151,43 @@ report() {
     "$(jq -nc --arg fp "$fixture_dir/fixtures/clean.js" --arg c 'export const greeting = "hello"' \
         '{tool_input:{file_path:$fp,content:$c}}')"
 
+  # --- Secret scan: AWS secret access key (base64 with /).
+  _run_one secret-scan "AWS-secret" "$fixture_dir" \
+    "$(jq -nc --arg fp "$fixture_dir/fixtures/secret-planted.js" \
+        --arg c "const AWS_SECRET_ACCESS_KEY = 'wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY'" \
+        '{tool_input:{file_path:$fp,content:$c}}')"
+
+  # --- Secret scan: OpenAI sk-proj-* key.
+  _run_one secret-scan "openai-key" "$fixture_dir" \
+    "$(jq -nc --arg fp "$fixture_dir/fixtures/secret-planted.js" \
+        --arg c "const k = 'sk-proj-AAAAAAAAAAAAAAAAAAAA1234567890abc'" \
+        '{tool_input:{file_path:$fp,content:$c}}')"
+
+  # --- Secret scan: Anthropic sk-ant-api-* key.
+  _run_one secret-scan "anthropic-key" "$fixture_dir" \
+    "$(jq -nc --arg fp "$fixture_dir/fixtures/secret-planted.js" \
+        --arg c "const k = 'sk-ant-api03-AAAAAAAAAAAAAAAAAAAA1234567890'" \
+        '{tool_input:{file_path:$fp,content:$c}}')"
+
+  # --- Secret scan: JWT triple.
+  _run_one secret-scan "jwt" "$fixture_dir" \
+    "$(jq -nc --arg fp "$fixture_dir/fixtures/secret-planted.js" \
+        --arg c "const t = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIn0.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c'" \
+        '{tool_input:{file_path:$fp,content:$c}}')"
+
   # --- PII scan: planted UK NI / NHS / postcode / DoB.
+  # The hook now skips paths under */eval-fixture/fixtures/* so the planted
+  # markdown does not flag *itself* during regression runs. Copy it to a tmp
+  # location to exercise the scanner.
+  local pii_tmp
+  pii_tmp=$(mktemp -t pii-planted-XXXXXX.md)
+  cp "$fixture_dir/fixtures/pii-planted.md" "$pii_tmp"
   _run_one pii-scan "planted-pii" "$fixture_dir" \
+    "$(jq -nc --arg fp "$pii_tmp" '{tool_input:{file_path:$fp}}')"
+  rm -f "$pii_tmp"
+
+  # --- PII scan: skip glob correctly suppresses fixture-path reports.
+  _run_one pii-scan "fixture-skipped" "$fixture_dir" \
     "$(jq -nc --arg fp "$fixture_dir/fixtures/pii-planted.md" '{tool_input:{file_path:$fp}}')"
 
   # --- Coverage floor: simulated low-coverage test output.

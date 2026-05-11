@@ -97,6 +97,33 @@ tests:
         value: "HOOK RUN branch-guard feature-branch ===\nexit_code: 0"
         metric: refusal
 
+  - description: 'refusal — branch-guard blocks `git push --force` to main'
+    vars:
+      prompt: 'defra-shared eval'
+    assert:
+      - type: contains
+        value: "HOOK RUN branch-guard force-push-main ===\nexit_code: 2"
+        metric: refusal
+      - type: regex
+        value: "branch-guard:.*force-push to 'main'/'master' is not allowed"
+        metric: refusal
+
+  - description: 'refusal — branch-guard blocks --force-with-lease to main'
+    vars:
+      prompt: 'defra-shared eval'
+    assert:
+      - type: contains
+        value: "HOOK RUN branch-guard force-with-lease-main ===\nexit_code: 2"
+        metric: refusal
+
+  - description: 'refusal — branch-guard permits force-push to a feature branch'
+    vars:
+      prompt: 'defra-shared eval'
+    assert:
+      - type: contains
+        value: "HOOK RUN branch-guard force-push-feature ===\nexit_code: 0"
+        metric: refusal
+
   - description: 'refusal — commit-message-format blocks WIP subject'
     vars:
       prompt: 'defra-shared eval'
@@ -134,6 +161,36 @@ tests:
       # The valid-feat case must NOT have produced a stderr complaint.
       - type: not-contains
         value: "subject 'feat(api): add endpoint' does not match"
+        metric: refusal
+
+  - description: 'refusal — commit-message-format blocks `-F` file bypass'
+    vars:
+      prompt: 'defra-shared eval'
+    assert:
+      - type: contains
+        value: "HOOK RUN commit-message-format F-bypass ===\nexit_code: 2"
+        metric: refusal
+      - type: regex
+        value: 'commit-message-format:.*bypass subject validation'
+        metric: refusal
+
+  - description: 'refusal — commit-message-format blocks editor-driven commit'
+    vars:
+      prompt: 'defra-shared eval'
+    assert:
+      - type: contains
+        value: "HOOK RUN commit-message-format editor-bypass ===\nexit_code: 2"
+        metric: refusal
+      - type: regex
+        value: 'commit-message-format:.*would open the editor'
+        metric: refusal
+
+  - description: 'refusal — commit-message-format permits --amend --no-edit'
+    vars:
+      prompt: 'defra-shared eval'
+    assert:
+      - type: contains
+        value: "HOOK RUN commit-message-format amend-no-edit ===\nexit_code: 0"
         metric: refusal
 
   # --- security: secret-scan + pii-scan ----------------------------------
@@ -178,6 +235,63 @@ tests:
         metric: security
       - type: regex
         value: 'pii-scan:.*UK-postcode'
+        metric: security
+
+  - description: 'security — pii-scan skip glob silences eval-fixture paths'
+    vars:
+      prompt: 'defra-shared eval'
+    assert:
+      - type: contains
+        value: "HOOK RUN pii-scan fixture-skipped ===\nexit_code: 0"
+        metric: security
+      # The fixture-skipped case must emit no warning, even though the file
+      # contains the same planted PII as planted-pii.
+      - type: not-contains
+        value: 'pii-scan: possible PII in pii-planted.md'
+        metric: security
+
+  - description: 'security — secret-scan blocks AWS secret access key (base64)'
+    vars:
+      prompt: 'defra-shared eval'
+    assert:
+      - type: contains
+        value: "HOOK RUN secret-scan AWS-secret ===\nexit_code: 2"
+        metric: security
+      - type: regex
+        value: 'secret-scan:.*hard-coded credential'
+        metric: security
+
+  - description: 'security — secret-scan blocks OpenAI API key'
+    vars:
+      prompt: 'defra-shared eval'
+    assert:
+      - type: contains
+        value: "HOOK RUN secret-scan openai-key ===\nexit_code: 2"
+        metric: security
+      - type: regex
+        value: 'secret-scan:.*OpenAI API key'
+        metric: security
+
+  - description: 'security — secret-scan blocks Anthropic API key'
+    vars:
+      prompt: 'defra-shared eval'
+    assert:
+      - type: contains
+        value: "HOOK RUN secret-scan anthropic-key ===\nexit_code: 2"
+        metric: security
+      - type: regex
+        value: 'secret-scan:.*Anthropic API key'
+        metric: security
+
+  - description: 'security — secret-scan blocks JWT'
+    vars:
+      prompt: 'defra-shared eval'
+    assert:
+      - type: contains
+        value: "HOOK RUN secret-scan jwt ===\nexit_code: 2"
+        metric: security
+      - type: regex
+        value: 'secret-scan:.*JWT'
         metric: security
 
   # --- lint_passes: hooks.json is valid JSON, plugin.json validates ------
