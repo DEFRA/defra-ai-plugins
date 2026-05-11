@@ -33,6 +33,17 @@
             "async": false
           }
         ]
+      },
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "INPUT=$(cat); FILE=$(echo \"$INPUT\" | jq -r '.tool_input.file_path // empty'); if [[ ( \"$FILE\" == *.js || \"$FILE\" == *.mjs ) && -f \"$FILE\" ]]; then if grep -qE 'document\\.write[[:space:]]*\\(' \"$FILE\"; then echo \"Warning: 'document.write(' found in $(basename $FILE) — this breaks progressive enhancement and HTML5 parsing. Render the content server-side in Nunjucks and enhance with addEventListener and DOM APIs instead.\" >&2; fi; fi; exit 0",
+            "statusMessage": "Checking progressive enhancement...",
+            "async": false
+          }
+        ]
       }
     ],
     "PreToolUse": [
