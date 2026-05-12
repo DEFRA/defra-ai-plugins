@@ -46,19 +46,6 @@
           }
         ]
       }
-    ],
-    "PreToolUse": [
-      {
-        "matcher": "Bash",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "CMD=$(cat | jq -r '.tool_input.command // empty'); if echo \"$CMD\" | grep -qE '^git (commit|push)'; then BRANCH=$(cd \"$CLAUDE_PROJECT_DIR\" && git rev-parse --abbrev-ref HEAD 2>/dev/null); if [[ \"$BRANCH\" == 'main' || \"$BRANCH\" == 'master' ]]; then echo \"Direct commits and pushes to '$BRANCH' are not allowed. Create a feature branch first (e.g. feature/my-change).\" >&2; exit 2; fi; fi; exit 0",
-            "statusMessage": "Checking git branch...",
-            "async": false
-          }
-        ]
-      }
     ]
   }
 }

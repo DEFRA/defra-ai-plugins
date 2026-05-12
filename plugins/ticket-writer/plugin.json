@@ -11,5 +11,6 @@
   "homepage": "https://github.com/DEFRA/defra-ai-plugins/tree/main/plugins/ticket-writer",
   "repository": "https://github.com/DEFRA/defra-ai-plugins",
   "category": "productivity",
-  "keywords": ["jira", "tickets", "stories", "tasks", "agile", "planning"]
+  "keywords": ["jira", "tickets", "stories", "tasks", "agile", "planning"],
+  "dependencies": ["defra-shared"]
 }

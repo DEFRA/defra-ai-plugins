@@ -98,14 +98,15 @@ optional — see [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Validation
 
-Every PR runs four checks:
+Every PR runs five checks:
 
-| Check                     | What it enforces                                                   |
-| ------------------------- | ------------------------------------------------------------------ |
-| `marketplace.json` schema | Required fields, kebab-case names, no duplicates, source paths     |
-| `plugin.json` schema      | Required fields per plugin; name matches directory and marketplace |
-| Agent frontmatter         | `description` and `tools` present and well-formed                  |
-| Alphabetical sort         | Marketplace plugins sorted by name                                 |
+| Check                     | What it enforces                                                                                                                                                                  |
+| ------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `marketplace.json` schema | Required fields, kebab-case names, no duplicates, source paths                                                                                                                    |
+| `plugin.json` schema      | Required fields per plugin; name matches directory and marketplace                                                                                                                |
+| Agent frontmatter         | `description` and `tools` present and well-formed                                                                                                                                 |
+| Cross-plugin refs         | Every skill named in an agent prompt resolves to the agent's own plugin or a plugin listed in `dependencies` in `plugin.json`. Catches drift between agent prompts and manifests. |
+| Alphabetical sort         | Marketplace plugins sorted by name                                                                                                                                                |
 
 Run them locally:
 

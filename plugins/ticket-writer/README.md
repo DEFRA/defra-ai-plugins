@@ -11,9 +11,13 @@ A custom agent (**`ticket-writer`**) backed by two skills:
 
 At the start of every session the agent lists the available skills and asks whether to use the built-in default templates or a custom template file you provide.
 
-## Companion plugin
+## Prerequisite plugin
 
-This plugin's agent references the **`defra-shared`** plugin for cross-cutting standards (branching, commit messages, security/PII, documentation accessibility) and inherits its guardrail hooks. Install both for the full set of Defra rules and PreToolUse / PostToolUse guardrails. Without `defra-shared`, the agent falls back to short inline restatements; behaviour stays graceful but the shared hooks (e.g. `pii-scan`, `commit-message-format`, `branch-guard`) won't fire when the agent saves or commits ticket files.
+This plugin declares **`defra-shared`** as a dependency in [`plugin.json`](plugin.json) and **must be installed alongside it**. The agent references the shared skills (`defra-branching`, `defra-commit-messages`, `defra-security-pii`, `defra-accessibility`, `defra-quality-gates`) by name in its workflow, and the guardrail hooks shipped by `defra-shared` (`branch-guard`, `commit-message-format`, `secret-scan`, `pii-scan`) are the enforcement layer for those standards when the agent saves or commits ticket files.
+
+Copilot CLI does not auto-install dependencies — `npm test` (the `validate-cross-plugin-refs` check) verifies that every skill named in an agent prompt resolves to either the agent's own plugin or a plugin declared in `dependencies`, but the user still has to install both plugins. The Install section below lists the commands in the required order.
+
+If `defra-shared` is not installed, the agent falls back to short inline restatements of each rule; behaviour stays graceful but the shared hooks do not fire, so enforcement degrades to advisory.
 
 ## Install
 

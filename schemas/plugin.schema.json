@@ -81,6 +81,15 @@
         "minLength": 1,
         "maxLength": 30
       }
+    },
+    "dependencies": {
+      "type": "array",
+      "description": "Names of other plugins in the marketplace whose skills or hooks this plugin's agents reference. Copilot CLI does not auto-install dependencies — declaring them lets the validator catch references to skills the user may not have installed, and lets READMEs document the install order.",
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "pattern": "^[a-z][a-z0-9-]*[a-z0-9]$"
+      }
     }
   }
 }

@@ -61,12 +61,16 @@ Notes that diverge from "skills call tools, agent aggregates":
 
 - Skills here have **no `tools` declaration**. The agent's tool surface is the
   only one in play (`scripts/validate-frontmatter.mjs:99-110`).
-- The cross-plugin relationship is **textual**, not declarative. Agents in
-  `frontend-developer` and `ticket-writer` name `defra-shared` skills in their
-  prompts (e.g. `plugins/frontend-developer/agents/frontend-developer.agent.md:38-42`).
-  There is no manifest-level dependency between plugins; install order is the
-  user's responsibility (`plugins/defra-shared/README.md` is the soft
-  dependency contract).
+- The cross-plugin relationship is **declared in `plugin.json`** and verified
+  by `scripts/validate-cross-plugin-refs.mjs`, which scans every agent prompt
+  for skill names and fails the build if any name belongs to a plugin not
+  listed in the agent plugin's `dependencies`. Both `frontend-developer` and
+  `ticket-writer` declare `defra-shared` as a dependency. The agent prompts
+  still name skills textually (e.g.
+  `plugins/frontend-developer/agents/frontend-developer.agent.md:38-42`); the
+  validator is what keeps the prompt and the manifest in sync. Copilot CLI
+  does not auto-install dependencies — the user installs both plugins in the
+  order documented in each plugin's README.
 - `defra-shared` has **no agent** — only skills + hooks. It is consumed by the
   other plugins' agents (`plugins/defra-shared/plugin.json`).
 
@@ -134,7 +138,8 @@ declared-but-unused for sub-agent delegation.
    │       mentioning forbidden tech           │       │
    │                                           │       │
    │   hooks: lint/format, scss-build,         │       │
-   │     nunjucks-security, branch-guard       │       │
+   │     nunjucks-security                     │       │
+   │     (branch-guard lives in defra-shared)  │       │
    └───────────────────────────────────────────┘       │
                                                        │
    ┌───────────────────────────────────────────┐       │
@@ -177,27 +182,40 @@ declared-but-unused for sub-agent delegation.
   `plugins/<plugin>/hooks/hooks.json`. Each entry has a matcher (`Bash`,
   `Edit|Write`, `UserPromptSubmit`) and an inline shell command.
 - To find **what's installed in the marketplace and how plugins relate**: read
-  `README.md` and `plugins/<plugin>/plugin.json`. There is no declared
-  dependency between plugins; `defra-shared` is a soft dependency referenced
-  by name in the other agents' prompts.
+  `README.md` and `plugins/<plugin>/plugin.json`. Each plugin declares its
+  cross-plugin dependencies in the `dependencies` field; the
+  `validate-cross-plugin-refs` check
+  (`scripts/validate-cross-plugin-refs.mjs`) enforces that every skill named
+  in an agent prompt resolves to either the agent's own plugin or a declared
+  dependency.
 
 ## 6. Notes on the model
 
-- **No declared cross-plugin dependency.** `plugin.json` has no
-  `dependencies` field (`schemas/plugin.schema.json:7-9`). The other plugins'
-  agents call `defra-shared` skills by name; if a user installs
-  `frontend-developer` without `defra-shared`, those references become dead
-  links and the agent falls back to the inline "soft-handoff" copy in its own
-  prompt (`plugins/frontend-developer/agents/frontend-developer.agent.md:36`).
+- **Declared but not auto-installed.** `plugin.json` carries an optional
+  `dependencies` array (`schemas/plugin.schema.json`). Both
+  `frontend-developer` and `ticket-writer` declare `defra-shared` there, and
+  the `validate-cross-plugin-refs` check fails the build if an agent
+  references a skill from an undeclared plugin. Copilot CLI does **not**
+  resolve or install dependencies — the field is a contract for documentation
+  and CI, not an installer directive. The user must still install both
+  plugins; the READMEs document the order. Without `defra-shared`, agent
+  prompts fall back to the inline "soft-handoff" copy
+  (`plugins/frontend-developer/agents/frontend-developer.agent.md:36`) and
+  the shared hooks do not fire.
 - **Skill loading is opportunistic, not deterministic.** The agent decides
   when to load a skill based on the workflow text in its prompt. The one
   exception is `frontend-tech-stack`, which the `UserPromptSubmit` hook
   injects deterministically on keyword match — added because the project
   could not rely on the skill selector picking it up (see the comment in
   `plugins/frontend-developer/hooks/hooks.json` on the UserPromptSubmit hook).
-- **Hooks are the only enforcement.** Skill content is advisory; the
-  guarantees that something cannot happen (no commit to `main`, no hard-coded
-  secret reaching disk) come from `PreToolUse` hooks that exit 2.
+- **Hooks are the only enforcement, and they live exactly once.** Skill
+  content is advisory; the guarantees that something cannot happen (no commit
+  to `main`, no hard-coded secret reaching disk) come from `PreToolUse` hooks
+  that exit 2. All cross-cutting hooks live in `defra-shared` — role plugins
+  do not redeclare them. (An earlier duplicate `branch-guard` in
+  `frontend-developer/hooks/hooks.json` was removed once `defra-shared` was
+  made a declared dependency; carrying both meant the hook fired twice when
+  both plugins were installed and partially when only the role plugin was.)
 - **Context cost.** Every skill an agent loads is appended to its context for
   the rest of the session. The frontend-developer workflow can pull in up to
   nine skills in one session (four own + five shared) which is the upper bound
