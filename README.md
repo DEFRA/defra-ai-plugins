@@ -98,15 +98,16 @@ optional — see [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Validation
 
-Every PR runs five checks:
+Every PR runs six checks:
 
-| Check                     | What it enforces                                                                                                                                                                  |
-| ------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `marketplace.json` schema | Required fields, kebab-case names, no duplicates, source paths                                                                                                                    |
-| `plugin.json` schema      | Required fields per plugin; name matches directory and marketplace                                                                                                                |
-| Agent frontmatter         | `description` and `tools` present and well-formed                                                                                                                                 |
-| Cross-plugin refs         | Every skill named in an agent prompt resolves to the agent's own plugin or a plugin listed in `dependencies` in `plugin.json`. Catches drift between agent prompts and manifests. |
-| Alphabetical sort         | Marketplace plugins sorted by name                                                                                                                                                |
+| Check                     | What it enforces                                                                                                                                                                    |
+| ------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `marketplace.json` schema | Required fields, kebab-case names, no duplicates, source paths                                                                                                                      |
+| `plugin.json` schema      | Required fields per plugin; name matches directory and marketplace                                                                                                                  |
+| Agent frontmatter         | `description` and `tools` present and well-formed                                                                                                                                   |
+| Cross-plugin refs         | Every skill named in an agent prompt resolves to the agent's own plugin or a plugin listed in `dependencies` in `plugin.json`. Catches drift between agent prompts and manifests.   |
+| Docs sync                 | `docs/agents-and-skills.md` references every agent and skill on disk, and every path it cites still exists. Catches doc drift when an agent or skill is added, renamed, or removed. |
+| Alphabetical sort         | Marketplace plugins sorted by name                                                                                                                                                  |
 
 Run them locally:
 

@@ -188,6 +188,12 @@ declared-but-unused for sub-agent delegation.
   (`scripts/validate-cross-plugin-refs.mjs`) enforces that every skill named
   in an agent prompt resolves to either the agent's own plugin or a declared
   dependency.
+- To **keep this document honest**: the `validate-docs-sync` check
+  (`scripts/validate-docs-sync.mjs`, run as part of `npm test`) parses this
+  file's backticked path references and fails CI if any agent or skill on
+  disk is missing from the inventory, or if a path in the doc no longer
+  exists. Adding, removing, or renaming an entry-point file means updating
+  the inventory in section 3 below.
 
 ## 6. Notes on the model
 

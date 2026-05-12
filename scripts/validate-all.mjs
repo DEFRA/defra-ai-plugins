@@ -7,6 +7,7 @@ import { validateMarketplace } from './validate-marketplace.mjs'
 import { validatePlugins } from './validate-plugins.mjs'
 import { validateFrontmatter } from './validate-frontmatter.mjs'
 import { validateCrossPluginRefs } from './validate-cross-plugin-refs.mjs'
+import { validateDocsSync } from './validate-docs-sync.mjs'
 import { checkSorted } from './check-sorted.mjs'
 
 const checks = [
@@ -14,6 +15,7 @@ const checks = [
   ['plugins/', validatePlugins],
   ['agent frontmatter', validateFrontmatter],
   ['cross-plugin refs', validateCrossPluginRefs],
+  ['docs sync', validateDocsSync],
   ['marketplace ordering', () => checkSorted({ fix: false })]
 ]
 
