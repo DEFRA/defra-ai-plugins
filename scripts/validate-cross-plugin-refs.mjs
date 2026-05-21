@@ -48,7 +48,7 @@ function findSkillReferences(body, registry) {
   /** @type {Set<string>} */
   const hits = new Set()
   for (const name of registry.keys()) {
-    const re = new RegExp(`\\b${name.replace(/[-]/g, '-')}\\b`)
+    const re = new RegExp(`\\b${name}\\b`)
     if (re.test(body)) {
       hits.add(name)
     }

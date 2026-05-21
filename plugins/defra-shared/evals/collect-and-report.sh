@@ -143,9 +143,9 @@ report() {
     '{"tool_input":{"command":"git commit --amend --no-edit"}}'
 
   # --- Secret scan: planted AWS key.
-  local AWS_KEY='AKIAIOSFODNN7EXAMPLE'
+  local aws_key='AKIAIOSFODNN7EXAMPLE'
   _run_one secret-scan "AWS-key" "$fixture_dir" \
-    "$(jq -nc --arg fp "$fixture_dir/fixtures/secret-planted.js" --arg c "const k = '$AWS_KEY'" \
+    "$(jq -nc --arg fp "$fixture_dir/fixtures/secret-planted.js" --arg c "const k = '$aws_key'" \
         '{tool_input:{file_path:$fp,content:$c}}')"
 
   # --- Secret scan: clean content (negative control).
