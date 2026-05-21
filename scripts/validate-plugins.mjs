@@ -44,7 +44,9 @@ export function validatePlugins() {
   const marketplaceByName = new Map()
   if (Array.isArray(marketplace.plugins)) {
     for (const p of marketplace.plugins) {
-      if (p && typeof p.name === 'string') marketplaceByName.set(p.name, p)
+      if (p && typeof p.name === 'string') {
+        marketplaceByName.set(p.name, p)
+      }
     }
   }
 
@@ -68,7 +70,9 @@ export function validatePlugins() {
 
     // Schema validation
     const schemaErrors = validatePlugin(manifest)
-    for (const e of schemaErrors) errors.push(`${prefix}/plugin.json: ${e}`)
+    for (const e of schemaErrors) {
+      errors.push(`${prefix}/plugin.json: ${e}`)
+    }
 
     // Name must match directory
     if (manifest.name !== basename(pluginRoot)) {
@@ -142,7 +146,9 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   const errors = validatePlugins()
   if (errors.length) {
     console.error(`plugins: ${errors.length} error(s)`)
-    for (const e of errors) console.error(`  - ${e}`)
+    for (const e of errors) {
+      console.error(`  - ${e}`)
+    }
     process.exit(1)
   }
   console.log('plugins: ok')

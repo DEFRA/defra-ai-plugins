@@ -35,7 +35,9 @@ export function discoverEntryPoints(pluginRoot) {
   const agentsDir = resolve(pluginRoot, 'agents')
   if (existsSync(agentsDir) && statSync(agentsDir).isDirectory()) {
     for (const file of readdirSync(agentsDir)) {
-      if (!file.endsWith('.md')) continue
+      if (!file.endsWith('.md')) {
+        continue
+      }
       const absPath = resolve(agentsDir, file)
       if (file.endsWith('.agent.md')) {
         entries.push({
@@ -60,7 +62,9 @@ export function discoverEntryPoints(pluginRoot) {
   if (existsSync(skillsDir) && statSync(skillsDir).isDirectory()) {
     for (const skillName of readdirSync(skillsDir)) {
       const skillRoot = resolve(skillsDir, skillName)
-      if (!statSync(skillRoot).isDirectory()) continue
+      if (!statSync(skillRoot).isDirectory()) {
+        continue
+      }
       const skillFile = resolve(skillRoot, 'SKILL.md')
       if (existsSync(skillFile)) {
         entries.push({

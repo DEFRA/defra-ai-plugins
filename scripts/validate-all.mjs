@@ -24,7 +24,9 @@ for (const [label, run] of checks) {
   const errors = run()
   if (errors.length) {
     console.error(`✗ ${label}: ${errors.length} error(s)`)
-    for (const e of errors) console.error(`    - ${e}`)
+    for (const e of errors) {
+      console.error(`    - ${e}`)
+    }
     totalErrors += errors.length
   } else {
     console.log(`✓ ${label}`)

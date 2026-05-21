@@ -35,7 +35,9 @@ export function validateDocsSync() {
 
   const doc = readFileSync(DOC_PATH, 'utf8')
 
-  if (!existsSync(PLUGINS_DIR)) return ['plugins/: directory does not exist']
+  if (!existsSync(PLUGINS_DIR)) {
+    return ['plugins/: directory does not exist']
+  }
   const dirs = readdirSync(PLUGINS_DIR).filter((entry) =>
     statSync(resolve(PLUGINS_DIR, entry)).isDirectory()
   )
@@ -53,7 +55,9 @@ export function validateDocsSync() {
   // Match `plugins/<plugin>/agents/<name>.agent.md`, `…/agents/<name>.md`, `…/skills/<name>/SKILL.md`.
   const pathRe =
     /`(plugins\/[a-z0-9-]+\/(?:agents\/[a-z0-9.-]+\.md|skills\/[a-z0-9-]+\/SKILL\.md))`/g
-  for (const match of doc.matchAll(pathRe)) referencedPaths.add(match[1])
+  for (const match of doc.matchAll(pathRe)) {
+    referencedPaths.add(match[1])
+  }
 
   for (const path of expectedPaths) {
     if (!referencedPaths.has(path)) {
@@ -80,7 +84,9 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   const errors = validateDocsSync()
   if (errors.length) {
     console.error(`docs sync: ${errors.length} error(s)`)
-    for (const e of errors) console.error(`  - ${e}`)
+    for (const e of errors) {
+      console.error(`  - ${e}`)
+    }
     process.exit(1)
   }
   console.log('docs sync: ok')

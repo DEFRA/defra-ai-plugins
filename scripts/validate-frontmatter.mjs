@@ -48,7 +48,9 @@ function validateDescription(data, prefix) {
 function validateToolsArray(value, prefix, { required }) {
   const errors = []
   if (value === undefined || value === null) {
-    if (required) errors.push(`${prefix}: frontmatter "tools" missing or not an array`)
+    if (required) {
+      errors.push(`${prefix}: frontmatter "tools" missing or not an array`)
+    }
     return errors
   }
   if (!Array.isArray(value)) {
@@ -165,7 +167,9 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   const errors = validateFrontmatter()
   if (errors.length) {
     console.error(`frontmatter: ${errors.length} error(s)`)
-    for (const e of errors) console.error(`  - ${e}`)
+    for (const e of errors) {
+      console.error(`  - ${e}`)
+    }
     process.exit(1)
   }
   console.log('frontmatter: ok')

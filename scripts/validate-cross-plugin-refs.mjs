@@ -27,7 +27,9 @@ function buildSkillRegistry(pluginDirs) {
   for (const dir of pluginDirs) {
     const pluginRoot = resolve(PLUGINS_DIR, dir)
     for (const entry of discoverEntryPoints(pluginRoot)) {
-      if (entry.format === 'skill') registry.set(entry.name, dir)
+      if (entry.format === 'skill') {
+        registry.set(entry.name, dir)
+      }
     }
   }
   return registry
@@ -47,7 +49,9 @@ function findSkillReferences(body, registry) {
   const hits = new Set()
   for (const name of registry.keys()) {
     const re = new RegExp(`\\b${name.replace(/[-]/g, '-')}\\b`)
-    if (re.test(body)) hits.add(name)
+    if (re.test(body)) {
+      hits.add(name)
+    }
   }
   return hits
 }
@@ -58,7 +62,9 @@ function findSkillReferences(body, registry) {
 export function validateCrossPluginRefs() {
   const errors = []
 
-  if (!existsSync(PLUGINS_DIR)) return ['plugins/: directory does not exist']
+  if (!existsSync(PLUGINS_DIR)) {
+    return ['plugins/: directory does not exist']
+  }
 
   const dirs = readdirSync(PLUGINS_DIR).filter((entry) =>
     statSync(resolve(PLUGINS_DIR, entry)).isDirectory()
@@ -69,7 +75,9 @@ export function validateCrossPluginRefs() {
   for (const dir of dirs) {
     const pluginRoot = resolve(PLUGINS_DIR, dir)
     const manifestPath = resolve(pluginRoot, 'plugin.json')
-    if (!existsSync(manifestPath)) continue
+    if (!existsSync(manifestPath)) {
+      continue
+    }
 
     let manifest
     try {
@@ -80,7 +88,9 @@ export function validateCrossPluginRefs() {
     const declaredDeps = new Set(Array.isArray(manifest.dependencies) ? manifest.dependencies : [])
 
     for (const entry of discoverEntryPoints(pluginRoot)) {
-      if (entry.format !== 'copilot-agent' && entry.format !== 'claude-agent') continue
+      if (entry.format !== 'copilot-agent' && entry.format !== 'claude-agent') {
+        continue
+      }
 
       let parsed
       try {
@@ -92,7 +102,10 @@ export function validateCrossPluginRefs() {
       const hits = findSkillReferences(parsed.content, skillRegistry)
       for (const skillName of hits) {
         const owningPlugin = skillRegistry.get(skillName)
-        if (owningPlugin === dir) continue // own-plugin reference is always fine
+        // own-plugin reference is always fine
+        if (owningPlugin === dir) {
+          continue
+        }
         if (!declaredDeps.has(owningPlugin)) {
           errors.push(
             `plugins/${dir}/${entry.relPath}: references skill "${skillName}" ` +
@@ -124,7 +137,9 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   const errors = validateCrossPluginRefs()
   if (errors.length) {
     console.error(`cross-plugin refs: ${errors.length} error(s)`)
-    for (const e of errors) console.error(`  - ${e}`)
+    for (const e of errors) {
+      console.error(`  - ${e}`)
+    }
     process.exit(1)
   }
   console.log('cross-plugin refs: ok')

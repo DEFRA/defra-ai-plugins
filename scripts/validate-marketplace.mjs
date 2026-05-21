@@ -24,13 +24,17 @@ export function validateMarketplace() {
   }
 
   const schemaErrors = buildValidator('marketplace.schema.json')(marketplace)
-  for (const e of schemaErrors) errors.push(`marketplace.json: ${e}`)
+  for (const e of schemaErrors) {
+    errors.push(`marketplace.json: ${e}`)
+  }
 
   // Structural checks beyond what JSON Schema covers
   if (Array.isArray(marketplace.plugins)) {
     const seen = new Set()
     for (const [i, p] of marketplace.plugins.entries()) {
-      if (!p || typeof p !== 'object') continue
+      if (!p || typeof p !== 'object') {
+        continue
+      }
       if (typeof p.name === 'string') {
         if (seen.has(p.name)) {
           errors.push(`marketplace.json: plugins[${i}] duplicate plugin name "${p.name}"`)
@@ -47,7 +51,9 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   const errors = validateMarketplace()
   if (errors.length) {
     console.error(`marketplace.json: ${errors.length} error(s)`)
-    for (const e of errors) console.error(`  - ${e}`)
+    for (const e of errors) {
+      console.error(`  - ${e}`)
+    }
     process.exit(1)
   }
   console.log('marketplace.json: ok')
