@@ -57,11 +57,85 @@ function findSkillReferences(body, registry) {
 }
 
 /**
+ * Read and parse a plugin.json. Returns null when missing or unparseable —
+ * validate-plugins.mjs reports parse errors, so we silently skip here.
+ * @param {string} manifestPath
+ * @returns {object|null}
+ */
+function loadManifest(manifestPath) {
+  if (!existsSync(manifestPath)) {
+    return null
+  }
+  try {
+    return JSON.parse(readFileSync(manifestPath, 'utf8'))
+  } catch {
+    return null
+  }
+}
+
+/**
+ * Errors for any skill an agent references that lives in an undeclared plugin.
+ * @param {string} dir
+ * @param {string} pluginRoot
+ * @param {Map<string, string>} skillRegistry
+ * @param {Set<string>} declaredDeps
+ * @returns {string[]}
+ */
+function collectAgentRefErrors(dir, pluginRoot, skillRegistry, declaredDeps) {
+  const errors = []
+  for (const entry of discoverEntryPoints(pluginRoot)) {
+    if (entry.format !== 'copilot-agent' && entry.format !== 'claude-agent') {
+      continue
+    }
+    let parsed
+    try {
+      parsed = matter(readFileSync(entry.absPath, 'utf8'))
+    } catch {
+      continue // validate-frontmatter.mjs reports parse errors
+    }
+    for (const skillName of findSkillReferences(parsed.content, skillRegistry)) {
+      const owningPlugin = skillRegistry.get(skillName)
+      if (owningPlugin === dir || declaredDeps.has(owningPlugin)) {
+        continue
+      }
+      errors.push(
+        `plugins/${dir}/${entry.relPath}: references skill "${skillName}" ` +
+          `(owned by plugin "${owningPlugin}") but plugins/${dir}/plugin.json ` +
+          `does not declare "${owningPlugin}" in "dependencies".`
+      )
+    }
+  }
+  return errors
+}
+
+/**
+ * Errors for declared dependencies that don't resolve to a sibling plugin
+ * (or that name the declaring plugin itself).
+ * @param {string} dir
+ * @param {Set<string>} declaredDeps
+ * @param {string[]} dirs
+ * @returns {string[]}
+ */
+function collectDepErrors(dir, declaredDeps, dirs) {
+  const errors = []
+  for (const depName of declaredDeps) {
+    if (!dirs.includes(depName)) {
+      errors.push(
+        `plugins/${dir}/plugin.json: dependency "${depName}" is not a plugin in this marketplace ` +
+          `(no plugins/${depName}/ directory).`
+      )
+    }
+    if (depName === dir) {
+      errors.push(`plugins/${dir}/plugin.json: plugin lists itself as a dependency.`)
+    }
+  }
+  return errors
+}
+
+/**
  * @returns {string[]} list of error messages (empty if valid)
  */
 export function validateCrossPluginRefs() {
-  const errors = []
-
   if (!existsSync(PLUGINS_DIR)) {
     return ['plugins/: directory does not exist']
   }
@@ -69,65 +143,18 @@ export function validateCrossPluginRefs() {
   const dirs = readdirSync(PLUGINS_DIR).filter((entry) =>
     statSync(resolve(PLUGINS_DIR, entry)).isDirectory()
   )
-
   const skillRegistry = buildSkillRegistry(dirs)
+  const errors = []
 
   for (const dir of dirs) {
     const pluginRoot = resolve(PLUGINS_DIR, dir)
-    const manifestPath = resolve(pluginRoot, 'plugin.json')
-    if (!existsSync(manifestPath)) {
+    const manifest = loadManifest(resolve(pluginRoot, 'plugin.json'))
+    if (!manifest) {
       continue
     }
-
-    let manifest
-    try {
-      manifest = JSON.parse(readFileSync(manifestPath, 'utf8'))
-    } catch {
-      continue // validate-plugins.mjs will report parse errors
-    }
     const declaredDeps = new Set(Array.isArray(manifest.dependencies) ? manifest.dependencies : [])
-
-    for (const entry of discoverEntryPoints(pluginRoot)) {
-      if (entry.format !== 'copilot-agent' && entry.format !== 'claude-agent') {
-        continue
-      }
-
-      let parsed
-      try {
-        parsed = matter(readFileSync(entry.absPath, 'utf8'))
-      } catch {
-        continue // validate-frontmatter.mjs reports parse errors
-      }
-
-      const hits = findSkillReferences(parsed.content, skillRegistry)
-      for (const skillName of hits) {
-        const owningPlugin = skillRegistry.get(skillName)
-        // own-plugin reference is always fine
-        if (owningPlugin === dir) {
-          continue
-        }
-        if (!declaredDeps.has(owningPlugin)) {
-          errors.push(
-            `plugins/${dir}/${entry.relPath}: references skill "${skillName}" ` +
-              `(owned by plugin "${owningPlugin}") but plugins/${dir}/plugin.json ` +
-              `does not declare "${owningPlugin}" in "dependencies".`
-          )
-        }
-      }
-    }
-
-    // Reverse check: every declared dependency must exist as a plugin directory.
-    for (const depName of declaredDeps) {
-      if (!dirs.includes(depName)) {
-        errors.push(
-          `plugins/${dir}/plugin.json: dependency "${depName}" is not a plugin in this marketplace ` +
-            `(no plugins/${depName}/ directory).`
-        )
-      }
-      if (depName === dir) {
-        errors.push(`plugins/${dir}/plugin.json: plugin lists itself as a dependency.`)
-      }
-    }
+    errors.push(...collectAgentRefErrors(dir, pluginRoot, skillRegistry, declaredDeps))
+    errors.push(...collectDepErrors(dir, declaredDeps, dirs))
   }
 
   return errors
