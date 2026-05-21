@@ -38,6 +38,7 @@ write_hook() {
     printf '%s\n' "$cmd"
   } > "$out"
   chmod +x "$out"
+  return 0
 }
 
 write_hook 'branch-guard'

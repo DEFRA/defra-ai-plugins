@@ -22,11 +22,11 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 FIXTURE_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 HOOK_SCRIPT="$FIXTURE_DIR/hooks-under-test/$HOOK_ID.sh"
 
-if [ ! -x "$HOOK_SCRIPT" ]; then
+if [[ ! -x "$HOOK_SCRIPT" ]]; then
   "$SCRIPT_DIR/extract-hooks.sh" >/dev/null
 fi
 
-if [ -n "$EXPLICIT_PROJECT_DIR" ]; then
+if [[ -n "$EXPLICIT_PROJECT_DIR" ]]; then
   PROJECT_DIR="$EXPLICIT_PROJECT_DIR"
   CLEANUP=''
 else
@@ -39,9 +39,10 @@ export CLAUDE_PROJECT_DIR="$PROJECT_DIR"
 stderr_capture=$(mktemp)
 cleanup() {
   rm -f "$stderr_capture"
-  if [ -n "$CLEANUP" ] && [ -d "$CLEANUP" ]; then
+  if [[ -n "$CLEANUP" && -d "$CLEANUP" ]]; then
     rm -rf "$CLEANUP"
   fi
+  return 0
 }
 trap cleanup EXIT
 

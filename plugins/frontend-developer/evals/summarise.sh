@@ -10,7 +10,7 @@ set -euo pipefail
 
 RESULT="${1:?usage: summarise.sh <results.json>}"
 
-if [ ! -f "$RESULT" ]; then
+if [[ ! -f "$RESULT" ]]; then
   echo "::error::No result file at $RESULT" >&2
   exit 1
 fi

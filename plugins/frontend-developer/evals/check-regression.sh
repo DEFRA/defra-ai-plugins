@@ -15,11 +15,11 @@ NEW="${1:?usage: check-regression.sh <new-results.json> [baseline.json]}"
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 BASELINE="${2:-$SCRIPT_DIR/baseline/promptfoo-results.json}"
 
-if [ ! -f "$NEW" ]; then
+if [[ ! -f "$NEW" ]]; then
   echo "::error::New results file not found: $NEW" >&2
   exit 2
 fi
-if [ ! -f "$BASELINE" ]; then
+if [[ ! -f "$BASELINE" ]]; then
   echo "::error::Baseline file not found: $BASELINE" >&2
   exit 2
 fi
@@ -38,7 +38,7 @@ baseline_passing=$(jq -r '
 
 regressions=()
 while IFS= read -r prompt; do
-  [ -z "$prompt" ] && continue
+  [[ -z "$prompt" ]] && continue
   status=$(jq -r --arg p "$prompt" '
     [.results.results[] | select(.vars.prompt == $p) | .success] as $rs
     | if ($rs | length) == 0 then "missing"
@@ -52,7 +52,7 @@ while IFS= read -r prompt; do
   esac
 done <<< "$baseline_passing"
 
-if [ ${#regressions[@]} -eq 0 ]; then
+if [[ ${#regressions[@]} -eq 0 ]]; then
   echo "No regressions vs baseline."
   exit 0
 fi

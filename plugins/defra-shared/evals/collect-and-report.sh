@@ -30,7 +30,7 @@ _run_one() {
   echo "=== HOOK RUN $hook_id $label ==="
   local out
   set +e
-  if [ -n "$project_dir" ]; then
+  if [[ -n "$project_dir" ]]; then
     out=$(printf '%s' "$input_json" | "$fixture_dir/scripts/run-hook.sh" "$hook_id" "$project_dir" 2>&1)
   else
     out=$(printf '%s' "$input_json" | "$fixture_dir/scripts/run-hook.sh" "$hook_id" 2>&1)
@@ -39,6 +39,7 @@ _run_one() {
   # `run-hook.sh` already emits its own header — strip it to avoid a double header.
   echo "$out" | sed -n '/^exit_code:/,$p'
   echo
+  return 0
 }
 
 # Stage a fixture clone and check out a feature branch on it. Echoes the path.
@@ -49,6 +50,7 @@ _stage_feature_branch() {
   stage=$("$fixture_dir/scripts/init-git.sh")
   ( cd "$stage" && git checkout -q -b feature/x )
   echo "$stage"
+  return 0
 }
 
 report() {
@@ -200,4 +202,5 @@ report() {
   echo "branch-guard refused commit on main: see HOOK RUN branch-guard main+commit"
   echo "commit-message-format refused WIP subject: see HOOK RUN commit-message-format WIP"
   echo "secret-scan refused AWS key: see HOOK RUN secret-scan AWS-key"
+  return 0
 }
