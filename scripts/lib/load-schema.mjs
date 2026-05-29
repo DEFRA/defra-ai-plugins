@@ -39,7 +39,9 @@ export function buildValidator(schemaFile) {
     }
 
     const ok = validate(cleaned)
-    if (ok) return []
+    if (ok) {
+      return []
+    }
     return (validate.errors ?? []).map((err) => {
       const path = err.instancePath || '(root)'
       return `${path} ${err.message}${err.params ? ' ' + JSON.stringify(err.params) : ''}`

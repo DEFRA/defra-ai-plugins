@@ -21,6 +21,7 @@ snapshot_files() {
     find src -type f -exec md5 -r {} \; 2>/dev/null \
       | sort -k2 > "$outfile" || true
   fi
+  return 0
 }
 
 # Diff two snapshots. New paths are flagged "(new)"; paths in both whose
@@ -36,18 +37,19 @@ _files_changed() {
   awk '{print $2}' "$after"  > "$after_paths"
 
   comm -13 "$before_paths" "$after_paths" | while IFS= read -r p; do
-    [ -n "$p" ] && printf '%s (new)\n' "$p"
+    [[ -n "$p" ]] && printf '%s (new)\n' "$p"
   done
 
   comm -12 "$before_paths" "$after_paths" | while IFS= read -r p; do
-    [ -z "$p" ] && continue
+    [[ -z "$p" ]] && continue
     local h_before h_after
     h_before=$(awk -v p="$p" '$2==p {print $1; exit}' "$before")
     h_after=$(awk  -v p="$p" '$2==p {print $1; exit}' "$after")
-    [ "$h_before" != "$h_after" ] && printf '%s (modified)\n' "$p"
+    [[ "$h_before" != "$h_after" ]] && printf '%s (modified)\n' "$p"
   done
 
   rm -f "$before_paths" "$after_paths"
+  return 0
 }
 
 # Print the combined report. Caller provides the agent output and label;
@@ -67,13 +69,13 @@ report() {
 
   local njk_content="" js_content="" f
   while IFS= read -r f; do
-    [ -z "$f" ] && continue
+    [[ -z "$f" ]] && continue
     njk_content="$njk_content
 --- $f ---
 $(cat "$f")"
   done < <(find src/views -name '*.njk' -type f 2>/dev/null)
   while IFS= read -r f; do
-    [ -z "$f" ] && continue
+    [[ -z "$f" ]] && continue
     js_content="$js_content
 --- $f ---
 $(cat "$f")"
@@ -106,4 +108,5 @@ $lint_output
 exit_code: $test_exit
 $test_output
 HEREDOC
+  return 0
 }

@@ -11,5 +11,6 @@
   "homepage": "https://github.com/DEFRA/defra-ai-plugins/tree/main/plugins/frontend-developer",
   "repository": "https://github.com/DEFRA/defra-ai-plugins",
   "category": "development",
-  "keywords": ["defra", "gds", "govuk", "frontend", "accessibility", "nunjucks", "hapi"]
+  "keywords": ["defra", "gds", "govuk", "frontend", "accessibility", "nunjucks", "hapi"],
+  "dependencies": ["defra-shared"]
 }

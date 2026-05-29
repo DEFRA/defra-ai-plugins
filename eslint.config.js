@@ -13,7 +13,8 @@ export default [
     },
     rules: {
       'no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
-      'no-console': 'off'
+      'no-console': 'off',
+      curly: ['error', 'all']
     }
   }
 ]

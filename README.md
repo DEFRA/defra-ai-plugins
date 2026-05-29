@@ -13,6 +13,32 @@ standards so Copilot produces compliant code by default.
 > (`make frontend-evals-claude`); cross-CLI plugin distribution is a future
 > iteration.
 
+## Prerequisites
+
+To use the plugins as a Copilot CLI user:
+
+| Tool          | Why                                                                                           |
+| ------------- | --------------------------------------------------------------------------------------------- |
+| `copilot` CLI | Host that loads the plugins (`npm install -g @github/copilot`).                               |
+| `jq`          | Every plugin hook parses tool-use JSON via `jq`. Without it, hooks fail.                      |
+| `bash`        | Hooks are bash scripts. macOS/Linux native; Windows users need WSL or Git Bash.               |
+| `git`         | Required by the `branch-guard` and `commit-message-format` hooks shipped with `defra-shared`. |
+
+Additionally, to develop in this repo or run the eval harness:
+
+| Tool                               | Why                                                                       |
+| ---------------------------------- | ------------------------------------------------------------------------- |
+| Node.js + `npm`                    | Repo validators (`npm test`) and the eval harness.                        |
+| `make`                             | Eval entry points (`make frontend-evals`, `make frontend-evals-claude`).  |
+| `claude` CLI + `ANTHROPIC_API_KEY` | Only for `make frontend-evals-claude`; not required for Copilot-only use. |
+
+Optional — activate the tracked pre-commit hook so Prettier formats the repo on
+every commit (one-time, per checkout):
+
+```sh
+git config core.hooksPath .githooks
+```
+
 ## Add this marketplace
 
 ```sh
@@ -21,10 +47,11 @@ copilot plugin marketplace add DEFRA/defra-ai-plugins
 
 ## Plugins
 
-| Plugin                                             | Description                                                                                                                                                   | Install                                                      |
-| -------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------ |
-| [`frontend-developer`](plugins/frontend-developer) | Builds Defra-compliant frontends following the GOV.UK Design System, WCAG 2.2 AA, and Defra software development standards (Hapi + Nunjucks + SCSS + Vitest). | `copilot plugin install frontend-developer@defra-ai-plugins` |
-| [`ticket-writer`](plugins/ticket-writer)           | Creates well-structured JIRA tickets (stories and tasks) for any team. Ships default templates with support for custom templates at runtime.                  | `copilot plugin install ticket-writer@defra-ai-plugins`      |
+| Plugin                                             | Description                                                                                                                                                                                                               | Install                                                      |
+| -------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------ |
+| [`defra-shared`](plugins/defra-shared)             | Cross-cutting Defra standards as installable skills and guardrail hooks (branching, commit messages, quality gates, security/PII, accessibility). Referenced by every other Defra plugin. No agent — skills + hooks only. | `copilot plugin install defra-shared@defra-ai-plugins`       |
+| [`frontend-developer`](plugins/frontend-developer) | Builds Defra-compliant frontends following the GOV.UK Design System, WCAG 2.2 AA, and Defra software development standards (Hapi + Nunjucks + SCSS + Vitest).                                                             | `copilot plugin install frontend-developer@defra-ai-plugins` |
+| [`ticket-writer`](plugins/ticket-writer)           | Creates well-structured JIRA tickets (stories and tasks) for any team. Ships default templates with support for custom templates at runtime.                                                                              | `copilot plugin install ticket-writer@defra-ai-plugins`      |
 
 ## Repository layout
 
@@ -71,14 +98,16 @@ optional — see [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Validation
 
-Every PR runs four checks:
+Every PR runs six checks:
 
-| Check                     | What it enforces                                                   |
-| ------------------------- | ------------------------------------------------------------------ |
-| `marketplace.json` schema | Required fields, kebab-case names, no duplicates, source paths     |
-| `plugin.json` schema      | Required fields per plugin; name matches directory and marketplace |
-| Agent frontmatter         | `description` and `tools` present and well-formed                  |
-| Alphabetical sort         | Marketplace plugins sorted by name                                 |
+| Check                     | What it enforces                                                                                                                                                                    |
+| ------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `marketplace.json` schema | Required fields, kebab-case names, no duplicates, source paths                                                                                                                      |
+| `plugin.json` schema      | Required fields per plugin; name matches directory and marketplace                                                                                                                  |
+| Agent frontmatter         | `description` and `tools` present and well-formed                                                                                                                                   |
+| Cross-plugin refs         | Every skill named in an agent prompt resolves to the agent's own plugin or a plugin listed in `dependencies` in `plugin.json`. Catches drift between agent prompts and manifests.   |
+| Docs sync                 | `docs/agents-and-skills.md` references every agent and skill on disk, and every path it cites still exists. Catches doc drift when an agent or skill is added, renamed, or removed. |
+| Alphabetical sort         | Marketplace plugins sorted by name                                                                                                                                                  |
 
 Run them locally:
 
@@ -104,15 +133,16 @@ follow the same `plugins/<plugin-name>/eval-fixture/` skeleton +
 `plugins/<plugin-name>/evals/` fixture set layout.
 
 A second provider, Claude Code, is wired up locally as a demonstration that the
-same fixtures port across CLIs unchanged (`make frontend-evals-claude`). It is **not**
-part of the CI gate — Copilot CLI is the only provider with a committed baseline
-and a regression gate.
+same fixtures port across CLIs unchanged (`make frontend-evals-claude`). It is
+**not** part of the CI gate — Copilot CLI is the only provider with a committed
+baseline and a regression gate.
 
 ### Run locally
 
 Prerequisites:
 
 ```sh
+npm install                              # installs promptfoo (pinned) and other devDependencies
 npm install -g @github/copilot
 copilot plugin marketplace add DEFRA/defra-ai-plugins
 copilot plugin install frontend-developer@defra-ai-plugins
@@ -124,10 +154,19 @@ Then:
 make frontend-evals
 ```
 
-Results land in `results/run-YYYY-MM-DD/promptfoo-results.json`. `make frontend-evals`
-also runs `check-regression.sh`, which compares against
+Results land in `results/run-YYYY-MM-DD/promptfoo-results.json`. `make
+frontend-evals` also runs `check-regression.sh`, which compares against
 `plugins/frontend-developer/evals/baseline/promptfoo-results.json` and exits
 non-zero on any per-fixture regression.
+
+> **Node 24 / `better-sqlite3` native-binding gotcha** — promptfoo persists
+> results to SQLite via `better-sqlite3`. As of `better-sqlite3@12.9.0` there
+> is no prebuilt binary for Node 24's ABI, and `npm install` may complete
+> without compiling one from source. The `make frontend-evals` and
+> `make frontend-evals-claude` targets depend on `evals-setup`, which runs
+> `npm run evals:setup` — an idempotent script that rebuilds the binding if
+> the file is missing and no-ops otherwise. If you run promptfoo by hand
+> rather than via `make`, run `npm run evals:setup` first.
 
 To run the same suite against Claude Code instead (requires `ANTHROPIC_API_KEY`
 and `claude` CLI installed):
@@ -135,6 +174,26 @@ and `claude` CLI installed):
 ```sh
 make frontend-evals-claude
 ```
+
+### Iterating on the plugin without reinstalling
+
+By default `claude` loads the plugin that was installed via
+`claude plugin install frontend-developer@defra-ai-plugins`, so edits to
+`plugins/frontend-developer/` are only picked up after a fresh
+`claude plugin install`. To skip that step while you iterate locally, set
+`CLAUDE_PLUGIN_DIR` to the absolute path of the plugin checkout — the
+Claude-provider eval script passes it through as `--plugin-dir`, which
+overrides the installed copy for that session only:
+
+```sh
+export CLAUDE_PLUGIN_DIR=/abs/path/to/plugins/frontend-developer
+npx --no-install promptfoo eval \
+  --filter-providers claude-code-frontend-developer \
+  --filter-pattern 'Refuse'
+```
+
+Leave the env var unset for CI or baseline runs against the installed
+plugin.
 
 To browse results in a UI:
 
@@ -158,11 +217,11 @@ plugin, use `<your-plugin>:<your-agent>`.
 ### CI
 
 CI automation for the eval harness is forthcoming — it depends on a
-`COPILOT_GITHUB_TOKEN` repository secret (a fine-grained PAT with the
-**Copilot Requests** permission) which has not yet been provisioned. The
-workflow definition, baseline regression gate, token-setup instructions, and
-GitHub Actions step-summary reporting will land in a follow-up PR. Until
-then, run the harness locally with `make frontend-evals` (see above).
+`COPILOT_GITHUB_TOKEN` repository secret (a fine-grained PAT with the **Copilot
+Requests** permission) which has not yet been provisioned. The workflow
+definition, baseline regression gate, token-setup instructions, and GitHub
+Actions step-summary reporting will land in a follow-up PR. Until then, run the
+harness locally with `make frontend-evals` (see above).
 
 ## Contributing
 

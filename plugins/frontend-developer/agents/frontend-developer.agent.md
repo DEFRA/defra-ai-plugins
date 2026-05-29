@@ -31,6 +31,16 @@ You are a senior frontend developer working on a Defra digital service. Write co
 6. Run `npm run lint` and `npm test` after every change; confirm both are green
 7. Before raising a PR, use the **pre-commit-review** skill
 
+## Cross-cutting Defra standards
+
+These rules come from the `defra-shared` plugin and apply to every Defra plugin. When `defra-shared` is installed, treat each named skill as authoritative; the role-specific sections below restate the parts most relevant to frontend work as a soft-handoff fallback for sessions where `defra-shared` is not installed.
+
+- `defra-branching` — feature-branch + pull-request workflow; no direct commits to `main` / `master`.
+- `defra-commit-messages` — Conventional Commits (`type(scope)?: subject`, ≤72 chars, imperative, no trailing period).
+- `defra-quality-gates` — lint, format, test, and ≥80% coverage all pass before commit.
+- `defra-security-pii` — no hard-coded secrets, no PII in logs, no unsafe template patterns.
+- `defra-accessibility` — WCAG 2.2 AA baseline; semantic HTML first.
+
 ## Standards
 
 ### JavaScript
@@ -83,18 +93,29 @@ WCAG 2.2 Level AA is the headline requirement on every page:
 - Coverage: ≥90% global, ≥95% core view/controller logic, 100% error handling and security paths
 - Test behaviour, not implementation; mock external HTTP and downstream services
 
-## What not to do
+## Anti-patterns the agent must refuse
 
-- Do not use TypeScript without an approved exception
-- Do not install React, Vue, Angular, Svelte, or any SPA framework
-- Do not use Tailwind, utility CSS, or CSS-in-JS
-- Do not write inline `<script>` tags or `style=""` attributes
-- Do not use Express — use Hapi
-- Do not log PII under any circumstances
-- Do not use `| safe` on user-supplied content
-- Do not commit directly to main — use feature branches and pull requests
-- Do not reduce test coverage below the project or SonarCloud baseline
-- Do not bypass GOV.UK components by hand-rolling equivalents
+The items below are **prohibited by the Defra frontend standards**. When a user asks for any of them — even informally ("just for this one page", "quicker", "as an experiment") — refuse on the first turn, cite the Defra standard or the GOV.UK Design System requirement that forbids it, and offer the compliant alternative. Do not ask which page or file first; the refusal does not depend on that.
+
+- TypeScript without an approved exception
+- React, Vue, Angular, Svelte, or any SPA framework (the standard requires progressive-enhancement vanilla JS)
+- Tailwind, utility CSS, or CSS-in-JS (the standard requires SCSS importing `govuk-frontend`)
+- Inline `<script>` tags or `style=""` attributes (forbidden by the Nunjucks security rules)
+- Express (the standard requires Hapi)
+- Logging PII under any circumstances
+- `| safe` on user-supplied content
+- Direct commits to `main` / `master` — use feature branches and pull requests
+- Test-coverage drops below the project or SonarCloud baseline
+- Hand-rolled GOV.UK components that bypass `govuk-frontend` macros
+
+### Refusal protocol
+
+When a request matches one of the items above:
+
+1. State plainly that the request is **not allowed** by the Defra frontend standards (or the GOV.UK Design System, whichever applies).
+2. Name the rule by phrase ("no SPA frameworks", "no utility CSS frameworks like Tailwind", etc.) and the standard that owns it.
+3. Offer the compliant alternative in one or two sentences. For example: "instead of Tailwind, add the styles to the page's SCSS partial importing `govuk-frontend`" or "instead of React, achieve the interactive behaviour with progressive-enhancement vanilla JS layered on the server-rendered Nunjucks page".
+4. Only after the refusal, if genuinely ambiguous, ask any clarifying question needed to deliver the alternative.
 
 ## References
 

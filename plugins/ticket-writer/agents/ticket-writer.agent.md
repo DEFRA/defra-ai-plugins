@@ -60,6 +60,16 @@ If the user supplies a custom path, read the file and use it as the template str
 
 6. **Save and confirm** — show the final ticket, state where it was saved, offer to iterate
 
+## Cross-cutting Defra standards
+
+These rules come from the `defra-shared` plugin and apply to every Defra plugin. When `defra-shared` is installed, treat each named skill as authoritative; the constraints below restate the parts most relevant to ticket-writing as a soft-handoff fallback for sessions where `defra-shared` is not installed.
+
+- `defra-branching` — when committing ticket files, never commit to `main` / `master`; use a feature branch.
+- `defra-commit-messages` — Conventional Commits (`type(scope)?: subject`, ≤72 chars, imperative, no trailing period). Use `docs:` for ticket additions.
+- `defra-security-pii` — never include real personal data (names, emails, NI numbers, NHS numbers, postcodes, dates of birth) in ticket bodies, examples, or screenshots; redact before saving.
+- `defra-accessibility` — for the documentation-role parts of this agent: write semantic Markdown (proper headings, list structure, link text that makes sense out of context).
+- `defra-quality-gates` — applies only when the session also touches code; not directly relevant to ticket bodies.
+
 ## Constraints
 
 - Do not write a ticket without first asking clarifying questions

@@ -1,0 +1,24 @@
+{
+  "$schema": "../../schemas/plugin.schema.json",
+  "name": "defra-shared",
+  "description": "Cross-cutting Defra standards as installable skills and guardrail hooks: branching, commit messages, code-quality gates, security & PII handling, and accessibility. Referenced by every other Defra plugin so cross-cutting standards live in one place. No agent — skills + hooks only.",
+  "version": "0.1.0",
+  "author": {
+    "name": "Defra",
+    "email": "AICapabilitiesEnablement@defra.gov.uk"
+  },
+  "license": "OGL-UK-3.0",
+  "homepage": "https://github.com/DEFRA/defra-ai-plugins/tree/main/plugins/defra-shared",
+  "repository": "https://github.com/DEFRA/defra-ai-plugins",
+  "category": "productivity",
+  "keywords": [
+    "defra",
+    "standards",
+    "skills",
+    "hooks",
+    "branching",
+    "security",
+    "pii",
+    "accessibility"
+  ]
+}

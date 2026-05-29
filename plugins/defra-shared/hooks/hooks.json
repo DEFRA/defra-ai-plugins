@@ -1,0 +1,63 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "# Block git commit / git push while HEAD is on main or master.\n# Also block any `git push --force` / -f / --force-with-lease whose args\n# mention main or master, from any branch — force-pushes overwrite shared\n# history regardless of current HEAD.\n\nCMD=$(cat | jq -r '.tool_input.command // empty')\n\nif ! printf '%s' \"$CMD\" | grep -qE '^[[:space:]]*git[[:space:]]+(commit|push)([[:space:]]|$)'; then\n  exit 0\nfi\n\nif printf '%s' \"$CMD\" | grep -qE '^[[:space:]]*git[[:space:]]+push([[:space:]]|$).*(-[a-zA-Z]*f([[:space:]]|$)|--force([[:space:]]|=|$)|--force-with-lease)'; then\n  if printf '%s' \"$CMD\" | grep -qE '(^|[[:space:]/:])(main|master)([[:space:]/:]|$)'; then\n    echo \"branch-guard: force-push to 'main'/'master' is not allowed. See skill defra-branching.\" >&2\n    exit 2\n  fi\nfi\n\nDIR=\"${CLAUDE_PROJECT_DIR:-$PWD}\"\nBRANCH=$(cd \"$DIR\" 2>/dev/null && git rev-parse --abbrev-ref HEAD 2>/dev/null)\n\nif [[ \"$BRANCH\" == 'main' || \"$BRANCH\" == 'master' ]]; then\n  echo \"branch-guard: direct commits and pushes to '$BRANCH' are not allowed. Create a feature branch first (e.g. feature/my-change). See skill defra-branching.\" >&2\n  exit 2\nfi\n\nexit 0",
+            "statusMessage": "branch-guard: checking git branch...",
+            "async": false
+          }
+        ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "# Validate Conventional Commits subject on `git commit`.\n# Refuse forms that bypass message inspection (-F / --file / --template /\n# -C / --reuse-message / --fixup / --squash) and editor-driven commits.\n# Allow `--amend --no-edit` (reuses an already-validated message).\n\nCMD=$(cat | jq -r '.tool_input.command // empty')\n\nif ! printf '%s' \"$CMD\" | grep -qE '^[[:space:]]*git[[:space:]]+commit([[:space:]]|$)'; then\n  exit 0\nfi\n\nif printf '%s' \"$CMD\" | grep -qE '(^|[[:space:]])--amend([[:space:]]|=|$)' \\\n   && printf '%s' \"$CMD\" | grep -qE '(^|[[:space:]])--no-edit([[:space:]]|$)'; then\n  exit 0\nfi\n\nif printf '%s' \"$CMD\" | grep -qE '(^|[[:space:]])(-F([[:space:]]|$)|--file([[:space:]]|=)|--template([[:space:]]|=)|-C([[:space:]]|$)|--reuse-message([[:space:]]|=)|--fixup([[:space:]]|=)|--squash([[:space:]]|=))'; then\n  echo \"commit-message-format: -F/--file/--template/-C/--reuse-message/--fixup/--squash bypass subject validation. Use -m \\\"type(scope): subject\\\". See skill defra-commit-messages.\" >&2\n  exit 2\nfi\n\nif ! printf '%s' \"$CMD\" | grep -qE '(-[a-zA-Z]*m([[:space:]]|=)|--message[= ])'; then\n  echo \"commit-message-format: commit without -m/--message would open the editor (not usable from an agent). Use -m \\\"type(scope): subject\\\". See skill defra-commit-messages.\" >&2\n  exit 2\nfi\n\nMSG=$(printf '%s' \"$CMD\" | sed -nE 's/.*--message=(\"[^\"]*\"|'\"'\"'[^'\"'\"']*'\"'\"'|[^ ]+).*/\\1/p')\nif [[ -z \"$MSG\" ]]; then\n  MSG=$(printf '%s' \"$CMD\" | sed -nE 's/.*--message[[:space:]]+(\"[^\"]*\"|'\"'\"'[^'\"'\"']*'\"'\"'|[^ ]+).*/\\1/p')\nfi\nif [[ -z \"$MSG\" ]]; then\n  MSG=$(printf '%s' \"$CMD\" | sed -nE 's/.*[[:space:]]-[a-zA-Z]*m[[:space:]]+(\"[^\"]*\"|'\"'\"'[^'\"'\"']*'\"'\"'|[^ ]+).*/\\1/p')\nfi\n\n# Strip surrounding quotes if any.\nMSG=\"${MSG#\\\"}\"; MSG=\"${MSG%\\\"}\"\nMSG=\"${MSG#\\'}\"; MSG=\"${MSG%\\'}\"\n\nif [[ -z \"$MSG\" ]]; then\n  echo \"commit-message-format: could not parse commit subject from -m / --message argument.\" >&2\n  exit 2\nfi\n\nSUBJECT=$(printf '%s' \"$MSG\" | head -n1)\n\nif [[ ${#SUBJECT} -gt 72 ]]; then\n  echo \"commit-message-format: subject is ${#SUBJECT} chars; max is 72. Subject: '$SUBJECT'. See skill defra-commit-messages.\" >&2\n  exit 2\nfi\n\nif ! printf '%s' \"$SUBJECT\" | grep -qE '^(feat|fix|chore|docs|refactor|test|build|ci|perf|style|revert)(\\([a-z0-9-]+\\))?(!)?: [^[:space:]].*[^.[:space:]]$'; then\n  echo \"commit-message-format: subject '$SUBJECT' does not match Conventional Commits (type(scope)?: subject, <=72 chars, no trailing period). See skill defra-commit-messages.\" >&2\n  exit 2\nfi\n\nexit 0",
+            "statusMessage": "commit-message-format: validating commit subject...",
+            "async": false
+          }
+        ]
+      },
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "# Refuse Edit/Write whose content contains a known secret pattern.\n\nINPUT=$(cat)\nFILE=$(printf '%s' \"$INPUT\" | jq -r '.tool_input.file_path // empty')\nCONTENT=$(printf '%s' \"$INPUT\" | jq -r '.tool_input.content // .tool_input.new_string // empty')\n\nSCAN_TARGET=$(mktemp)\nprintf '%s' \"$CONTENT\" > \"$SCAN_TARGET\"\n\nHIT=''\nif grep -qE 'AKIA[0-9A-Z]{16}' \"$SCAN_TARGET\"; then HIT='AWS access key id'; fi\nif [[ -z \"$HIT\" ]] && grep -qE -e '-----BEGIN ((RSA|EC|DSA|OPENSSH|PGP) )?PRIVATE KEY' \"$SCAN_TARGET\"; then HIT='private key block'; fi\nif [[ -z \"$HIT\" ]] && grep -qiE '(api[_-]?key|secret|password|passwd|token|bearer)[A-Za-z0-9_]*[[:space:]]*[:=][[:space:]]*[\"'\\''`][A-Za-z0-9+/=_\\-]{16,}[\"'\\''`]' \"$SCAN_TARGET\"; then HIT='hard-coded credential'; fi\nif [[ -z \"$HIT\" ]] && grep -qE 'gh[oprsu]_[A-Za-z0-9]{30,}' \"$SCAN_TARGET\"; then HIT='GitHub token'; fi\nif [[ -z \"$HIT\" ]] && grep -qE 'xox[abpr]-[A-Za-z0-9-]{10,}' \"$SCAN_TARGET\"; then HIT='Slack token'; fi\nif [[ -z \"$HIT\" ]] && grep -qE 'sk-ant-(api|admin)[0-9]{2}-[A-Za-z0-9_\\-]{20,}' \"$SCAN_TARGET\"; then HIT='Anthropic API key'; fi\nif [[ -z \"$HIT\" ]] && grep -qE 'sk-(proj|svcacct|admin)-[A-Za-z0-9_\\-]{20,}' \"$SCAN_TARGET\"; then HIT='OpenAI API key'; fi\nif [[ -z \"$HIT\" ]] && grep -qE '(sk|rk|pk)_(live|test)_[A-Za-z0-9]{24,}' \"$SCAN_TARGET\"; then HIT='Stripe key'; fi\nif [[ -z \"$HIT\" ]] && grep -qE 'AIza[0-9A-Za-z_\\-]{35}' \"$SCAN_TARGET\"; then HIT='Google API key'; fi\nif [[ -z \"$HIT\" ]] && grep -qE 'eyJ[A-Za-z0-9_\\-]{10,}\\.eyJ[A-Za-z0-9_\\-]{10,}\\.[A-Za-z0-9_\\-]{10,}' \"$SCAN_TARGET\"; then HIT='JWT'; fi\n\nrm -f \"$SCAN_TARGET\"\n\nif [[ -n \"$HIT\" ]]; then\n  echo \"secret-scan: $HIT detected in change to $(basename \"$FILE\"). Move the secret to an environment variable or the platform secret manager. See skill defra-security-pii.\" >&2\n  exit 2\nfi\n\nexit 0",
+            "statusMessage": "secret-scan: scanning for hard-coded secrets...",
+            "async": false
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "# Warn (async, non-blocking) when a written file contains UK PII patterns.\n# NHS-number candidates are validated with the Mod-11 check digit so generic\n# 10-digit numbers (phone numbers, order ids) don't false-positive.\n\nINPUT=$(cat)\nFILE=$(printf '%s' \"$INPUT\" | jq -r '.tool_input.file_path // empty')\n\nif [[ -z \"$FILE\" || ! -f \"$FILE\" ]]; then exit 0; fi\ncase \"$FILE\" in *.lock|*lock.json|*.snap|*/eval-fixture/fixtures/*) exit 0;; esac\n\nHITS=''\n\nif grep -qE '\\b[A-CEGHJ-PR-TW-Z]{2}[0-9]{6}[A-D]\\b' \"$FILE\"; then\n  HITS=\"$HITS UK-NI-number\"\nfi\n\nNHS_CANDIDATES=$(grep -oE '\\b[0-9]{3}[ -]?[0-9]{3}[ -]?[0-9]{4}\\b' \"$FILE\" | tr -d ' -')\nif [[ -n \"$NHS_CANDIDATES\" ]]; then\n  if printf '%s\\n' \"$NHS_CANDIDATES\" | awk '\n    {\n      if (length($0) != 10) next\n      sum = 0\n      for (i = 1; i <= 9; i++) sum += (substr($0, i, 1) + 0) * (11 - i)\n      check = 11 - (sum % 11)\n      if (check == 11) check = 0\n      if (check == 10) next\n      if (check == substr($0, 10, 1) + 0) { print; exit 0 }\n    }\n  ' | grep -q .; then\n    HITS=\"$HITS NHS-number\"\n  fi\nfi\n\nif grep -qE '\\b[A-Z]{1,2}[0-9R][0-9A-Z]?[ ]?[0-9][ABD-HJLNP-UW-Z]{2}\\b' \"$FILE\"; then\n  HITS=\"$HITS UK-postcode\"\nfi\n\nif grep -qE '\\b(0[1-9]|[12][0-9]|3[01])[/-](0[1-9]|1[0-2])[/-](19|20)[0-9]{2}\\b' \"$FILE\"; then\n  HITS=\"$HITS DoB\"\nfi\n\nif [[ -n \"$HITS\" ]]; then\n  echo \"pii-scan: possible PII in $(basename \"$FILE\"):$HITS. Review and redact before logging or persisting. See skill defra-security-pii.\" >&2\nfi\n\nexit 0",
+            "statusMessage": "pii-scan: scanning for PII patterns...",
+            "async": true
+          }
+        ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "# Warn when test-runner output reports coverage below the floor (default 80%).\n# Try the structured \"All files\" / \"TOTAL\" row first; fall back to the first\n# stand-alone percentage only if that row isn't present.\n\nINPUT=$(cat)\nCMD=$(printf '%s' \"$INPUT\" | jq -r '.tool_input.command // empty')\nOUTPUT=$(printf '%s' \"$INPUT\" | jq -r '.tool_response.stdout // .tool_response.output // empty')\n\nif ! printf '%s' \"$CMD\" | grep -qE '\\b(test|vitest|jest|pytest|dotnet test)\\b'; then\n  exit 0\nfi\n\nTHRESHOLD=${COVERAGE_FLOOR:-80}\n\nPCT=$(printf '%s' \"$OUTPUT\" | grep -iE '^[[:space:]]*(All files|TOTAL)' | grep -oE '[0-9]+\\.[0-9]+|[0-9]{2,}' | head -n1)\nif [[ -z \"$PCT\" ]]; then\n  PCT=$(printf '%s' \"$OUTPUT\" | grep -oE '([0-9]+(\\.[0-9]+)?)[[:space:]]*%' | head -n1 | grep -oE '[0-9]+(\\.[0-9]+)?' | head -n1)\nfi\nif [[ -z \"$PCT\" ]]; then exit 0; fi\n\nINT=${PCT%%.*}\nif [[ \"$INT\" -lt \"$THRESHOLD\" ]]; then\n  echo \"coverage-floor: coverage ${PCT}% is below the ${THRESHOLD}% threshold. Add tests for the changed files before merging. See skill defra-quality-gates.\" >&2\nfi\n\nexit 0",
+            "statusMessage": "coverage-floor: checking coverage threshold...",
+            "async": true
+          }
+        ]
+      }
+    ]
+  }
+}

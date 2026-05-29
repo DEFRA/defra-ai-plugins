@@ -6,12 +6,16 @@
 import { validateMarketplace } from './validate-marketplace.mjs'
 import { validatePlugins } from './validate-plugins.mjs'
 import { validateFrontmatter } from './validate-frontmatter.mjs'
+import { validateCrossPluginRefs } from './validate-cross-plugin-refs.mjs'
+import { validateDocsSync } from './validate-docs-sync.mjs'
 import { checkSorted } from './check-sorted.mjs'
 
 const checks = [
   ['marketplace.json', validateMarketplace],
   ['plugins/', validatePlugins],
   ['agent frontmatter', validateFrontmatter],
+  ['cross-plugin refs', validateCrossPluginRefs],
+  ['docs sync', validateDocsSync],
   ['marketplace ordering', () => checkSorted({ fix: false })]
 ]
 
@@ -20,7 +24,9 @@ for (const [label, run] of checks) {
   const errors = run()
   if (errors.length) {
     console.error(`✗ ${label}: ${errors.length} error(s)`)
-    for (const e of errors) console.error(`    - ${e}`)
+    for (const e of errors) {
+      console.error(`    - ${e}`)
+    }
     totalErrors += errors.length
   } else {
     console.log(`✓ ${label}`)

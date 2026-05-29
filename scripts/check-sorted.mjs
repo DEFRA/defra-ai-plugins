@@ -61,7 +61,9 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   const fix = process.argv.includes('--fix')
   const errors = checkSorted({ fix })
   if (errors.length) {
-    for (const e of errors) console.error(`  - ${e}`)
+    for (const e of errors) {
+      console.error(`  - ${e}`)
+    }
     process.exit(1)
   }
   console.log(fix ? 'marketplace.json: sorted' : 'marketplace.json: ordering ok')
