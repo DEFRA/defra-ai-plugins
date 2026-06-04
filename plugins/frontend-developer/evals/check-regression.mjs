@@ -13,29 +13,11 @@ import { readFileSync, existsSync } from 'node:fs'
 import { dirname, resolve, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
-const [, , newPath, baselineArg] = process.argv
-if (!newPath) {
-  console.error('usage: check-regression.mjs <new-results.json> [baseline.json]')
-  process.exit(2)
-}
-
-const scriptDir = dirname(fileURLToPath(import.meta.url))
-const baselinePath = baselineArg ?? join(scriptDir, 'baseline', 'promptfoo-results.json')
-
-if (!existsSync(resolve(newPath))) {
-  console.error(`::error::New results file not found: ${newPath}`)
-  process.exit(2)
-}
-if (!existsSync(baselinePath)) {
-  console.error(`::error::Baseline file not found: ${baselinePath}`)
-  process.exit(2)
-}
-
-// Build per-prompt success maps: a prompt is "passing" only if every provider
-// that ran it passed. With one provider this is the obvious thing; with
-// multiple, a regression on any provider fails the gate.
-function buildPromptPassMap(file) {
-  const data = JSON.parse(readFileSync(file, 'utf8'))
+// Build a per-prompt success map from a parsed promptfoo result object. A
+// prompt is "passing" only if every provider that ran it passed. With one
+// provider this is the obvious thing; with multiple, a regression on any
+// provider fails the gate.
+export function buildPromptPassMap(data) {
   const byPrompt = new Map()
   for (const r of data.results?.results ?? []) {
     const prompt = r.vars?.prompt
@@ -53,28 +35,56 @@ function buildPromptPassMap(file) {
   return out
 }
 
-const baseline = buildPromptPassMap(baselinePath)
-const fresh = buildPromptPassMap(newPath)
-
-const regressions = []
-for (const [prompt, basePassed] of baseline) {
-  if (!basePassed) {
-    continue
+// Given baseline and fresh pass-maps, list prompts that passed in the baseline
+// but are now missing or failing. Newly-added prompts are intentionally
+// ignored (see header).
+export function findRegressions(baseline, fresh) {
+  const regressions = []
+  for (const [prompt, basePassed] of baseline) {
+    if (!basePassed) {
+      continue
+    }
+    if (!fresh.has(prompt)) {
+      regressions.push(`MISSING: ${prompt}`)
+    } else if (!fresh.get(prompt)) {
+      regressions.push(`FAIL: ${prompt}`)
+    }
   }
-  if (!fresh.has(prompt)) {
-    regressions.push(`MISSING: ${prompt}`)
-  } else if (!fresh.get(prompt)) {
-    regressions.push(`FAIL: ${prompt}`)
+  return regressions
+}
+
+if (process.argv[1] === fileURLToPath(import.meta.url)) {
+  const [, , newPath, baselineArg] = process.argv
+  if (!newPath) {
+    console.error('usage: check-regression.mjs <new-results.json> [baseline.json]')
+    process.exit(2)
   }
-}
 
-if (regressions.length === 0) {
-  console.log('No regressions vs baseline.')
-  process.exit(0)
-}
+  const scriptDir = dirname(fileURLToPath(import.meta.url))
+  const baselinePath = baselineArg ?? join(scriptDir, 'baseline', 'promptfoo-results.json')
 
-console.error(`::error::${regressions.length} regression(s) vs baseline:`)
-for (const r of regressions) {
-  console.error(`  ${r}`)
+  if (!existsSync(resolve(newPath))) {
+    console.error(`::error::New results file not found: ${newPath}`)
+    process.exit(2)
+  }
+  if (!existsSync(baselinePath)) {
+    console.error(`::error::Baseline file not found: ${baselinePath}`)
+    process.exit(2)
+  }
+
+  const baseline = buildPromptPassMap(JSON.parse(readFileSync(baselinePath, 'utf8')))
+  const fresh = buildPromptPassMap(JSON.parse(readFileSync(newPath, 'utf8')))
+
+  const regressions = findRegressions(baseline, fresh)
+
+  if (regressions.length === 0) {
+    console.log('No regressions vs baseline.')
+    process.exit(0)
+  }
+
+  console.error(`::error::${regressions.length} regression(s) vs baseline:`)
+  for (const r of regressions) {
+    console.error(`  ${r}`)
+  }
+  process.exit(1)
 }
-process.exit(1)

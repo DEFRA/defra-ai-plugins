@@ -50,8 +50,9 @@ function findSkillFiles(skillsDir) {
   return out.sort()
 }
 
-function listHookStatusMessages(hooksJsonPath) {
-  const config = JSON.parse(readFileSync(hooksJsonPath, 'utf8'))
+// Collect every hook's statusMessage from a parsed hooks.json config, in
+// declaration order. Hooks without a statusMessage report "(no statusMessage)".
+export function listHookStatusMessages(config) {
   const messages = []
   for (const event of Object.values(config.hooks ?? {})) {
     for (const matcher of event ?? []) {
@@ -99,7 +100,8 @@ export function report({ provider, prompt, fixtureDir }) {
   out.push('')
 
   out.push('=== HOOKS DEFINED ===')
-  for (const msg of listHookStatusMessages(join(pluginDir, 'hooks', 'hooks.json'))) {
+  const hooksConfig = JSON.parse(readFileSync(join(pluginDir, 'hooks', 'hooks.json'), 'utf8'))
+  for (const msg of listHookStatusMessages(hooksConfig)) {
     out.push(msg)
   }
   out.push('')

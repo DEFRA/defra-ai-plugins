@@ -59,28 +59,27 @@ export function snapshotFiles(outFile, cwd) {
   writeFileSync(outFile, lines.sort().join('\n') + (lines.length ? '\n' : ''))
 }
 
-// Diff two snapshot files. New paths are flagged "(new)"; paths in both
-// whose hash changed are flagged "(modified)".
-function filesChanged(beforePath, afterPath) {
-  const parse = (p) => {
-    const map = new Map()
-    if (!existsSync(p)) {
-      return map
+// Parse a snapshot listing ("<hash> <path>" per line) into a path->hash map.
+function parseSnapshot(text) {
+  const map = new Map()
+  for (const line of text.split('\n')) {
+    if (!line) {
+      continue
     }
-    for (const line of readFileSync(p, 'utf8').split('\n')) {
-      if (!line) {
-        continue
-      }
-      const space = line.indexOf(' ')
-      if (space < 0) {
-        continue
-      }
-      map.set(line.slice(space + 1), line.slice(0, space))
+    const space = line.indexOf(' ')
+    if (space < 0) {
+      continue
     }
-    return map
+    map.set(line.slice(space + 1), line.slice(0, space))
   }
-  const before = parse(beforePath)
-  const after = parse(afterPath)
+  return map
+}
+
+// Diff two snapshot listings. New paths are flagged "(new)"; paths in both
+// whose hash changed are flagged "(modified)".
+export function diffSnapshots(beforeText, afterText) {
+  const before = parseSnapshot(beforeText)
+  const after = parseSnapshot(afterText)
   const out = []
   for (const [path, hash] of after) {
     if (!before.has(path)) {
@@ -90,6 +89,12 @@ function filesChanged(beforePath, afterPath) {
     }
   }
   return out
+}
+
+// Diff two snapshot files. An absent file is treated as an empty snapshot.
+function filesChanged(beforePath, afterPath) {
+  const read = (p) => (existsSync(p) ? readFileSync(p, 'utf8') : '')
+  return diffSnapshots(read(beforePath), read(afterPath))
 }
 
 export function report({ agentLabel, agentOutput, snapBefore, cwd, tmpAfterPath }) {

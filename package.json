@@ -12,7 +12,7 @@
     "lint:fix": "eslint scripts/ --fix",
     "format": "prettier --check .",
     "format:fix": "prettier --write .",
-    "test": "node scripts/validate-all.mjs && node scripts/test-hooks.mjs",
+    "test": "node scripts/validate-all.mjs && node scripts/test-units.mjs",
     "validate": "node scripts/validate-all.mjs",
     "validate:fix": "node scripts/check-sorted.mjs --fix",
     "evals:setup": "node scripts/evals-setup.mjs",
