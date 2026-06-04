@@ -18,7 +18,7 @@ A regression in any fixture relative to this file blocks a PR.
 
 The pin lives in two places and must match this file:
 
-- `plugins/frontend-developer/evals/run-copilot.sh` — `COPILOT_MODEL=gpt-5-mini`
+- `plugins/frontend-developer/evals/run-copilot.mjs` — `COPILOT_MODEL=gpt-5-mini`
 - `.github/workflows/evals.yml` — `COPILOT_MODEL: gpt-5-mini`
 
 ## Caveats
@@ -40,19 +40,19 @@ When the pinned model is updated, or after a deliberate change to the plugin's
 expected behaviour:
 
 ```sh
-make frontend-evals
+npm run evals:frontend
 cp results/run-$(date +%Y-%m-%d)/promptfoo-results.json \
    plugins/frontend-developer/evals/baseline/promptfoo-results.json
 # update the provenance table above with the new date and model
 ```
 
 Commit the new baseline with the change that prompted it, in the same PR.
-Update the model pin in `run-copilot.sh` and `evals.yml` in the same PR if
+Update the model pin in `run-copilot.mjs` and `evals.yml` in the same PR if
 that is what triggered the regeneration.
 
 ## How the regression gate uses this file
 
-`plugins/frontend-developer/evals/check-regression.sh` reads this file and
+`plugins/frontend-developer/evals/check-regression.mjs` reads this file and
 the new run's JSON, matches tests by `vars.prompt`, and exits non-zero if
 any test that PASSED here now fails. With multiple providers in a single
 run, a test must pass on **every** provider to count as passing — a

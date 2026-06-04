@@ -11,12 +11,12 @@ description: Defra frontend-developer plugin eval
 providers:
   # Copilot CLI is the default provider — this is a Copilot CLI plugin
   # marketplace and CI gates on this provider. `make frontend-evals` filters to it.
-  - id: exec:./run-copilot.sh
+  - id: exec:node ./run-copilot.mjs
     label: copilot-cli-frontend-developer
   # Claude Code is included as a demonstration that the harness is portable
   # across providers. Local-only: there is no CI gate or baseline for this
-  # provider — `make frontend-evals-claude` runs it on demand. See README §Evaluating.
-  - id: exec:./run-claude.sh
+  # provider — `npm run evals:frontend:claude` runs it on demand. See README §Evaluating.
+  - id: exec:node ./run-claude.mjs
     label: claude-code-frontend-developer
 
 # Named-score buckets used across assertions:

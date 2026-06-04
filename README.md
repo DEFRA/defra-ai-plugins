@@ -76,11 +76,11 @@ defra-ai-plugins/
     │   ├── eval-fixture/             # Skeleton app the agent operates on during eval
     │   └── evals/                    # Behavioural fixtures, provider scripts, baseline
     │       ├── promptfooconfig.yaml
-    │       ├── run-copilot.sh        # Default CI provider
-    │       ├── run-claude.sh         # Local-only demo of cross-provider support
-    │       ├── collect-and-report.sh # Shared snapshot/diff/lint/test helpers
-    │       ├── check-regression.sh   # Baseline regression gate
-    │       ├── summarise.sh          # Markdown summary for CI step output
+    │       ├── run-copilot.mjs       # Default CI provider
+    │       ├── run-claude.mjs        # Local-only demo of cross-provider support
+    │       ├── collect-and-report.mjs # Shared snapshot/diff/lint/test helpers
+    │       ├── check-regression.mjs  # Baseline regression gate
+    │       ├── summarise.mjs         # Markdown summary for CI step output
     │       └── baseline/             # Reference run for regression comparison
     └── ticket-writer/
         ├── plugin.json
@@ -154,7 +154,7 @@ npm run evals:frontend
 ```
 
 Results land in `results/run-YYYY-MM-DD/promptfoo-results.json`. `npm run
-evals:frontend` also runs `check-regression.sh`, which compares against
+evals:frontend` also runs `check-regression.mjs`, which compares against
 `plugins/frontend-developer/evals/baseline/promptfoo-results.json` and exits
 non-zero on any per-fixture regression.
 
@@ -200,7 +200,7 @@ To browse results in a UI:
 npm run evals:frontend:view
 ```
 
-The default model is pinned in `plugins/frontend-developer/evals/run-copilot.sh`
+The default model is pinned in `plugins/frontend-developer/evals/run-copilot.mjs`
 (`COPILOT_MODEL=gpt-5-mini`). Override for ad-hoc experiments:
 
 ```sh

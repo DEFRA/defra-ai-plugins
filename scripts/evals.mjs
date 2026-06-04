@@ -44,7 +44,7 @@ if (subcommand === 'eval') {
     { cwd: dir }
   )
   copyFileSync(join(dir, 'output.json'), join(resultsDir, resultsFile))
-  run(join(dir, 'check-regression.sh'), [join(resultsDir, resultsFile)])
+  run('node', [join(dir, 'check-regression.mjs'), join(resultsDir, resultsFile)])
 
   console.log(`\nResults saved to ${join(resultsDir, resultsFile)}`)
 } else if (subcommand === 'view') {

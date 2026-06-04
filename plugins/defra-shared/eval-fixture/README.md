@@ -15,21 +15,21 @@ eval-fixture/
 │   ├── secret-planted.js        #   contains a hard-coded AWS access key
 │   ├── pii-planted.md           #   contains a UK NI number
 │   └── lowcov-test-output.txt   #   simulated test output reporting <80% coverage
-├── hooks-under-test/            # extracted command bodies, one per hook
-│   ├── branch-guard.sh
-│   ├── commit-message-format.sh
-│   ├── secret-scan.sh
-│   ├── pii-scan.sh
-│   └── coverage-floor.sh
 └── scripts/
-    └── run-hook.sh              # synthesises a hook input JSON, pipes it to a hook script
+    ├── init-git.mjs             # stages a fixture clone into a tmp git repo on HEAD=main
+    └── run-hook.mjs             # spawns a single hook with synthetic input on stdin
 ```
+
+Hook scripts themselves live in `../hooks/scripts/*.mjs` and are invoked
+directly from `run-hook.mjs` (the legacy `extract-hooks.sh` indirection has
+been removed — hook bodies are now real `.mjs` files, not bash strings
+embedded in `hooks.json`).
 
 ## How to use
 
-`scripts/run-hook.sh <hook-id> <input.json>` runs the named hook with the
-given input and prints its stderr + exit code. The eval suite calls this
-once per acceptance criterion in AC6:
+`node scripts/run-hook.mjs <hook-id> [project-dir] < <input.json>` runs the
+named hook with the given input and prints its stderr + exit code. The eval
+suite calls this once per acceptance criterion in AC6:
 
 | AC6 case | Expected |
 |---|---|
@@ -40,7 +40,7 @@ once per acceptance criterion in AC6:
 | `coverage-floor` with simulated test output reporting 42% | exit 0 (async), stderr warns below threshold |
 
 The fixture is itself a git repo so `branch-guard` has a real `HEAD` to read.
-`scripts/init-git.sh` creates one on first run.
+`scripts/init-git.mjs` creates one on first run.
 
 ## Why only fixtures, no real source
 
