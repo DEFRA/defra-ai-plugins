@@ -1,24 +1,32 @@
-#!/usr/bin/env bash
-# Format the repo with Prettier before each commit.
-#
-# Activate once per checkout:
-#   git config core.hooksPath .githooks
-#
-# Behaviour: runs `npx prettier --write .` on the whole tree (paths in
-# .prettierignore are skipped). Only files that were already staged get
-# re-added — unstaged tracked changes are left alone, so a stray edit
-# elsewhere does not silently slip into the commit.
-set -euo pipefail
+#!/usr/bin/env node
+// Format the repo with Prettier before each commit.
+//
+// Activate once per checkout:
+//   git config core.hooksPath .githooks
+//
+// Behaviour: runs `npx prettier --write .` on the whole tree (paths in
+// .prettierignore are skipped). Only files that were already staged get
+// re-added — unstaged tracked changes are left alone, so a stray edit
+// elsewhere does not silently slip into the commit.
 
-# Snapshot the index before formatting so we know what to re-add.
-STAGED=$(git diff --cached --name-only --diff-filter=ACMR)
+import { execFileSync, spawnSync } from 'node:child_process'
+import { existsSync } from 'node:fs'
 
-npx --no-install prettier --write .
+const staged = execFileSync('git', ['diff', '--cached', '--name-only', '--diff-filter=ACMR'], {
+  encoding: 'utf8'
+})
+  .split('\n')
+  .filter(Boolean)
 
-if [ -n "$STAGED" ]; then
-  # Re-stage only the originally-staged paths that still exist.
-  printf '%s\n' "$STAGED" \
-    | while IFS= read -r f; do
-        [ -e "$f" ] && git add -- "$f"
-      done
-fi
+const prettier = spawnSync('npx', ['--no-install', 'prettier', '--write', '.'], {
+  stdio: 'inherit'
+})
+if (prettier.status !== 0) {
+  process.exit(prettier.status ?? 1)
+}
+
+for (const path of staged) {
+  if (existsSync(path)) {
+    execFileSync('git', ['add', '--', path], { stdio: 'inherit' })
+  }
+}

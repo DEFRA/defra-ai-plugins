@@ -15,7 +15,14 @@
     "test": "node scripts/validate-all.mjs",
     "validate": "node scripts/validate-all.mjs",
     "validate:fix": "node scripts/check-sorted.mjs --fix",
-    "evals:setup": "test -f node_modules/better-sqlite3/build/Release/better_sqlite3.node || (cd node_modules/better-sqlite3 && npx node-gyp rebuild)"
+    "evals:setup": "node scripts/evals-setup.mjs",
+    "evals:frontend:fixture:install": "npm --prefix plugins/frontend-developer/eval-fixture install",
+    "evals:frontend:fixture:test": "npm --prefix plugins/frontend-developer/eval-fixture test",
+    "evals:frontend:fixture:lint": "npm --prefix plugins/frontend-developer/eval-fixture run lint",
+    "evals:frontend": "npm run evals:frontend:fixture:install && npm run evals:setup && node scripts/evals.mjs eval frontend-developer copilot-cli-frontend-developer",
+    "evals:frontend:claude": "npm run evals:frontend:fixture:install && npm run evals:setup && node scripts/evals.mjs eval frontend-developer claude-code-frontend-developer",
+    "evals:frontend:view": "node scripts/evals.mjs view frontend-developer",
+    "evals:frontend:clean": "node scripts/evals.mjs clean frontend-developer"
   },
   "dependencies": {
     "ajv": "8.17.1",
