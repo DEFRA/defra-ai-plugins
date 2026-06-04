@@ -20,6 +20,7 @@ EXPLICIT_PROJECT_DIR="${2:-}"
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 FIXTURE_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
+PLUGIN_DIR="$(cd "$FIXTURE_DIR/.." && pwd)"
 HOOK_SCRIPT="$FIXTURE_DIR/hooks-under-test/$HOOK_ID.sh"
 
 if [[ ! -x "$HOOK_SCRIPT" ]]; then
@@ -35,6 +36,7 @@ else
 fi
 
 export CLAUDE_PROJECT_DIR="$PROJECT_DIR"
+export CLAUDE_PLUGIN_ROOT="$PLUGIN_DIR"
 
 stderr_capture=$(mktemp)
 cleanup() {

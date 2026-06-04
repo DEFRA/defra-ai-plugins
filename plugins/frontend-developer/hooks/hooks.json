@@ -5,7 +5,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "# Block prompts that mention a technology forbidden by the Defra frontend\n# standards. Exits 2 so the message never reaches the LLM and the refusal\n# banner is printed to the terminal — refusal is deterministic, not\n# dependent on the model cooperating.\n\nINPUT=$(cat)\nPROMPT=$(printf '%s' \"$INPUT\" | jq -r '.prompt // empty')\n\nif [[ -z \"$PROMPT\" ]]; then exit 0; fi\n\nMATCH=$(printf '%s' \"$PROMPT\" | grep -oiE '\\b(tailwind|react|vue|angular|svelte|jquery|bootstrap|typescript|express)\\b' | head -1)\n\nif [[ -n \"$MATCH\" ]]; then\n  cat >&2 <<BANNER\n[frontend-developer] refused: '$MATCH' is not allowed by the Defra frontend standards.\n\nThe approved stack is Hapi + Nunjucks + SCSS (importing govuk-frontend) +\nprogressive-enhancement vanilla JS + Vitest. SPA frameworks (React, Vue,\nAngular, Svelte), utility-CSS frameworks (Tailwind, Bootstrap), jQuery,\nand TypeScript are all forbidden.\n\nRe-send the request without naming a forbidden technology — e.g. \"add a\ncallback request form at /callback\" — and the agent will build the\ncompliant version. See skill frontend-tech-stack for the full list.\nBANNER\n  exit 2\nfi\n\nexit 0",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/hooks/scripts/forbidden-tech-block.mjs\"",
             "statusMessage": "Checking for forbidden frontend tech...",
             "async": false
           }
@@ -18,7 +18,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "FILE=$(cat | jq -r '.tool_input.file_path // empty'); case \"$FILE\" in *.js|*.mjs) cd \"$CLAUDE_PROJECT_DIR\" && npm run lint -- --fix \"$FILE\" 2>/dev/null; npm run format:fix -- \"$FILE\" 2>/dev/null;; esac; exit 0",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/hooks/scripts/lint-format-on-write.mjs\"",
             "statusMessage": "Linting and formatting...",
             "async": true
           }
@@ -29,7 +29,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "FILE=$(cat | jq -r '.tool_input.file_path // empty'); if [[ \"$FILE\" == *.scss && -f \"$FILE\" ]]; then cd \"$CLAUDE_PROJECT_DIR\" && npm run build 2>&1 | tail -5; fi; exit 0",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/hooks/scripts/scss-build-on-write.mjs\"",
             "statusMessage": "Building CSS...",
             "async": true
           }
@@ -40,7 +40,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "INPUT=$(cat); FILE=$(echo \"$INPUT\" | jq -r '.tool_input.file_path // empty'); if [[ \"$FILE\" == *.njk && -f \"$FILE\" ]]; then if grep -qE '<script[^>]*>|<style[^>]*>|\\bstyle=' \"$FILE\"; then echo \"Security: inline <script>, <style>, or style= attribute found in $(basename $FILE). Move scripts to external .js files and styles to external .scss files.\" >&2; exit 2; fi; COUNT=$(grep -c '| safe' \"$FILE\" 2>/dev/null || echo 0); if [[ \"$COUNT\" -gt 0 ]]; then echo \"Warning: $COUNT use(s) of '| safe' in $(basename $FILE) — only use on pre-sanitised trusted content, never on user-supplied data.\" >&2; fi; fi; exit 0",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/hooks/scripts/nunjucks-security.mjs\"",
             "statusMessage": "Checking Nunjucks security...",
             "async": false
           }

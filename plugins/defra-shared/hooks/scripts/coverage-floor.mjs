@@ -1,0 +1,61 @@
+#!/usr/bin/env node
+// Warn when test-runner output reports coverage below the floor (default 80%).
+// Try the structured "All files" / "TOTAL" row first; fall back to the first
+// stand-alone percentage only if that row isn't present.
+
+import { readFileSync } from 'node:fs'
+import { fileURLToPath } from 'node:url'
+
+export function check(input, env = {}) {
+  const cmd = input.tool_input?.command ?? ''
+  const output = input.tool_response?.stdout ?? input.tool_response?.output ?? ''
+
+  if (!/\b(test|vitest|jest|pytest|dotnet test)\b/.test(cmd)) {
+    return { exitCode: 0 }
+  }
+
+  const threshold = Number(env.COVERAGE_FLOOR ?? 80)
+
+  // Structured row first: line starting with "All files" or "TOTAL" (case-insensitive).
+  let pct
+  const rowLine = output.split('\n').find((line) => /^\s*(All files|TOTAL)/i.test(line))
+  if (rowLine) {
+    const m = rowLine.match(/[0-9]+\.[0-9]+|[0-9]{2,}/)
+    if (m) {
+      pct = m[0]
+    }
+  }
+  if (pct === undefined) {
+    const m = output.match(/([0-9]+(?:\.[0-9]+)?)\s*%/)
+    if (m) {
+      pct = m[1]
+    }
+  }
+  if (pct === undefined) {
+    return { exitCode: 0 }
+  }
+
+  const intPart = Number.parseInt(pct, 10)
+  if (intPart < threshold) {
+    return {
+      exitCode: 0,
+      stderr: `coverage-floor: coverage ${pct}% is below the ${threshold}% threshold. Add tests for the changed files before merging. See skill defra-quality-gates.\n`
+    }
+  }
+
+  return { exitCode: 0 }
+}
+
+if (process.argv[1] === fileURLToPath(import.meta.url)) {
+  let input = {}
+  try {
+    input = JSON.parse(readFileSync(0, 'utf8'))
+  } catch {
+    process.exit(0)
+  }
+  const { exitCode, stderr } = check(input, process.env)
+  if (stderr) {
+    process.stderr.write(stderr)
+  }
+  process.exit(exitCode)
+}
