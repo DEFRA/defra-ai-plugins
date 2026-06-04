@@ -4,17 +4,13 @@
 // banner is printed to the terminal — refusal is deterministic, not
 // dependent on the model cooperating.
 
-import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
+import { runHook } from './hook-runner.mjs'
 
 const FORBIDDEN = /\b(tailwind|react|vue|angular|svelte|jquery|bootstrap|typescript|express)\b/i
 
 export function check(input) {
-  const prompt = input.prompt ?? ''
-  if (!prompt) {
-    return { exitCode: 0 }
-  }
-  const match = prompt.match(FORBIDDEN)
+  const match = (input.prompt ?? '').match(FORBIDDEN)
   if (!match) {
     return { exitCode: 0 }
   }
@@ -35,15 +31,5 @@ compliant version. See skill frontend-tech-stack for the full list.
 }
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
-  let input = {}
-  try {
-    input = JSON.parse(readFileSync(0, 'utf8'))
-  } catch {
-    process.exit(0)
-  }
-  const { exitCode, stderr } = check(input)
-  if (stderr) {
-    process.stderr.write(stderr)
-  }
-  process.exit(exitCode)
+  runHook(check)
 }

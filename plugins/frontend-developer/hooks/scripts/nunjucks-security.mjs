@@ -6,6 +6,7 @@
 import { readFileSync, existsSync } from 'node:fs'
 import { basename } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { runHook } from './hook-runner.mjs'
 
 const INLINE = /<script[^>]*>|<style[^>]*>|\bstyle=/
 const SAFE_FILTER = /\| safe/g
@@ -22,7 +23,7 @@ export function check(file, readFile = (f) => readFileSync(f, 'utf8'), fileExist
     }
   }
   const safeMatches = content.match(SAFE_FILTER)
-  if (safeMatches && safeMatches.length > 0) {
+  if (safeMatches) {
     return {
       exitCode: 0,
       stderr: `Warning: ${safeMatches.length} use(s) of '| safe' in ${basename(file)} — only use on pre-sanitised trusted content, never on user-supplied data.\n`
@@ -32,16 +33,5 @@ export function check(file, readFile = (f) => readFileSync(f, 'utf8'), fileExist
 }
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
-  let input = {}
-  try {
-    input = JSON.parse(readFileSync(0, 'utf8'))
-  } catch {
-    process.exit(0)
-  }
-  const file = input.tool_input?.file_path ?? ''
-  const { exitCode, stderr } = check(file)
-  if (stderr) {
-    process.stderr.write(stderr)
-  }
-  process.exit(exitCode)
+  runHook((input) => check(input.tool_input?.file_path ?? ''))
 }

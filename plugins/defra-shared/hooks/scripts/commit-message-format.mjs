@@ -4,8 +4,8 @@
 // -C / --reuse-message / --fixup / --squash) and editor-driven commits.
 // Allow `--amend --no-edit` (reuses an already-validated message).
 
-import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
+import { runHook } from './hook-runner.mjs'
 
 const TYPES =
   /^(feat|fix|chore|docs|refactor|test|build|ci|perf|style|revert)(\([a-z0-9-]+\))?(!)?: [^\s].*[^.\s]$/
@@ -15,11 +15,8 @@ const BYPASS_FLAGS =
 
 const HAS_M_OR_MESSAGE = /(-[a-zA-Z]*m(\s|=)|--message[= ])/
 
-const EXTRACTORS = [
-  /--message=("[^"]*"|'[^']*'|[^ ]+)/,
-  /--message\s+("[^"]*"|'[^']*'|[^ ]+)/,
-  /\s-[a-zA-Z]*m\s+("[^"]*"|'[^']*'|[^ ]+)/
-]
+// Capture the message argument from -m / --message= / --message <text>.
+const EXTRACT_MSG = /(?:--message=|--message\s+|\s-[a-zA-Z]*m\s+)("[^"]*"|'[^']*'|[^ ]+)/
 
 function stripQuotes(s) {
   if ((s.startsWith('"') && s.endsWith('"')) || (s.startsWith("'") && s.endsWith("'"))) {
@@ -57,15 +54,8 @@ export function check(input) {
     }
   }
 
-  let msg = ''
-  for (const re of EXTRACTORS) {
-    const m = cmd.match(re)
-    if (m) {
-      msg = m[1]
-      break
-    }
-  }
-  msg = stripQuotes(msg)
+  const matched = cmd.match(EXTRACT_MSG)
+  const msg = stripQuotes(matched ? matched[1] : '')
 
   if (!msg) {
     return {
@@ -95,15 +85,5 @@ export function check(input) {
 }
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
-  let input = {}
-  try {
-    input = JSON.parse(readFileSync(0, 'utf8'))
-  } catch {
-    process.exit(0)
-  }
-  const { exitCode, stderr } = check(input)
-  if (stderr) {
-    process.stderr.write(stderr)
-  }
-  process.exit(exitCode)
+  runHook(check)
 }

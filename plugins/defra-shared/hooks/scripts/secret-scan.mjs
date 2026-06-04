@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 // Refuse Edit/Write whose content contains a known secret pattern.
 
-import { readFileSync } from 'node:fs'
 import { basename } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { runHook } from './hook-runner.mjs'
 
 const PATTERNS = [
   [/AKIA[0-9A-Z]{16}/, 'AWS access key id'],
@@ -38,15 +38,5 @@ export function check(input) {
 }
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
-  let input = {}
-  try {
-    input = JSON.parse(readFileSync(0, 'utf8'))
-  } catch {
-    process.exit(0)
-  }
-  const { exitCode, stderr } = check(input)
-  if (stderr) {
-    process.stderr.write(stderr)
-  }
-  process.exit(exitCode)
+  runHook(check)
 }

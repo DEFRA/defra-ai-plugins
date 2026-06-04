@@ -53,7 +53,7 @@ export function snapshotFiles(outFile, cwd) {
     } catch {
       continue
     }
-    const hash = createHash('md5').update(buf).digest('hex')
+    const hash = createHash('sha256').update(buf).digest('hex')
     lines.push(`${hash} ${relative(cwd, file)}`)
   }
   writeFileSync(outFile, lines.sort().join('\n') + (lines.length ? '\n' : ''))

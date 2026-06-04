@@ -3,8 +3,8 @@
 // Try the structured "All files" / "TOTAL" row first; fall back to the first
 // stand-alone percentage only if that row isn't present.
 
-import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
+import { runHook } from './hook-runner.mjs'
 
 export function check(input, env = {}) {
   const cmd = input.tool_input?.command ?? ''
@@ -35,8 +35,8 @@ export function check(input, env = {}) {
     return { exitCode: 0 }
   }
 
-  const intPart = Number.parseInt(pct, 10)
-  if (intPart < threshold) {
+  const value = Number.parseFloat(pct)
+  if (value < threshold) {
     return {
       exitCode: 0,
       stderr: `coverage-floor: coverage ${pct}% is below the ${threshold}% threshold. Add tests for the changed files before merging. See skill defra-quality-gates.\n`
@@ -47,15 +47,5 @@ export function check(input, env = {}) {
 }
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
-  let input = {}
-  try {
-    input = JSON.parse(readFileSync(0, 'utf8'))
-  } catch {
-    process.exit(0)
-  }
-  const { exitCode, stderr } = check(input, process.env)
-  if (stderr) {
-    process.stderr.write(stderr)
-  }
-  process.exit(exitCode)
+  runHook((input) => check(input, process.env))
 }

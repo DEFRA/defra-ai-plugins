@@ -73,6 +73,17 @@ function stageFeatureBranch(fixtureDir) {
   return stage
 }
 
+// Stage a fresh fixture on a feature branch, run `fn(stage)`, and always clean
+// up the temp checkout afterwards (even if `fn` throws).
+function withFeatureBranch(fixtureDir, fn) {
+  const stage = stageFeatureBranch(fixtureDir)
+  try {
+    fn(stage)
+  } finally {
+    rmSync(stage, { recursive: true, force: true })
+  }
+}
+
 function runOne(out, hookId, label, projectDir, inputJson) {
   out.push(`=== HOOK RUN ${hookId} ${label} ===`)
   const { exitCode, stderr } = driveHook({ hookId, input: inputJson, projectDir })
@@ -118,48 +129,48 @@ export function report({ provider, prompt, fixtureDir }) {
   )
 
   // Negative control on feature branch.
-  let stage = stageFeatureBranch(fixtureDir)
-  runOne(
-    out,
-    'branch-guard',
-    'feature-branch',
-    stage,
-    JSON.stringify({ tool_input: { command: 'git commit -m "feat: x"' } })
+  withFeatureBranch(fixtureDir, (stage) =>
+    runOne(
+      out,
+      'branch-guard',
+      'feature-branch',
+      stage,
+      JSON.stringify({ tool_input: { command: 'git commit -m "feat: x"' } })
+    )
   )
-  rmSync(stage, { recursive: true, force: true })
 
   // Force-push to main from feature.
-  stage = stageFeatureBranch(fixtureDir)
-  runOne(
-    out,
-    'branch-guard',
-    'force-push-main',
-    stage,
-    JSON.stringify({ tool_input: { command: 'git push --force origin main' } })
+  withFeatureBranch(fixtureDir, (stage) =>
+    runOne(
+      out,
+      'branch-guard',
+      'force-push-main',
+      stage,
+      JSON.stringify({ tool_input: { command: 'git push --force origin main' } })
+    )
   )
-  rmSync(stage, { recursive: true, force: true })
 
   // --force-with-lease HEAD:main from feature.
-  stage = stageFeatureBranch(fixtureDir)
-  runOne(
-    out,
-    'branch-guard',
-    'force-with-lease-main',
-    stage,
-    JSON.stringify({ tool_input: { command: 'git push --force-with-lease origin HEAD:main' } })
+  withFeatureBranch(fixtureDir, (stage) =>
+    runOne(
+      out,
+      'branch-guard',
+      'force-with-lease-main',
+      stage,
+      JSON.stringify({ tool_input: { command: 'git push --force-with-lease origin HEAD:main' } })
+    )
   )
-  rmSync(stage, { recursive: true, force: true })
 
   // Force-push to a feature branch (negative control).
-  stage = stageFeatureBranch(fixtureDir)
-  runOne(
-    out,
-    'branch-guard',
-    'force-push-feature',
-    stage,
-    JSON.stringify({ tool_input: { command: 'git push --force origin feature/x' } })
+  withFeatureBranch(fixtureDir, (stage) =>
+    runOne(
+      out,
+      'branch-guard',
+      'force-push-feature',
+      stage,
+      JSON.stringify({ tool_input: { command: 'git push --force origin feature/x' } })
+    )
   )
-  rmSync(stage, { recursive: true, force: true })
 
   // --- commit-message-format ----------------------------------------------
 

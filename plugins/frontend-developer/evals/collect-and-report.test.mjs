@@ -41,10 +41,10 @@ test('snapshotFiles writes a sorted hash+path listing for files under src/', () 
     const out = join(dir, 'snap.txt')
     snapshotFiles(out, dir)
     const lines = readFileSync(out, 'utf8').trimEnd().split('\n')
-    // One "<md5> <relpath>" entry per file under src/ (line order is by hash).
+    // One "<sha256> <relpath>" entry per file under src/ (line order is by hash).
     assert.equal(lines.length, 2)
     for (const line of lines) {
-      assert.match(line, /^[a-f0-9]{32} src\/.+$/)
+      assert.match(line, /^[a-f0-9]{64} src\/.+$/)
     }
     const paths = lines.map((l) => l.slice(l.indexOf(' ') + 1)).sort()
     assert.deepEqual(paths, ['src/b.js', 'src/views/a.njk'])

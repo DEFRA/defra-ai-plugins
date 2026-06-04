@@ -4,9 +4,9 @@
 // master, from any branch — force-pushes overwrite shared history regardless
 // of current HEAD.
 
-import { readFileSync } from 'node:fs'
 import { spawnSync } from 'node:child_process'
 import { fileURLToPath } from 'node:url'
+import { runHook } from './hook-runner.mjs'
 
 export function check(input, getCurrentBranch) {
   const cmd = input.tool_input?.command ?? ''
@@ -37,12 +37,6 @@ export function check(input, getCurrentBranch) {
 }
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
-  let input = {}
-  try {
-    input = JSON.parse(readFileSync(0, 'utf8'))
-  } catch {
-    process.exit(0)
-  }
   const dir = process.env.CLAUDE_PROJECT_DIR || process.cwd()
   const getCurrentBranch = () => {
     const r = spawnSync('git', ['rev-parse', '--abbrev-ref', 'HEAD'], {
@@ -51,9 +45,5 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
     })
     return r.status === 0 ? (r.stdout || '').trim() : ''
   }
-  const { exitCode, stderr } = check(input, getCurrentBranch)
-  if (stderr) {
-    process.stderr.write(stderr)
-  }
-  process.exit(exitCode)
+  runHook((input) => check(input, getCurrentBranch))
 }

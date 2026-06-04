@@ -6,6 +6,7 @@
 import { readFileSync, existsSync } from 'node:fs'
 import { basename } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { runHook } from './hook-runner.mjs'
 
 const SKIP_PATTERNS = [/\.lock$/, /lock\.json$/, /\.snap$/, /\/eval-fixture\/fixtures\//]
 
@@ -67,16 +68,5 @@ export function scan(file, readFile = (f) => readFileSync(f, 'utf8'), fileExists
 }
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
-  let input = {}
-  try {
-    input = JSON.parse(readFileSync(0, 'utf8'))
-  } catch {
-    process.exit(0)
-  }
-  const file = input.tool_input?.file_path ?? ''
-  const { exitCode, stderr } = scan(file)
-  if (stderr) {
-    process.stderr.write(stderr)
-  }
-  process.exit(exitCode)
+  runHook((input) => scan(input.tool_input?.file_path ?? ''))
 }
