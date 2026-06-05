@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import { spawnSync } from 'node:child_process'
-import { mkdirSync, copyFileSync, rmSync } from 'node:fs'
+import { mkdirSync, copyFileSync, rmSync, existsSync } from 'node:fs'
 import { join } from 'node:path'
 
 const [subcommand, ...rest] = process.argv.slice(2)
@@ -33,9 +33,14 @@ if (subcommand === 'eval') {
   const dir = evalDir(plugin)
   const date = new Date().toISOString().slice(0, 10)
   const resultsDir = `results/run-${date}`
+  // Each provider has its own results + baseline file. The regression gate must
+  // never compare a claude run against the copilot baseline (different model,
+  // different output shape) — so we pick the matching baseline per provider and
+  // pass it to check-regression explicitly.
   const resultsFile = providerId.includes('claude')
     ? 'promptfoo-results-claude.json'
     : 'promptfoo-results.json'
+  const baselinePath = join(dir, 'baseline', resultsFile)
 
   mkdirSync(resultsDir, { recursive: true })
   run(
@@ -44,7 +49,18 @@ if (subcommand === 'eval') {
     { cwd: dir }
   )
   copyFileSync(join(dir, 'output.json'), join(resultsDir, resultsFile))
-  run('node', [join(dir, 'check-regression.mjs'), join(resultsDir, resultsFile)])
+
+  if (existsSync(baselinePath)) {
+    run('node', [join(dir, 'check-regression.mjs'), join(resultsDir, resultsFile), baselinePath])
+  } else {
+    // No baseline for this provider yet (e.g. the first claude run). Skip the
+    // gate loudly rather than fall back to another provider's baseline. Once
+    // this run is green, promote it: cp the results file to baselinePath.
+    console.log(
+      `\nNo baseline at ${baselinePath} — skipping regression gate for this provider.\n` +
+        `Promote this run once green:  cp ${join(resultsDir, resultsFile)} ${baselinePath}`
+    )
+  }
 
   console.log(`\nResults saved to ${join(resultsDir, resultsFile)}`)
 } else if (subcommand === 'view') {
