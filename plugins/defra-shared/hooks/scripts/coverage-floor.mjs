@@ -6,6 +6,14 @@
 import { fileURLToPath } from 'node:url'
 import { runHook } from './hook-runner.mjs'
 
+/**
+ * Warn when a test-runner command's output reports coverage below the floor.
+ * Non-blocking (always returns exitCode 0); emits a stderr warning only.
+ *
+ * @param {{ tool_input?: { command?: string }, tool_response?: { stdout?: string, output?: string } }} input - Copilot hook tool-use payload.
+ * @param {Record<string, string | undefined>} [env] - Environment variables; reads `COVERAGE_FLOOR` (default 80).
+ * @returns {{ exitCode: number, stderr?: string }}
+ */
 export function check(input, env = {}) {
   const cmd = input.tool_input?.command ?? ''
   const output = input.tool_response?.stdout ?? input.tool_response?.output ?? ''

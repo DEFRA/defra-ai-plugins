@@ -8,6 +8,14 @@ import { spawnSync } from 'node:child_process'
 import { fileURLToPath } from 'node:url'
 import { runHook } from './hook-runner.mjs'
 
+/**
+ * Guard against commits and pushes directly to main/master, and
+ * force-pushes that target main/master from any branch.
+ *
+ * @param {{ tool_input?: { command?: string } }} input - Copilot hook tool-use payload.
+ * @param {() => string} getCurrentBranch - Returns the current HEAD branch name.
+ * @returns {{ exitCode: number, stderr?: string }}
+ */
 export function check(input, getCurrentBranch) {
   const cmd = input.tool_input?.command ?? ''
 

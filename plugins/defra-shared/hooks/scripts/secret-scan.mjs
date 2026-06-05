@@ -21,6 +21,13 @@ const PATTERNS = [
   [/eyJ[A-Za-z0-9_\-]{10,}\.eyJ[A-Za-z0-9_\-]{10,}\.[A-Za-z0-9_\-]{10,}/, 'JWT']
 ]
 
+/**
+ * Refuse an Edit/Write tool call whose new content contains a known secret pattern
+ * (AWS key, private key block, hard-coded credential, GitHub/Slack/Anthropic/OpenAI/Stripe token, JWT, etc.).
+ *
+ * @param {{ tool_input?: { file_path?: string, content?: string, new_string?: string } }} input - Copilot hook tool-use payload.
+ * @returns {{ exitCode: number, stderr?: string }}
+ */
 export function check(input) {
   const file = input.tool_input?.file_path ?? ''
   const content = input.tool_input?.content ?? input.tool_input?.new_string ?? ''

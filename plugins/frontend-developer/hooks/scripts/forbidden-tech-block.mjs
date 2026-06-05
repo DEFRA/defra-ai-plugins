@@ -9,6 +9,14 @@ import { runHook } from './hook-runner.mjs'
 
 const FORBIDDEN = /\b(tailwind|react|vue|angular|svelte|jquery|bootstrap|typescript|express)\b/i
 
+/**
+ * Block prompts that name a technology forbidden by Defra frontend standards
+ * (React, Vue, Angular, Svelte, jQuery, Bootstrap, Tailwind, TypeScript, Express).
+ * Exits 2 — the message never reaches the LLM.
+ *
+ * @param {{ prompt?: string }} input - Hook input object containing the user prompt.
+ * @returns {{ exitCode: number, stderr?: string }}
+ */
 export function check(input) {
   const match = (input.prompt ?? '').match(FORBIDDEN)
   if (!match) {

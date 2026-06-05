@@ -25,6 +25,13 @@ function stripQuotes(s) {
   return s
 }
 
+/**
+ * Validate that a `git commit` command uses a Conventional Commits subject
+ * and does not bypass message inspection via -F/--file/--template etc.
+ *
+ * @param {{ tool_input?: { command?: string } }} input - Copilot hook tool-use payload.
+ * @returns {{ exitCode: number, stderr?: string }}
+ */
 export function check(input) {
   const cmd = input.tool_input?.command ?? ''
 

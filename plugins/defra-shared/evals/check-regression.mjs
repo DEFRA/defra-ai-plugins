@@ -27,9 +27,16 @@ export const THRESHOLDS = {
   refusal: 100
 }
 
-// Pass-rate (0-100) for a single metric across a parsed promptfoo result
-// object, or null if the metric never appears. A component matches when its
-// assertion metric equals `metric` or is namespaced as `metric:<suffix>`.
+/**
+ * Compute the pass-rate (0–100) for a single metric across a parsed promptfoo
+ * result object. Returns `null` if the metric never appears. A component
+ * matches when its assertion metric equals `metric` or is namespaced as
+ * `metric:<suffix>`.
+ *
+ * @param {object} data - Parsed promptfoo JSON result object.
+ * @param {string} metric - Metric name to look up (e.g. `"correctness"`).
+ * @returns {number | null}
+ */
 export function metricPassRate(data, metric) {
   const hits = []
   for (const r of data.results?.results ?? []) {
@@ -46,9 +53,17 @@ export function metricPassRate(data, metric) {
   return (hits.filter(Boolean).length * 100) / hits.length
 }
 
-// Compare parsed new results against the thresholds and, when supplied, a
-// parsed baseline. Returns human-readable regression strings; empty means all
-// metrics are at or above threshold and have not dropped >5pp vs baseline.
+/**
+ * Compare parsed new results against the thresholds and, when supplied, a
+ * parsed baseline. Returns human-readable regression strings; an empty array
+ * means all metrics are at or above threshold and have not dropped >5pp vs
+ * baseline.
+ *
+ * @param {object} newData - Parsed promptfoo JSON result object for the current run.
+ * @param {object | null} baselineData - Parsed baseline result object, or `null` to skip baseline comparison.
+ * @param {Record<string, number>} [thresholds] - Per-metric pass-rate thresholds (default: `THRESHOLDS`).
+ * @returns {string[]}
+ */
 export function findRegressions(newData, baselineData, thresholds = THRESHOLDS) {
   const regressions = []
 

@@ -28,6 +28,15 @@ function isValidNhs(digits) {
   return check === Number(digits[9])
 }
 
+/**
+ * Warn (non-blocking) when a written file contains UK PII patterns.
+ * Skips lock files, snapshots, and eval-fixture fixture paths.
+ *
+ * @param {string} file - Absolute or relative path to the file to scan.
+ * @param {(path: string) => string} [readFile] - Override for reading file contents (default: fs.readFileSync).
+ * @param {(path: string) => boolean} [fileExists] - Override for existence check (default: fs.existsSync).
+ * @returns {{ exitCode: number, stderr?: string }}
+ */
 export function scan(file, readFile = (f) => readFileSync(f, 'utf8'), fileExists = existsSync) {
   if (!file || !fileExists(file)) {
     return { exitCode: 0 }

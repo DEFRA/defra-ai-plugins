@@ -13,10 +13,14 @@ import { readFileSync, existsSync } from 'node:fs'
 import { dirname, resolve, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
-// Build a per-prompt success map from a parsed promptfoo result object. A
-// prompt is "passing" only if every provider that ran it passed. With one
-// provider this is the obvious thing; with multiple, a regression on any
-// provider fails the gate.
+/**
+ * Build a per-prompt success map from a parsed promptfoo result object.
+ * A prompt is "passing" only if every provider that ran it passed — with
+ * multiple providers a regression on any one fails the gate.
+ *
+ * @param {object} data - Parsed promptfoo JSON result object.
+ * @returns {Map<string, boolean>} Map of prompt text → overall pass status.
+ */
 export function buildPromptPassMap(data) {
   const byPrompt = new Map()
   for (const r of data.results?.results ?? []) {
@@ -35,9 +39,16 @@ export function buildPromptPassMap(data) {
   return out
 }
 
-// Given baseline and fresh pass-maps, list prompts that passed in the baseline
-// but are now missing or failing. Newly-added prompts are intentionally
-// ignored (see header).
+/**
+ * Given baseline and fresh pass-maps, list prompts that passed in the baseline
+ * but are now missing or failing. Newly-added prompts are intentionally
+ * ignored — promptfoo's own exit code already gates new fixtures from their
+ * first appearance.
+ *
+ * @param {Map<string, boolean>} baseline - Pass-map built from the committed baseline results.
+ * @param {Map<string, boolean>} fresh - Pass-map built from the current run's results.
+ * @returns {string[]} Human-readable regression descriptions; empty means no regressions.
+ */
 export function findRegressions(baseline, fresh) {
   const regressions = []
   for (const [prompt, basePassed] of baseline) {

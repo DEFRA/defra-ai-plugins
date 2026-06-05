@@ -26,7 +26,9 @@ if (files.length === 0) {
   process.exit(0)
 }
 
-const result = spawnSync('node', ['--test', '--test-reporter=spec', ...files], {
-  stdio: 'inherit'
-})
+const result = spawnSync(
+  'node',
+  ['--test', '--test-reporter=spec', '--experimental-test-coverage', ...files],
+  { stdio: 'inherit' }
+)
 process.exit(result.status ?? 1)
