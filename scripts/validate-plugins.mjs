@@ -14,26 +14,12 @@ const PLUGINS_DIR = resolve(REPO_ROOT, 'plugins')
 const MARKETPLACE_PATH = resolve(REPO_ROOT, '.github/plugin/marketplace.json')
 
 /**
- * @returns {string[]} list of error messages (empty if valid)
+ * Build a name → marketplace-entry index, recording a read error in `errors`
+ * if the registry can't be loaded.
+ * @param {string[]} errors
+ * @returns {Map<string, object>}
  */
-export function validatePlugins() {
-  const errors = []
-  const validatePlugin = buildValidator('plugin.schema.json')
-
-  if (!existsSync(PLUGINS_DIR)) {
-    return ['plugins/: directory does not exist']
-  }
-
-  const dirs = readdirSync(PLUGINS_DIR).filter((entry) => {
-    return statSync(resolve(PLUGINS_DIR, entry)).isDirectory()
-  })
-
-  if (dirs.length === 0) {
-    errors.push('plugins/: no plugin directories found')
-    return errors
-  }
-
-  // Build marketplace lookup so we can cross-check each plugin
+function buildMarketplaceIndex(errors) {
   let marketplace = { plugins: [] }
   try {
     marketplace = readJson(MARKETPLACE_PATH)
@@ -41,96 +27,113 @@ export function validatePlugins() {
     errors.push(`marketplace.json: cannot read for cross-check: ${err.message}`)
   }
 
-  const marketplaceByName = new Map()
+  const byName = new Map()
   if (Array.isArray(marketplace.plugins)) {
     for (const p of marketplace.plugins) {
       if (p && typeof p.name === 'string') {
-        marketplaceByName.set(p.name, p)
+        byName.set(p.name, p)
       }
     }
   }
+  return byName
+}
 
-  for (const dir of dirs) {
-    const pluginRoot = resolve(PLUGINS_DIR, dir)
-    const manifestPath = resolve(pluginRoot, 'plugin.json')
-    const prefix = `plugins/${dir}`
-
-    if (!existsSync(manifestPath)) {
-      errors.push(`${prefix}: plugin.json missing`)
-      continue
-    }
-
-    let manifest
-    try {
-      manifest = readJson(manifestPath)
-    } catch (err) {
-      errors.push(`${prefix}/plugin.json: cannot parse: ${err.message}`)
-      continue
-    }
-
-    // Schema validation
-    const schemaErrors = validatePlugin(manifest)
-    for (const e of schemaErrors) {
-      errors.push(`${prefix}/plugin.json: ${e}`)
-    }
-
-    // Name must match directory
-    if (manifest.name !== basename(pluginRoot)) {
-      errors.push(
-        `${prefix}/plugin.json: name "${manifest.name}" does not match directory "${dir}"`
-      )
-    }
-
-    // Must be in marketplace registry
-    const marketplaceEntry = marketplaceByName.get(manifest.name)
-    if (!marketplaceEntry) {
-      errors.push(
-        `${prefix}: not registered in marketplace.json (expected entry "${manifest.name}")`
-      )
-    } else {
-      if (marketplaceEntry.description !== manifest.description) {
-        errors.push(`${prefix}: description in plugin.json does not match marketplace.json entry`)
-      }
-      if (marketplaceEntry.version !== manifest.version) {
-        errors.push(
-          `${prefix}: version in plugin.json does not match marketplace.json entry ` +
-            `(plugin: ${manifest.version}, marketplace: ${marketplaceEntry.version})`
-        )
-      }
-      const expectedSource = `plugins/${dir}`
-      if (marketplaceEntry.source !== expectedSource) {
-        errors.push(
-          `${prefix}: marketplace.json source "${marketplaceEntry.source}" should be "${expectedSource}"`
-        )
-      }
-    }
-
-    // README required
-    if (!existsSync(resolve(pluginRoot, 'README.md'))) {
-      errors.push(`${prefix}: README.md missing`)
-    }
-
-    // At least one entry point required (any format: Copilot agent, Claude agent, or skill)
-    const entries = discoverEntryPoints(pluginRoot)
-    if (entries.length === 0) {
-      errors.push(
-        `${prefix}: no entry points found — expected one of agents/*.agent.md, ` +
-          `agents/*.md, or skills/<name>/SKILL.md`
-      )
-    }
-
-    // Skill folders must match the convention: skills/<name>/ where the dir name
-    // is the skill identifier and matches SKILL.md frontmatter (checked elsewhere).
-    for (const entry of entries) {
-      if (entry.format === 'skill' && !/^[a-z][a-z0-9-]*[a-z0-9]$/.test(entry.name)) {
-        errors.push(
-          `${prefix}/${entry.relPath}: skill directory "${entry.name}" must be kebab-case`
-        )
-      }
-    }
+/**
+ * Cross-check a plugin manifest against its marketplace registry entry.
+ * @returns {string[]}
+ */
+function checkMarketplaceEntry(prefix, dir, manifest, marketplaceByName) {
+  const entry = marketplaceByName.get(manifest.name)
+  if (!entry) {
+    return [`${prefix}: not registered in marketplace.json (expected entry "${manifest.name}")`]
   }
 
-  // Reverse check: every marketplace entry must have a directory
+  const errors = []
+  if (entry.description !== manifest.description) {
+    errors.push(`${prefix}: description in plugin.json does not match marketplace.json entry`)
+  }
+  if (entry.version !== manifest.version) {
+    errors.push(
+      `${prefix}: version in plugin.json does not match marketplace.json entry ` +
+        `(plugin: ${manifest.version}, marketplace: ${entry.version})`
+    )
+  }
+  const expectedSource = `plugins/${dir}`
+  if (entry.source !== expectedSource) {
+    errors.push(
+      `${prefix}: marketplace.json source "${entry.source}" should be "${expectedSource}"`
+    )
+  }
+  return errors
+}
+
+/**
+ * Entry-point existence + skill-directory naming checks for one plugin.
+ * @returns {string[]}
+ */
+function checkEntryPoints(prefix, pluginRoot) {
+  const errors = []
+  const entries = discoverEntryPoints(pluginRoot)
+  if (entries.length === 0) {
+    errors.push(
+      `${prefix}: no entry points found — expected one of agents/*.agent.md, ` +
+        `agents/*.md, or skills/<name>/SKILL.md`
+    )
+  }
+
+  // Skill folders must match the convention: skills/<name>/ where the dir name
+  // is the skill identifier and matches SKILL.md frontmatter (checked elsewhere).
+  for (const entry of entries) {
+    if (entry.format === 'skill' && !/^[a-z][a-z0-9-]*[a-z0-9]$/.test(entry.name)) {
+      errors.push(`${prefix}/${entry.relPath}: skill directory "${entry.name}" must be kebab-case`)
+    }
+  }
+  return errors
+}
+
+/**
+ * Validate a single plugin directory (manifest, schema, marketplace cross-check,
+ * README, entry points). Returns early on the fatal cases (missing/unparseable
+ * manifest) so the caller never has to use loop control.
+ * @returns {string[]}
+ */
+function validateOnePlugin(dir, validatePlugin, marketplaceByName) {
+  const pluginRoot = resolve(PLUGINS_DIR, dir)
+  const manifestPath = resolve(pluginRoot, 'plugin.json')
+  const prefix = `plugins/${dir}`
+
+  if (!existsSync(manifestPath)) {
+    return [`${prefix}: plugin.json missing`]
+  }
+
+  let manifest
+  try {
+    manifest = readJson(manifestPath)
+  } catch (err) {
+    return [`${prefix}/plugin.json: cannot parse: ${err.message}`]
+  }
+
+  const errors = []
+  for (const e of validatePlugin(manifest)) {
+    errors.push(`${prefix}/plugin.json: ${e}`)
+  }
+  if (manifest.name !== basename(pluginRoot)) {
+    errors.push(`${prefix}/plugin.json: name "${manifest.name}" does not match directory "${dir}"`)
+  }
+  errors.push(...checkMarketplaceEntry(prefix, dir, manifest, marketplaceByName))
+  if (!existsSync(resolve(pluginRoot, 'README.md'))) {
+    errors.push(`${prefix}: README.md missing`)
+  }
+  errors.push(...checkEntryPoints(prefix, pluginRoot))
+  return errors
+}
+
+/**
+ * Reverse check: every marketplace entry must have a plugin directory.
+ * @returns {string[]}
+ */
+function checkOrphanMarketplaceEntries(marketplaceByName, dirs) {
+  const errors = []
   for (const [name, entry] of marketplaceByName) {
     if (!dirs.includes(name)) {
       errors.push(
@@ -138,7 +141,31 @@ export function validatePlugins() {
       )
     }
   }
+  return errors
+}
 
+/**
+ * @returns {string[]} list of error messages (empty if valid)
+ */
+export function validatePlugins() {
+  if (!existsSync(PLUGINS_DIR)) {
+    return ['plugins/: directory does not exist']
+  }
+
+  const dirs = readdirSync(PLUGINS_DIR).filter((entry) =>
+    statSync(resolve(PLUGINS_DIR, entry)).isDirectory()
+  )
+  if (dirs.length === 0) {
+    return ['plugins/: no plugin directories found']
+  }
+
+  const errors = []
+  const validatePlugin = buildValidator('plugin.schema.json')
+  const marketplaceByName = buildMarketplaceIndex(errors)
+  for (const dir of dirs) {
+    errors.push(...validateOnePlugin(dir, validatePlugin, marketplaceByName))
+  }
+  errors.push(...checkOrphanMarketplaceEntries(marketplaceByName, dirs))
   return errors
 }
 
