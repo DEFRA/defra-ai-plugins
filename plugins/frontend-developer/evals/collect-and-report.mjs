@@ -29,6 +29,8 @@ function walk(dir) {
         visit(p)
       } else if (s.isFile()) {
         out.push(p)
+      } else {
+        // skip non-files, non-directories
       }
     }
   }
@@ -39,14 +41,14 @@ function walk(dir) {
 function findByExt(dir, ext) {
   return walk(dir)
     .filter((p) => p.endsWith(ext))
-    .sort()
+    .sort((a, b) => a.localeCompare(b))
 }
 
 // Hash every file under src/ into a sorted "<hash> <path>" listing.
 export function snapshotFiles(outFile, cwd) {
   const root = join(cwd, 'src')
   const lines = []
-  for (const file of walk(root).sort()) {
+  for (const file of walk(root).sort((a, b) => a.localeCompare(b))) {
     let buf
     try {
       buf = readFileSync(file)
@@ -56,21 +58,20 @@ export function snapshotFiles(outFile, cwd) {
     const hash = createHash('sha256').update(buf).digest('hex')
     lines.push(`${hash} ${relative(cwd, file)}`)
   }
-  writeFileSync(outFile, lines.sort().join('\n') + (lines.length ? '\n' : ''))
+  lines.sort((a, b) => a.localeCompare(b))
+  writeFileSync(outFile, lines.join('\n') + (lines.length ? '\n' : ''))
 }
 
 // Parse a snapshot listing ("<hash> <path>" per line) into a path->hash map.
 function parseSnapshot(text) {
   const map = new Map()
   for (const line of text.split('\n')) {
-    if (!line) {
-      continue
+    if (line) {
+      const space = line.indexOf(' ')
+      if (space >= 0) {
+        map.set(line.slice(space + 1), line.slice(0, space))
+      }
     }
-    const space = line.indexOf(' ')
-    if (space < 0) {
-      continue
-    }
-    map.set(line.slice(space + 1), line.slice(0, space))
   }
   return map
 }
@@ -86,6 +87,8 @@ export function diffSnapshots(beforeText, afterText) {
       out.push(`${path} (new)`)
     } else if (before.get(path) !== hash) {
       out.push(`${path} (modified)`)
+    } else {
+      // unchanged — no diff entry needed
     }
   }
   return out
@@ -115,26 +118,27 @@ export function report({ agentLabel, agentOutput, snapBefore, cwd, tmpAfterPath 
   const testExit = test.status ?? 1
   const testOutput = `${test.stdout ?? ''}${test.stderr ?? ''}`
 
-  const out = []
-  out.push(`=== ${agentLabel} OUTPUT ===`)
-  out.push(agentOutput)
-  out.push('')
-  out.push('=== NJK TEMPLATES ===')
-  out.push(readBlock(njkFiles))
-  out.push('')
-  out.push('=== JS ROUTES ===')
-  out.push(readBlock(jsFiles))
-  out.push('')
-  out.push('=== FILES CHANGED ===')
-  out.push(changed.join('\n'))
-  out.push('')
-  out.push('=== LINT ===')
-  out.push(`exit_code: ${lintExit}`)
-  out.push(lintOutput)
-  out.push('')
-  out.push('=== TESTS ===')
-  out.push(`exit_code: ${testExit}`)
-  out.push(testOutput)
+  const out = [
+    `=== ${agentLabel} OUTPUT ===`,
+    agentOutput,
+    '',
+    '=== NJK TEMPLATES ===',
+    readBlock(njkFiles),
+    '',
+    '=== JS ROUTES ===',
+    readBlock(jsFiles),
+    '',
+    '=== FILES CHANGED ===',
+    changed.join('\n'),
+    '',
+    '=== LINT ===',
+    `exit_code: ${lintExit}`,
+    lintOutput,
+    '',
+    '=== TESTS ===',
+    `exit_code: ${testExit}`,
+    testOutput
+  ]
 
   process.stdout.write(out.join('\n'))
 }

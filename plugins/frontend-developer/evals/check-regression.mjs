@@ -59,6 +59,8 @@ export function findRegressions(baseline, fresh) {
       regressions.push(`MISSING: ${prompt}`)
     } else if (!fresh.get(prompt)) {
       regressions.push(`FAIL: ${prompt}`)
+    } else {
+      // prompt still passes — no regression
     }
   }
   return regressions

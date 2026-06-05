@@ -9,19 +9,18 @@
 import { readFileSync, existsSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 
-// Build the markdown report (without a trailing newline) from a parsed
-// promptfoo result object.
-export function renderSummary(data) {
-  const lines = []
+const PROMPT_TRUNCATE_LENGTH = 80
+const P95_PERCENTILE = 0.95
 
-  lines.push('## Eval results', '')
-
+function renderSuiteStats(data) {
   const stats = data.results?.stats ?? {}
   const successes = stats.successes ?? 0
   const failures = stats.failures ?? 0
-  lines.push(`**Suite pass:** ${successes}/${successes + failures} tests`, '')
+  return [`**Suite pass:** ${successes}/${successes + failures} tests`, '']
+}
 
-  lines.push('### Per-fixture')
+function renderPerFixture(data) {
+  const lines = ['### Per-fixture']
   const byPrompt = new Map()
   for (const r of data.results?.results ?? []) {
     const prompt = r.vars?.prompt ?? ''
@@ -31,16 +30,22 @@ export function renderSummary(data) {
   }
   for (const [prompt, arr] of byPrompt) {
     const pass = arr.every(Boolean)
-    lines.push(`- ${pass ? 'PASS' : 'FAIL'} — ${prompt.slice(0, 80)}`)
+    lines.push(`- ${pass ? 'PASS' : 'FAIL'} — ${prompt.slice(0, PROMPT_TRUNCATE_LENGTH)}`)
   }
+  return lines
+}
 
-  lines.push('', '### Named scores')
+function renderNamedScores(data) {
+  const lines = ['', '### Named scores']
   const scores = data.results?.prompts?.[0]?.metrics?.namedScores ?? {}
   for (const [k, v] of Object.entries(scores)) {
     lines.push(`- **${k}**: ${v}`)
   }
+  return lines
+}
 
-  lines.push('', '### Latency')
+function renderLatencySection(data) {
+  const lines = ['', '### Latency']
   const latencies = (data.results?.results ?? [])
     .map((r) => r.latencyMs)
     .filter((n) => typeof n === 'number')
@@ -49,12 +54,15 @@ export function renderSummary(data) {
     lines.push('_no latency data_')
   } else {
     const p50 = latencies[Math.floor(latencies.length / 2)]
-    const p95 = latencies[Math.floor(latencies.length * 0.95)]
+    const p95 = latencies[Math.floor(latencies.length * P95_PERCENTILE)]
     const max = latencies[latencies.length - 1]
     lines.push(`- p50: ${p50}ms`, `- p95: ${p95}ms`, `- max: ${max}ms`)
   }
+  return lines
+}
 
-  lines.push('', '### Assertion-level failures')
+function renderAssertionFailures(data) {
+  const lines = ['', '### Assertion-level failures']
   const failureMetrics = []
   for (const r of data.results?.results ?? []) {
     for (const c of r.gradingResult?.componentResults ?? []) {
@@ -74,8 +82,21 @@ export function renderSummary(data) {
       lines.push(`- ${metric}: ${count}`)
     }
   }
+  return lines
+}
 
-  return lines.join('\n')
+// Build the markdown report (without a trailing newline) from a parsed
+// promptfoo result object.
+export function renderSummary(data) {
+  return [
+    '## Eval results',
+    '',
+    ...renderSuiteStats(data),
+    ...renderPerFixture(data),
+    ...renderNamedScores(data),
+    ...renderLatencySection(data),
+    ...renderAssertionFailures(data)
+  ].join('\n')
 }
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {

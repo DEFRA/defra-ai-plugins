@@ -47,7 +47,7 @@ test('refuses GitHub token', () => {
 test('refuses Stripe live key', () => {
   // Built at runtime so the contiguous literal never appears in this file and
   // trips GitHub push-protection secret scanning. Still matches secret-scan.mjs.
-  const fixture = 'sk_' + 'live_' + 'A'.repeat(24) + '1234567890'
+  const fixture = `sk_live_${'A'.repeat(24)}1234567890`
   const r = check(w(`const k = '${fixture}'`))
   assert.equal(r.exitCode, 2)
   assert.match(r.stderr, /Stripe key/)

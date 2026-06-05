@@ -32,8 +32,11 @@ export function runAgent({ agentLabel, binary, buildArgs, parseOutput }) {
   const snapAfter = join(workDir, '.snap-after')
 
   process.on('exit', () => rmSync(workDir, { recursive: true, force: true }))
-  process.on('SIGINT', () => process.exit(130))
-  process.on('SIGTERM', () => process.exit(143))
+
+  const EXIT_CODE_SIGINT = 130
+  const EXIT_CODE_SIGTERM = 143
+  process.on('SIGINT', () => process.exit(EXIT_CODE_SIGINT))
+  process.on('SIGTERM', () => process.exit(EXIT_CODE_SIGTERM))
 
   cpSync(fixtureSource, workDir, { recursive: true })
   snapshotFiles(snapBefore, workDir)

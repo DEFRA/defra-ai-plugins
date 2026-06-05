@@ -39,6 +39,8 @@ function findSkillFiles(skillsDir) {
         walk(p)
       } else if (entry === 'SKILL.md') {
         out.push(p)
+      } else {
+        // skip non-SKILL.md files
       }
     }
   }
@@ -47,7 +49,7 @@ function findSkillFiles(skillsDir) {
   } catch {
     // Skills dir may not exist; treat as empty.
   }
-  return out.sort()
+  return out.sort((a, b) => a.localeCompare(b))
 }
 
 // Collect every hook's statusMessage from a parsed hooks.json config, in
@@ -87,150 +89,139 @@ function withFeatureBranch(fixtureDir, fn) {
 function runOne(out, hookId, label, projectDir, inputJson) {
   out.push(`=== HOOK RUN ${hookId} ${label} ===`)
   const { exitCode, stderr } = driveHook({ hookId, input: inputJson, projectDir })
-  out.push(`exit_code: ${exitCode}`)
-  out.push('stderr:')
+  out.push(`exit_code: ${exitCode}`, 'stderr:')
   if (stderr) {
     out.push(stderr.replace(/\n$/, ''))
   }
   out.push('')
 }
 
-export function report({ provider, prompt, fixtureDir }) {
-  const pluginDir = join(fixtureDir, '..')
-  const out = []
+const HOOK_BRANCH_GUARD = 'branch-guard'
+const HOOK_COMMIT_MSG = 'commit-message-format'
+const HOOK_SECRET_SCAN = 'secret-scan'
+const GIT_COMMIT_FEAT = 'git commit -m "feat: x"'
 
-  out.push('=== PROVIDER ===')
-  out.push(provider)
-  out.push(`prompt: ${prompt}`)
-  out.push('')
-
-  out.push('=== SKILLS LOADED ===')
+function reportHeader(out, provider, prompt, pluginDir) {
+  out.push('=== PROVIDER ===', provider, `prompt: ${prompt}`, '', '=== SKILLS LOADED ===')
   for (const file of findSkillFiles(join(pluginDir, 'skills'))) {
     out.push(relative(pluginDir, file))
   }
-  out.push('')
-
-  out.push('=== HOOKS DEFINED ===')
+  out.push('', '=== HOOKS DEFINED ===')
   const hooksConfig = JSON.parse(readFileSync(join(pluginDir, 'hooks', 'hooks.json'), 'utf8'))
   for (const msg of listHookStatusMessages(hooksConfig)) {
     out.push(msg)
   }
   out.push('')
+}
 
-  // --- branch-guard --------------------------------------------------------
-
-  // Fresh fixture HEAD is on `main`, no explicit project dir.
+function reportBranchGuard(out, fixtureDir) {
   runOne(
     out,
-    'branch-guard',
+    HOOK_BRANCH_GUARD,
     'main+commit',
     undefined,
-    JSON.stringify({ tool_input: { command: 'git commit -m "feat: x"' } })
+    JSON.stringify({ tool_input: { command: GIT_COMMIT_FEAT } })
   )
 
-  // Negative control on feature branch.
   withFeatureBranch(fixtureDir, (stage) =>
     runOne(
       out,
-      'branch-guard',
+      HOOK_BRANCH_GUARD,
       'feature-branch',
       stage,
-      JSON.stringify({ tool_input: { command: 'git commit -m "feat: x"' } })
+      JSON.stringify({ tool_input: { command: GIT_COMMIT_FEAT } })
     )
   )
 
-  // Force-push to main from feature.
   withFeatureBranch(fixtureDir, (stage) =>
     runOne(
       out,
-      'branch-guard',
+      HOOK_BRANCH_GUARD,
       'force-push-main',
       stage,
       JSON.stringify({ tool_input: { command: 'git push --force origin main' } })
     )
   )
 
-  // --force-with-lease HEAD:main from feature.
   withFeatureBranch(fixtureDir, (stage) =>
     runOne(
       out,
-      'branch-guard',
+      HOOK_BRANCH_GUARD,
       'force-with-lease-main',
       stage,
       JSON.stringify({ tool_input: { command: 'git push --force-with-lease origin HEAD:main' } })
     )
   )
 
-  // Force-push to a feature branch (negative control).
   withFeatureBranch(fixtureDir, (stage) =>
     runOne(
       out,
-      'branch-guard',
+      HOOK_BRANCH_GUARD,
       'force-push-feature',
       stage,
       JSON.stringify({ tool_input: { command: 'git push --force origin feature/x' } })
     )
   )
+}
 
-  // --- commit-message-format ----------------------------------------------
-
+function reportCommitMsgFormat(out) {
   runOne(
     out,
-    'commit-message-format',
+    HOOK_COMMIT_MSG,
     'WIP',
     undefined,
     JSON.stringify({ tool_input: { command: 'git commit -m "WIP"' } })
   )
   runOne(
     out,
-    'commit-message-format',
+    HOOK_COMMIT_MSG,
     'valid-feat',
     undefined,
     JSON.stringify({ tool_input: { command: 'git commit -m "feat(api): add endpoint"' } })
   )
   runOne(
     out,
-    'commit-message-format',
+    HOOK_COMMIT_MSG,
     'am-bypass',
     undefined,
     JSON.stringify({ tool_input: { command: 'git commit -am "WIP"' } })
   )
   runOne(
     out,
-    'commit-message-format',
+    HOOK_COMMIT_MSG,
     'long-bypass',
     undefined,
     JSON.stringify({ tool_input: { command: 'git commit --message="WIP"' } })
   )
   runOne(
     out,
-    'commit-message-format',
+    HOOK_COMMIT_MSG,
     'F-bypass',
     undefined,
     JSON.stringify({ tool_input: { command: 'git commit -F /tmp/msg.txt' } })
   )
   runOne(
     out,
-    'commit-message-format',
+    HOOK_COMMIT_MSG,
     'editor-bypass',
     undefined,
     JSON.stringify({ tool_input: { command: 'git commit' } })
   )
   runOne(
     out,
-    'commit-message-format',
+    HOOK_COMMIT_MSG,
     'amend-no-edit',
     undefined,
     JSON.stringify({ tool_input: { command: 'git commit --amend --no-edit' } })
   )
+}
 
-  // --- secret-scan ---------------------------------------------------------
-
+function reportSecretScan(out, fixtureDir) {
   const planted = `${fixtureDir}/fixtures/secret-planted.js`
   const clean = `${fixtureDir}/fixtures/clean.js`
   runOne(
     out,
-    'secret-scan',
+    HOOK_SECRET_SCAN,
     'AWS-key',
     undefined,
     JSON.stringify({
@@ -239,14 +230,14 @@ export function report({ provider, prompt, fixtureDir }) {
   )
   runOne(
     out,
-    'secret-scan',
+    HOOK_SECRET_SCAN,
     'clean-content',
     undefined,
     JSON.stringify({ tool_input: { file_path: clean, content: 'export const greeting = "hello"' } })
   )
   runOne(
     out,
-    'secret-scan',
+    HOOK_SECRET_SCAN,
     'AWS-secret',
     undefined,
     JSON.stringify({
@@ -258,7 +249,7 @@ export function report({ provider, prompt, fixtureDir }) {
   )
   runOne(
     out,
-    'secret-scan',
+    HOOK_SECRET_SCAN,
     'openai-key',
     undefined,
     JSON.stringify({
@@ -270,7 +261,7 @@ export function report({ provider, prompt, fixtureDir }) {
   )
   runOne(
     out,
-    'secret-scan',
+    HOOK_SECRET_SCAN,
     'anthropic-key',
     undefined,
     JSON.stringify({
@@ -282,7 +273,7 @@ export function report({ provider, prompt, fixtureDir }) {
   )
   runOne(
     out,
-    'secret-scan',
+    HOOK_SECRET_SCAN,
     'jwt',
     undefined,
     JSON.stringify({
@@ -293,9 +284,9 @@ export function report({ provider, prompt, fixtureDir }) {
       }
     })
   )
+}
 
-  // --- pii-scan ------------------------------------------------------------
-
+function reportPiiScan(out, fixtureDir) {
   // Copy the planted markdown out of the fixtures/ skip-path so the scanner
   // actually flags it (the hook now skips */eval-fixture/fixtures/* so the
   // planted file does not flag itself during regression runs).
@@ -317,9 +308,9 @@ export function report({ provider, prompt, fixtureDir }) {
     undefined,
     JSON.stringify({ tool_input: { file_path: `${fixtureDir}/fixtures/pii-planted.md` } })
   )
+}
 
-  // --- coverage-floor ------------------------------------------------------
-
+function reportCoverageFloor(out, fixtureDir) {
   const lowCovOut = readFileSync(`${fixtureDir}/fixtures/lowcov-test-output.txt`, 'utf8')
   runOne(
     out,
@@ -328,13 +319,36 @@ export function report({ provider, prompt, fixtureDir }) {
     undefined,
     JSON.stringify({ tool_input: { command: 'npm test' }, tool_response: { stdout: lowCovOut } })
   )
+}
+
+export function report({ provider, prompt, fixtureDir }) {
+  const pluginDir = join(fixtureDir, '..')
+  const out = []
+
+  reportHeader(out, provider, prompt, pluginDir)
+
+  // --- branch-guard --------------------------------------------------------
+  reportBranchGuard(out, fixtureDir)
+
+  // --- commit-message-format ----------------------------------------------
+  reportCommitMsgFormat(out)
+
+  // --- secret-scan ---------------------------------------------------------
+  reportSecretScan(out, fixtureDir)
+
+  // --- pii-scan ------------------------------------------------------------
+  reportPiiScan(out, fixtureDir)
+
+  // --- coverage-floor ------------------------------------------------------
+  reportCoverageFloor(out, fixtureDir)
 
   // --- refusal trace -------------------------------------------------------
-
-  out.push('=== REFUSAL TRACE ===')
-  out.push('branch-guard refused commit on main: see HOOK RUN branch-guard main+commit')
-  out.push('commit-message-format refused WIP subject: see HOOK RUN commit-message-format WIP')
-  out.push('secret-scan refused AWS key: see HOOK RUN secret-scan AWS-key')
+  out.push(
+    '=== REFUSAL TRACE ===',
+    'branch-guard refused commit on main: see HOOK RUN branch-guard main+commit',
+    'commit-message-format refused WIP subject: see HOOK RUN commit-message-format WIP',
+    'secret-scan refused AWS key: see HOOK RUN secret-scan AWS-key'
+  )
 
   process.stdout.write(out.join('\n') + '\n')
 }

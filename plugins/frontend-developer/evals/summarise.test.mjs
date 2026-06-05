@@ -2,6 +2,9 @@ import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { renderSummary } from './summarise.mjs'
 
+const OVER_MAX_PROMPT_LENGTH = 200
+const LATENCY_VALUES = [10, 20, 30, 40, 50]
+
 test('renderSummary reports the suite pass count from stats', () => {
   const md = renderSummary({ results: { stats: { successes: 7, failures: 3 } } })
   assert.match(md, /\*\*Suite pass:\*\* 7\/10 tests/)
@@ -27,11 +30,11 @@ test('renderSummary marks a per-fixture PASS only when all providers pass', () =
 })
 
 test('renderSummary truncates long prompts to 80 chars', () => {
-  const prompt = 'x'.repeat(200)
+  const prompt = 'x'.repeat(OVER_MAX_PROMPT_LENGTH)
   const md = renderSummary({
     results: { results: [{ vars: { prompt }, success: true }] }
   })
-  assert.match(md, new RegExp(`- PASS — x{80}(?!x)`))
+  assert.match(md, /- PASS — x{80}(?!x)/)
 })
 
 test('renderSummary renders named scores', () => {
@@ -42,7 +45,7 @@ test('renderSummary renders named scores', () => {
 })
 
 test('renderSummary reports latency percentiles when present', () => {
-  const results = [10, 20, 30, 40, 50].map((latencyMs) => ({
+  const results = LATENCY_VALUES.map((latencyMs) => ({
     vars: { prompt: 'p' },
     latencyMs
   }))

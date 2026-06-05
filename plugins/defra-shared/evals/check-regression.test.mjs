@@ -2,6 +2,10 @@ import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { metricPassRate, findRegressions, THRESHOLDS } from './check-regression.mjs'
 
+const CORRECTNESS_THRESHOLD = 90
+const PASS_RATE_HALF = 50
+const COMPONENT_COUNT = 3
+
 // Build a minimal promptfoo-shaped result object from a list of
 // [metric, pass] component tuples.
 function resultsWith(...components) {
@@ -27,12 +31,12 @@ test('metricPassRate returns null when the metric never appears', () => {
 
 test('metricPassRate computes a percentage across matching components', () => {
   const data = resultsWith(['correctness', true], ['correctness', false], ['correctness', true])
-  assert.equal(metricPassRate(data, 'correctness'), (2 * 100) / 3)
+  assert.equal(metricPassRate(data, 'correctness'), (2 * 100) / COMPONENT_COUNT)
 })
 
 test('metricPassRate matches namespaced metrics (metric:suffix)', () => {
   const data = resultsWith(['security:secret', true], ['security:pii', false])
-  assert.equal(metricPassRate(data, 'security'), 50)
+  assert.equal(metricPassRate(data, 'security'), PASS_RATE_HALF)
 })
 
 test('metricPassRate does not match a different metric sharing a prefix', () => {
@@ -89,7 +93,7 @@ test('findRegressions: a 5pp drop is tolerated (only >5 fails)', () => {
 })
 
 test('THRESHOLDS encodes the documented v1 gate values', () => {
-  assert.equal(THRESHOLDS.correctness, 90)
+  assert.equal(THRESHOLDS.correctness, CORRECTNESS_THRESHOLD)
   assert.equal(THRESHOLDS.security, 100)
   assert.equal(THRESHOLDS.refusal, 100)
 })

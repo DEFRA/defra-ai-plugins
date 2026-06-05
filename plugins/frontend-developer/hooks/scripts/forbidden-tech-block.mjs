@@ -18,7 +18,7 @@ const FORBIDDEN = /\b(tailwind|react|vue|angular|svelte|jquery|bootstrap|typescr
  * @returns {{ exitCode: number, stderr?: string }}
  */
 export function check(input) {
-  const match = (input.prompt ?? '').match(FORBIDDEN)
+  const match = FORBIDDEN.exec(input.prompt ?? '')
   if (!match) {
     return { exitCode: 0 }
   }

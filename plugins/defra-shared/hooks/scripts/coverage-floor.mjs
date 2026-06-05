@@ -6,6 +6,20 @@
 import { fileURLToPath } from 'node:url'
 import { runHook } from './hook-runner.mjs'
 
+const DEFAULT_COVERAGE_FLOOR = 80
+
+function extractCoverage(output) {
+  const rowLine = output.split('\n').find((line) => /^\s*(All files|TOTAL)/i.test(line))
+  if (rowLine) {
+    const m = /\d+\.\d+|\d{2,}/.exec(rowLine)
+    if (m) {
+      return m[0]
+    }
+  }
+  const m = /(\d+(?:\.\d+)?)\s*%/.exec(output)
+  return m ? m[1] : undefined
+}
+
 /**
  * Warn when a test-runner command's output reports coverage below the floor.
  * Non-blocking (always returns exitCode 0); emits a stderr warning only.
@@ -22,23 +36,9 @@ export function check(input, env = {}) {
     return { exitCode: 0 }
   }
 
-  const threshold = Number(env.COVERAGE_FLOOR ?? 80)
+  const threshold = Number(env.COVERAGE_FLOOR ?? DEFAULT_COVERAGE_FLOOR)
 
-  // Structured row first: line starting with "All files" or "TOTAL" (case-insensitive).
-  let pct
-  const rowLine = output.split('\n').find((line) => /^\s*(All files|TOTAL)/i.test(line))
-  if (rowLine) {
-    const m = rowLine.match(/[0-9]+\.[0-9]+|[0-9]{2,}/)
-    if (m) {
-      pct = m[0]
-    }
-  }
-  if (pct === undefined) {
-    const m = output.match(/([0-9]+(?:\.[0-9]+)?)\s*%/)
-    if (m) {
-      pct = m[1]
-    }
-  }
+  const pct = extractCoverage(output)
   if (pct === undefined) {
     return { exitCode: 0 }
   }

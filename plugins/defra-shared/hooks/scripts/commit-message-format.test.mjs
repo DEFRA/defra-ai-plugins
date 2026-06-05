@@ -3,6 +3,7 @@ import assert from 'node:assert/strict'
 import { check } from './commit-message-format.mjs'
 
 const cmd = (command) => ({ tool_input: { command } })
+const OVER_LIMIT_LENGTH = 80
 
 test('passes non-commit git verbs', () => {
   assert.deepEqual(check(cmd('git status')), { exitCode: 0 })
@@ -78,7 +79,7 @@ test('refuses editor-driven commit (no -m)', () => {
 })
 
 test('refuses subject > 72 chars', () => {
-  const long = 'feat: ' + 'x'.repeat(80)
+  const long = 'feat: ' + 'x'.repeat(OVER_LIMIT_LENGTH)
   const r = check(cmd(`git commit -m "${long}"`))
   assert.equal(r.exitCode, 2)
   assert.match(r.stderr, /max is 72/)

@@ -19,7 +19,7 @@ for (const pattern of PATTERNS) {
     files.push(file)
   }
 }
-files.sort()
+files.sort((a, b) => a.localeCompare(b))
 
 if (files.length === 0) {
   console.log('No unit tests found.')

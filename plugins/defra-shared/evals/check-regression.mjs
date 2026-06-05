@@ -64,6 +64,8 @@ export function metricPassRate(data, metric) {
  * @param {Record<string, number>} [thresholds] - Per-metric pass-rate thresholds (default: `THRESHOLDS`).
  * @returns {string[]}
  */
+const MAX_DROP_PP = 5
+
 export function findRegressions(newData, baselineData, thresholds = THRESHOLDS) {
   const regressions = []
 
@@ -85,7 +87,7 @@ export function findRegressions(newData, baselineData, thresholds = THRESHOLDS) 
         continue
       }
       const drop = Math.floor(baseRate) - Math.floor(newRate)
-      if (drop > 5) {
+      if (drop > MAX_DROP_PP) {
         regressions.push(`${metric}: ${newRate}% is ${drop}pp below baseline ${baseRate}%`)
       }
     }

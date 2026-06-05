@@ -11,18 +11,57 @@ const TYPES =
   /^(feat|fix|chore|docs|refactor|test|build|ci|perf|style|revert)(\([a-z0-9-]+\))?(!)?: [^\s].*[^.\s]$/
 
 const BYPASS_FLAGS =
-  /(^|\s)(-F(\s|$)|--file(\s|=)|--template(\s|=)|-C(\s|$)|--reuse-message(\s|=)|--fixup(\s|=)|--squash(\s|=))/
+  /(^|\s)(-F(\s|$)|--file[\s=]|--template[\s=]|-C(\s|$)|--reuse-message[\s=]|--fixup[\s=]|--squash[\s=])/
 
 const HAS_M_OR_MESSAGE = /(-[a-zA-Z]*m(\s|=)|--message[= ])/
 
 // Capture the message argument from -m / --message= / --message <text>.
 const EXTRACT_MSG = /(?:--message=|--message\s+|\s-[a-zA-Z]*m\s+)("[^"]*"|'[^']*'|[^ ]+)/
 
+const MAX_SUBJECT_LENGTH = 72
+
 function stripQuotes(s) {
   if ((s.startsWith('"') && s.endsWith('"')) || (s.startsWith("'") && s.endsWith("'"))) {
     return s.slice(1, -1)
   }
   return s
+}
+
+/**
+ * Validate the commit subject extracted from -m / --message.
+ *
+ * @param {string} cmd - Full git commit command string.
+ * @returns {{ exitCode: number, stderr?: string }}
+ */
+function validateSubject(cmd) {
+  const matched = EXTRACT_MSG.exec(cmd)
+  const msg = stripQuotes(matched ? matched[1] : '')
+
+  if (!msg) {
+    return {
+      exitCode: 2,
+      stderr:
+        'commit-message-format: could not parse commit subject from -m / --message argument.\n'
+    }
+  }
+
+  const subject = msg.split('\n')[0]
+
+  if (subject.length > MAX_SUBJECT_LENGTH) {
+    return {
+      exitCode: 2,
+      stderr: `commit-message-format: subject is ${subject.length} chars; max is ${MAX_SUBJECT_LENGTH}. Subject: '${subject}'. See skill defra-commit-messages.\n`
+    }
+  }
+
+  if (!TYPES.test(subject)) {
+    return {
+      exitCode: 2,
+      stderr: `commit-message-format: subject '${subject}' does not match Conventional Commits (type(scope)?: subject, <=${MAX_SUBJECT_LENGTH} chars, no trailing period). See skill defra-commit-messages.\n`
+    }
+  }
+
+  return { exitCode: 0 }
 }
 
 /**
@@ -61,34 +100,7 @@ export function check(input) {
     }
   }
 
-  const matched = cmd.match(EXTRACT_MSG)
-  const msg = stripQuotes(matched ? matched[1] : '')
-
-  if (!msg) {
-    return {
-      exitCode: 2,
-      stderr:
-        'commit-message-format: could not parse commit subject from -m / --message argument.\n'
-    }
-  }
-
-  const subject = msg.split('\n')[0]
-
-  if (subject.length > 72) {
-    return {
-      exitCode: 2,
-      stderr: `commit-message-format: subject is ${subject.length} chars; max is 72. Subject: '${subject}'. See skill defra-commit-messages.\n`
-    }
-  }
-
-  if (!TYPES.test(subject)) {
-    return {
-      exitCode: 2,
-      stderr: `commit-message-format: subject '${subject}' does not match Conventional Commits (type(scope)?: subject, <=72 chars, no trailing period). See skill defra-commit-messages.\n`
-    }
-  }
-
-  return { exitCode: 0 }
+  return validateSubject(cmd)
 }
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {

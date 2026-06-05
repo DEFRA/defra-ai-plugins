@@ -10,22 +10,25 @@ import { runHook } from './hook-runner.mjs'
 
 const SKIP_PATTERNS = [/\.lock$/, /lock\.json$/, /\.snap$/, /\/eval-fixture\/fixtures\//]
 
+const NHS_LOOP_LIMIT = 9
+const NHS_MODULUS = 11
+
 function isValidNhs(digits) {
   if (digits.length !== 10) {
     return false
   }
   let sum = 0
-  for (let i = 0; i < 9; i++) {
+  for (let i = 0; i < NHS_LOOP_LIMIT; i++) {
     sum += Number(digits[i]) * (10 - i)
   }
-  let check = 11 - (sum % 11)
-  if (check === 11) {
+  let check = NHS_MODULUS - (sum % NHS_MODULUS)
+  if (check === NHS_MODULUS) {
     check = 0
   }
   if (check === 10) {
     return false
   }
-  return check === Number(digits[9])
+  return check === Number(digits[NHS_LOOP_LIMIT])
 }
 
 /**
@@ -48,21 +51,21 @@ export function scan(file, readFile = (f) => readFileSync(f, 'utf8'), fileExists
   const content = readFile(file)
   const hits = []
 
-  if (/\b[A-CEGHJ-PR-TW-Z]{2}[0-9]{6}[A-D]\b/.test(content)) {
+  if (/\b[A-CEGHJ-PR-TW-Z]{2}\d{6}[A-D]\b/.test(content)) {
     hits.push('UK-NI-number')
   }
 
-  const nhsCandidates = content.match(/\b[0-9]{3}[ -]?[0-9]{3}[ -]?[0-9]{4}\b/g) || []
+  const nhsCandidates = content.match(/\b\d{3}[ -]?\d{3}[ -]?\d{4}\b/g) || []
   const nhsHit = nhsCandidates.map((c) => c.replace(/[ -]/g, '')).some((d) => isValidNhs(d))
   if (nhsHit) {
     hits.push('NHS-number')
   }
 
-  if (/\b[A-Z]{1,2}[0-9R][0-9A-Z]?[ ]?[0-9][ABD-HJLNP-UW-Z]{2}\b/.test(content)) {
+  if (/\b[A-Z]{1,2}[\dR][\dA-Z]? ?\d[ABD-HJLNP-UW-Z]{2}\b/.test(content)) {
     hits.push('UK-postcode')
   }
 
-  if (/\b(0[1-9]|[12][0-9]|3[01])[/-](0[1-9]|1[0-2])[/-](19|20)[0-9]{2}\b/.test(content)) {
+  if (/\b(0[1-9]|[12]\d|3[01])[/-](0[1-9]|1[0-2])[/-](19|20)\d{2}\b/.test(content)) {
     hits.push('DoB')
   }
 

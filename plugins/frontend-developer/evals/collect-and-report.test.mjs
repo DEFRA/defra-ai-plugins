@@ -5,26 +5,28 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { diffSnapshots, snapshotFiles } from './collect-and-report.mjs'
 
+const ENTRY_A = 'aaa src/a.js\n'
+
 test('diffSnapshots flags newly-added paths', () => {
-  const before = 'aaa src/a.js\n'
-  const after = 'aaa src/a.js\nbbb src/b.js\n'
+  const before = ENTRY_A
+  const after = `${ENTRY_A}bbb src/b.js\n`
   assert.deepEqual(diffSnapshots(before, after), ['src/b.js (new)'])
 })
 
 test('diffSnapshots flags paths whose hash changed', () => {
-  const before = 'aaa src/a.js\n'
+  const before = ENTRY_A
   const after = 'zzz src/a.js\n'
   assert.deepEqual(diffSnapshots(before, after), ['src/a.js (modified)'])
 })
 
 test('diffSnapshots ignores unchanged and removed paths', () => {
-  const before = 'aaa src/a.js\nbbb src/gone.js\n'
-  const after = 'aaa src/a.js\n'
+  const before = `${ENTRY_A}bbb src/gone.js\n`
+  const after = ENTRY_A
   assert.deepEqual(diffSnapshots(before, after), [])
 })
 
 test('diffSnapshots treats an empty before-snapshot as all-new', () => {
-  assert.deepEqual(diffSnapshots('', 'aaa src/a.js\n'), ['src/a.js (new)'])
+  assert.deepEqual(diffSnapshots('', ENTRY_A), ['src/a.js (new)'])
 })
 
 test('diffSnapshots tolerates blank and malformed lines', () => {

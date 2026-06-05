@@ -12,6 +12,8 @@ try {
   process.exit(0)
 }
 
+const TAIL_LINE_COUNT = 5
+
 const file = input.tool_input?.file_path ?? ''
 const cwd = process.env.CLAUDE_PROJECT_DIR
 if (!cwd || !file.endsWith('.scss') || !existsSync(file)) {
@@ -20,7 +22,7 @@ if (!cwd || !file.endsWith('.scss') || !existsSync(file)) {
 
 const result = spawnSync('npm', ['run', 'build'], { cwd, encoding: 'utf8' })
 const combined = `${result.stdout ?? ''}${result.stderr ?? ''}`
-const lines = combined.split('\n').filter(Boolean).slice(-5)
+const lines = combined.split('\n').filter(Boolean).slice(-TAIL_LINE_COUNT)
 if (lines.length) {
   process.stderr.write(lines.join('\n') + '\n')
 }
