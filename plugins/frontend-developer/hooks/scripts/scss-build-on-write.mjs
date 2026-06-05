@@ -4,6 +4,9 @@
 
 import { readFileSync, existsSync } from 'node:fs'
 import { spawnSync } from 'node:child_process'
+import { join, dirname } from 'node:path'
+
+const NPM_BIN = join(dirname(process.execPath), 'npm')
 
 let input = {}
 try {
@@ -20,7 +23,7 @@ if (!cwd || !file.endsWith('.scss') || !existsSync(file)) {
   process.exit(0)
 }
 
-const result = spawnSync('npm', ['run', 'build'], { cwd, encoding: 'utf8' })
+const result = spawnSync(NPM_BIN, ['run', 'build'], { cwd, encoding: 'utf8' })
 const combined = `${result.stdout ?? ''}${result.stderr ?? ''}`
 const lines = combined.split('\n').filter(Boolean).slice(-TAIL_LINE_COUNT)
 if (lines.length) {

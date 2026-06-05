@@ -21,13 +21,13 @@ export function driveHook({ hookId, input, projectDir }) {
   let stage = projectDir
   let cleanup = ''
   if (!stage) {
-    stage = execFileSync('node', [join(scriptDir, 'init-git.mjs')], {
+    stage = execFileSync(process.execPath, [join(scriptDir, 'init-git.mjs')], {
       encoding: 'utf8'
     }).trim()
     cleanup = stage
   }
   const hookScript = join(pluginDir, 'hooks', 'scripts', `${hookId}.mjs`)
-  const result = spawnSync('node', [hookScript], {
+  const result = spawnSync(process.execPath, [hookScript], {
     cwd: stage,
     input,
     encoding: 'utf8',

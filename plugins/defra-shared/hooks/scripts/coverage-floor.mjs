@@ -11,12 +11,12 @@ const DEFAULT_COVERAGE_FLOOR = 80
 function extractCoverage(output) {
   const rowLine = output.split('\n').find((line) => /^\s*(All files|TOTAL)/i.test(line))
   if (rowLine) {
-    const rowMatch = /\d+\.\d+|\d{2,}/.exec(rowLine)
+    const rowMatch = /\d{2,3}(?:\.\d{1,2})?|\d\.\d{1,2}/.exec(rowLine)
     if (rowMatch) {
       return rowMatch[0]
     }
   }
-  const m = /(\d+(?:\.\d+)?)\s*%/.exec(output)
+  const m = /(\d{1,3}(?:\.\d{1,2})?)\s*%/.exec(output)
   return m ? m[1] : undefined
 }
 

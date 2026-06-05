@@ -26,8 +26,10 @@
 import { readFileSync, mkdtempSync, cpSync, rmSync, readdirSync, statSync } from 'node:fs'
 import { execFileSync } from 'node:child_process'
 import { tmpdir } from 'node:os'
-import { join, relative } from 'node:path'
+import { join, relative, dirname } from 'node:path'
 import { driveHook } from '../eval-fixture/scripts/run-hook.mjs'
+
+const GIT_BIN = execFileSync('/usr/bin/which', ['git'], { encoding: 'utf8' }).trim()
 
 function findSkillFiles(skillsDir) {
   const out = []
@@ -68,10 +70,10 @@ export function listHookStatusMessages(config) {
 
 function stageFeatureBranch(fixtureDir) {
   const scriptDir = join(fixtureDir, 'scripts')
-  const stage = execFileSync('node', [join(scriptDir, 'init-git.mjs')], {
+  const stage = execFileSync(process.execPath, [join(scriptDir, 'init-git.mjs')], {
     encoding: 'utf8'
   }).trim()
-  execFileSync('git', ['checkout', '-q', '-b', 'feature/x'], { cwd: stage })
+  execFileSync(GIT_BIN, ['checkout', '-q', '-b', 'feature/x'], { cwd: stage })
   return stage
 }
 
@@ -165,55 +167,18 @@ function reportBranchGuard(out, fixtureDir) {
 }
 
 function reportCommitMsgFormat(out) {
-  runOne(
-    out,
-    HOOK_COMMIT_MSG,
-    'WIP',
-    undefined,
-    JSON.stringify({ tool_input: { command: 'git commit -m "WIP"' } })
-  )
-  runOne(
-    out,
-    HOOK_COMMIT_MSG,
-    'valid-feat',
-    undefined,
-    JSON.stringify({ tool_input: { command: 'git commit -m "feat(api): add endpoint"' } })
-  )
-  runOne(
-    out,
-    HOOK_COMMIT_MSG,
-    'am-bypass',
-    undefined,
-    JSON.stringify({ tool_input: { command: 'git commit -am "WIP"' } })
-  )
-  runOne(
-    out,
-    HOOK_COMMIT_MSG,
-    'long-bypass',
-    undefined,
-    JSON.stringify({ tool_input: { command: 'git commit --message="WIP"' } })
-  )
-  runOne(
-    out,
-    HOOK_COMMIT_MSG,
-    'F-bypass',
-    undefined,
-    JSON.stringify({ tool_input: { command: 'git commit -F /tmp/msg.txt' } })
-  )
-  runOne(
-    out,
-    HOOK_COMMIT_MSG,
-    'editor-bypass',
-    undefined,
-    JSON.stringify({ tool_input: { command: 'git commit' } })
-  )
-  runOne(
-    out,
-    HOOK_COMMIT_MSG,
-    'amend-no-edit',
-    undefined,
-    JSON.stringify({ tool_input: { command: 'git commit --amend --no-edit' } })
-  )
+  const cases = [
+    ['WIP', 'git commit -m "WIP"'],
+    ['valid-feat', 'git commit -m "feat(api): add endpoint"'],
+    ['am-bypass', 'git commit -am "WIP"'],
+    ['long-bypass', 'git commit --message="WIP"'],
+    ['F-bypass', 'git commit -F /tmp/msg.txt'],
+    ['editor-bypass', 'git commit'],
+    ['amend-no-edit', 'git commit --amend --no-edit']
+  ]
+  for (const [name, command] of cases) {
+    runOne(out, HOOK_COMMIT_MSG, name, undefined, JSON.stringify({ tool_input: { command } }))
+  }
 }
 
 function reportSecretScan(out, fixtureDir) {

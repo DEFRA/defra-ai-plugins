@@ -13,14 +13,17 @@ import { join, dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { execFileSync } from 'node:child_process'
 
+import { execFileSync } from 'node:child_process'
+
 const scriptDir = dirname(fileURLToPath(import.meta.url))
 const fixtureDir = resolve(scriptDir, '..')
 
+const GIT_BIN = execFileSync('/usr/bin/which', ['git'], { encoding: 'utf8' }).trim()
 const stage = mkdtempSync(join(tmpdir(), 'defra-shared-fixture-'))
 cpSync(fixtureDir, stage, { recursive: true })
 rmSync(join(stage, '.git'), { recursive: true, force: true })
 
-const git = (...args) => execFileSync('git', args, { cwd: stage, stdio: ['ignore', 'ignore', 'pipe'] })
+const git = (...args) => execFileSync(GIT_BIN, args, { cwd: stage, stdio: ['ignore', 'ignore', 'pipe'] })
 git('init', '-q', '-b', 'main')
 git('config', 'user.email', 'eval-fixture@defra-ai-plugins.local')
 git('config', 'user.name', 'Defra eval fixture')

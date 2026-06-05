@@ -27,7 +27,7 @@ if (files.length === 0) {
 }
 
 const result = spawnSync(
-  'node',
+  process.execPath,
   ['--test', '--test-reporter=spec', '--experimental-test-coverage', ...files],
   { stdio: 'inherit' }
 )

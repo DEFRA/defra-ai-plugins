@@ -53,12 +53,12 @@ export function findRegressions(baseline, fresh) {
   const regressions = []
   for (const [prompt, basePassed] of baseline) {
     if (basePassed) {
-      if (!fresh.has(prompt)) {
-        regressions.push(`MISSING: ${prompt}`)
-      } else if (!fresh.get(prompt)) {
-        regressions.push(`FAIL: ${prompt}`)
+      if (fresh.has(prompt)) {
+        if (!fresh.get(prompt)) {
+          regressions.push(`FAIL: ${prompt}`)
+        }
       } else {
-        // prompt still passes — no regression
+        regressions.push(`MISSING: ${prompt}`)
       }
     }
   }

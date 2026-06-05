@@ -5,8 +5,11 @@
 // of current HEAD.
 
 import { spawnSync } from 'node:child_process'
+import { execFileSync } from 'node:child_process'
 import { fileURLToPath } from 'node:url'
 import { runHook } from './hook-runner.mjs'
+
+const GIT_BIN = execFileSync('/usr/bin/which', ['git'], { encoding: 'utf8' }).trim()
 
 /**
  * Guard against commits and pushes directly to main/master, and
@@ -47,7 +50,7 @@ export function check(input, getCurrentBranch) {
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
   const dir = process.env.CLAUDE_PROJECT_DIR || process.cwd()
   const getCurrentBranch = () => {
-    const r = spawnSync('git', ['rev-parse', '--abbrev-ref', 'HEAD'], {
+    const r = spawnSync(GIT_BIN, ['rev-parse', '--abbrev-ref', 'HEAD'], {
       cwd: dir,
       encoding: 'utf8'
     })

@@ -41,36 +41,25 @@ test('refuses -F file bypass', () => {
   assert.match(r.stderr, /bypass subject validation/)
 })
 
-test('refuses --file=...  bypass', () => {
+test('refuses --file=... bypass', () => {
   const r = check(cmd('git commit --file=/tmp/msg.txt'))
   assert.equal(r.exitCode, 2)
   assert.match(r.stderr, /bypass subject validation/)
 })
 
-test('refuses --template= bypass', () => {
-  const r = check(cmd('git commit --template=/tmp/tpl.txt'))
-  assert.equal(r.exitCode, 2)
-})
-
-test('refuses -C reuse-message bypass', () => {
-  const r = check(cmd('git commit -C HEAD'))
-  assert.equal(r.exitCode, 2)
-})
-
-test('refuses --reuse-message= bypass', () => {
-  const r = check(cmd('git commit --reuse-message=HEAD'))
-  assert.equal(r.exitCode, 2)
-})
-
-test('refuses --fixup= bypass', () => {
-  const r = check(cmd('git commit --fixup=HEAD~'))
-  assert.equal(r.exitCode, 2)
-})
-
-test('refuses --squash= bypass', () => {
-  const r = check(cmd('git commit --squash=HEAD~'))
-  assert.equal(r.exitCode, 2)
-})
+const bypassCases = [
+  { name: '--template= bypass', cmd: 'git commit --template=/tmp/tpl.txt' },
+  { name: '-C reuse-message bypass', cmd: 'git commit -C HEAD' },
+  { name: '--reuse-message= bypass', cmd: 'git commit --reuse-message=HEAD' },
+  { name: '--fixup= bypass', cmd: 'git commit --fixup=HEAD~' },
+  { name: '--squash= bypass', cmd: 'git commit --squash=HEAD~' }
+]
+for (const { name, cmd: c } of bypassCases) {
+  test(`refuses ${name}`, () => {
+    const r = check(cmd(c))
+    assert.equal(r.exitCode, 2)
+  })
+}
 
 test('refuses editor-driven commit (no -m)', () => {
   const r = check(cmd('git commit'))

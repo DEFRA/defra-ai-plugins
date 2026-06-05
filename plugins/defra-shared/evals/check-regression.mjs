@@ -106,12 +106,14 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
   const scriptDir = dirname(fileURLToPath(import.meta.url))
   const baselinePath = baselineArg ?? join(scriptDir, 'baseline', 'promptfoo-results.json')
 
-  if (!existsSync(resolve(newPath))) {
+  let newData
+  try {
+    newData = JSON.parse(readFileSync(newPath, 'utf8'))
+  } catch {
     console.error(`::error::New results file not found: ${newPath}`)
     process.exit(2)
   }
 
-  const newData = JSON.parse(readFileSync(newPath, 'utf8'))
   const baselineData = existsSync(baselinePath)
     ? JSON.parse(readFileSync(baselinePath, 'utf8'))
     : null

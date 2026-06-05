@@ -5,6 +5,9 @@
 
 import { readFileSync } from 'node:fs'
 import { spawnSync } from 'node:child_process'
+import { join, dirname } from 'node:path'
+
+const NPM_BIN = join(dirname(process.execPath), 'npm')
 
 let input = {}
 try {
@@ -19,6 +22,6 @@ if (!cwd || !/\.(js|mjs)$/.test(file)) {
   process.exit(0)
 }
 
-spawnSync('npm', ['run', 'lint', '--', '--fix', file], { cwd, stdio: 'ignore' })
-spawnSync('npm', ['run', 'format:fix', '--', file], { cwd, stdio: 'ignore' })
+spawnSync(NPM_BIN, ['run', 'lint', '--', '--fix', file], { cwd, stdio: 'ignore' })
+spawnSync(NPM_BIN, ['run', 'format:fix', '--', file], { cwd, stdio: 'ignore' })
 process.exit(0)

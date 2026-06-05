@@ -6,7 +6,9 @@
 import { readFileSync, writeFileSync, statSync, readdirSync, existsSync } from 'node:fs'
 import { createHash } from 'node:crypto'
 import { spawnSync } from 'node:child_process'
-import { relative, join } from 'node:path'
+
+const NPM_BIN = join(dirname(process.execPath), 'npm')
+import { relative, join, dirname } from 'node:path'
 
 function walk(dir) {
   const out = []
@@ -110,11 +112,11 @@ export function report({ agentLabel, agentOutput, snapBefore, cwd, tmpAfterPath 
   const readBlock = (files) =>
     files.map((f) => `\n--- ${relative(cwd, f)} ---\n${readFileSync(f, 'utf8')}`).join('')
 
-  const lint = spawnSync('npm', ['run', 'lint', '--silent'], { cwd, encoding: 'utf8' })
+  const lint = spawnSync(NPM_BIN, ['run', 'lint', '--silent'], { cwd, encoding: 'utf8' })
   const lintExit = lint.status ?? 1
   const lintOutput = `${lint.stdout ?? ''}${lint.stderr ?? ''}`
 
-  const test = spawnSync('npm', ['test', '--silent'], { cwd, encoding: 'utf8' })
+  const test = spawnSync(NPM_BIN, ['test', '--silent'], { cwd, encoding: 'utf8' })
   const testExit = test.status ?? 1
   const testOutput = `${test.stdout ?? ''}${test.stderr ?? ''}`
 

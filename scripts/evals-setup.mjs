@@ -5,6 +5,9 @@
 // install` may complete without compiling one from source.
 import { existsSync } from 'node:fs'
 import { spawnSync } from 'node:child_process'
+import { join, dirname } from 'node:path'
+
+const NPX_BIN = join(dirname(process.execPath), 'npx')
 
 const binding = 'node_modules/better-sqlite3/build/Release/better_sqlite3.node'
 
@@ -12,7 +15,7 @@ if (existsSync(binding)) {
   process.exit(0)
 }
 
-const result = spawnSync('npx', ['node-gyp', 'rebuild'], {
+const result = spawnSync(NPX_BIN, ['node-gyp', 'rebuild'], {
   cwd: 'node_modules/better-sqlite3',
   stdio: 'inherit'
 })
