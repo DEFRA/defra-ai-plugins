@@ -26,10 +26,10 @@ To use the plugins as a Copilot CLI user:
 
 Additionally, to develop in this repo or run the eval harness:
 
-| Tool                               | Why                                                                              |
-| ---------------------------------- | -------------------------------------------------------------------------------- |
-| Node.js + `npm`                    | Repo validators (`npm test`), the eval harness, and all build/scripting targets. |
-| `claude` CLI + `ANTHROPIC_API_KEY` | Only for `npm run evals:frontend:claude`; not required for Copilot-only use.     |
+| Tool                         | Why                                                                                                                                    |
+| ---------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| Node.js + `npm`              | Repo validators (`npm test`), the eval harness, and all build/scripting targets.                                                       |
+| `claude` CLI (authenticated) | Only for `npm run evals:frontend:claude`; subscription login is enough, `ANTHROPIC_API_KEY` optional. Not needed for Copilot-only use. |
 
 Optional — activate the tracked pre-commit hook so Prettier formats the repo on
 every commit (one-time, per checkout):
@@ -133,10 +133,22 @@ follow the same `plugins/<plugin-name>/eval-fixture/` skeleton +
 
 A second provider, Claude Code, is wired up locally as a demonstration that the
 same fixtures port across CLIs unchanged (`npm run evals:frontend:claude`). It is
-**not** part of the CI gate — Copilot CLI is the only provider with a committed
-baseline and a regression gate.
+**not** part of the CI gate — only the Copilot CLI run gates PRs in CI. Each
+provider has its own committed baseline (`promptfoo-results.json` for Copilot,
+`promptfoo-results-claude.json` for Claude) and the regression gate is
+provider-aware: a run is only ever compared against the baseline recorded with
+the same provider.
 
 ### Run locally
+
+> **⚠️ Running evals locally costs money / usage.** Each run drives a real agent
+> CLI through all 7 fixtures, 5 of which do real model work. The **Copilot** run
+> (`npm run evals:frontend`) spends **premium-request budget** on your Copilot
+> subscription. The **Claude** run (`npm run evals:frontend:claude`) spends
+> **tokens / usage** on whatever the `claude` CLI is authenticated with — your
+> subscription session, or your API key if `ANTHROPIC_API_KEY` is set. A full run
+> takes ~6–8 minutes. CI already gates the Copilot provider, so you don't need to
+> run these for every change — run them when you add or alter fixtures.
 
 Prerequisites:
 
@@ -167,32 +179,31 @@ non-zero on any per-fixture regression.
 > otherwise. If you run promptfoo by hand rather than via the npm scripts,
 > run `npm run evals:setup` first.
 
-To run the same suite against Claude Code instead (requires `ANTHROPIC_API_KEY`
-and `claude` CLI installed):
+To run the same suite against Claude Code instead (requires the `claude` CLI
+installed and authenticated — a subscription login is enough; `ANTHROPIC_API_KEY`
+is optional and only used for API billing if set):
 
 ```sh
 npm run evals:frontend:claude
 ```
 
+This spends tokens/usage on the model — see the cost warning above.
+
 ### Iterating on the plugin without reinstalling
 
-By default `claude` loads the plugin that was installed via
-`claude plugin install frontend-developer@defra-ai-plugins`, so edits to
-`plugins/frontend-developer/` are only picked up after a fresh
-`claude plugin install`. To skip that step while you iterate locally, set
-`CLAUDE_PLUGIN_DIR` to the absolute path of the plugin checkout — the
-Claude-provider eval script passes it through as `--plugin-dir`, which
-overrides the installed copy for that session only:
+The Claude-provider eval script always passes `--plugin-dir`, defaulting to the
+local plugin checkout (`plugins/frontend-developer`). So your edits there are
+picked up automatically — no `claude plugin install` needed, and crucially the
+plugin's governance hooks load (without `--plugin-dir`, headless `claude -p` runs
+with no hooks and the forbidden-tech refusal fixtures don't block). Set
+`CLAUDE_PLUGIN_DIR` only to point the eval at a different copy of the plugin:
 
 ```sh
-export CLAUDE_PLUGIN_DIR=/abs/path/to/plugins/frontend-developer
+export CLAUDE_PLUGIN_DIR=/abs/path/to/some/other/plugins/frontend-developer
 npx --no-install promptfoo eval \
   --filter-providers claude-code-frontend-developer \
   --filter-pattern 'Refuse'
 ```
-
-Leave the env var unset for CI or baseline runs against the installed
-plugin.
 
 To browse results in a UI:
 

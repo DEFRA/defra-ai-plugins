@@ -138,11 +138,19 @@ source of truth for what's installable.
    plugin before opening the PR. See README §Evaluating for the full setup
    (Copilot CLI install, plugin install, model pinning).
 
+   > **⚠️ Local evals cost money / usage.** A run drives a real agent CLI through
+   > all fixtures (most do real model work): the Copilot run spends premium-request
+   > budget on your Copilot subscription, and the Claude run spends tokens/usage on
+   > whatever the `claude` CLI is authed with. A full run is ~6–8 min. CI gates the
+   > Copilot provider, so run these when you add or change fixtures — not for every
+   > commit.
+
    To sanity-check that the same fixtures port to a second provider, run
-   `npm run evals:frontend:claude` (Claude Code, requires `ANTHROPIC_API_KEY` and the
-   `claude` CLI). The Claude provider is local-only — there is no CI gate
-   or committed baseline for it; it exists to demonstrate that the harness
-   is portable across CLIs.
+   `npm run evals:frontend:claude` (Claude Code — needs the `claude` CLI
+   authenticated; a subscription login is enough, `ANTHROPIC_API_KEY` is optional).
+   The Claude provider is local-only — not part of the CI gate — but has its own
+   committed baseline (`promptfoo-results-claude.json`) and provider-aware
+   regression gate; it demonstrates that the harness is portable across CLIs.
 
 10. **Open a pull request** using the PR template and fill in the checklist.
 
