@@ -3,7 +3,13 @@ import assert from 'node:assert/strict'
 import { renderSummary } from './summarise.mjs'
 
 const OVER_MAX_PROMPT_LENGTH = 200
-const LATENCY_VALUES = [10, 20, 30, 40, 50]
+const LATENCY_START_MS = 10
+const LATENCY_STEP_MS = 10
+const LATENCY_ENTRY_COUNT = 5
+const LATENCY_VALUES = Array.from(
+  { length: LATENCY_ENTRY_COUNT },
+  (_, i) => LATENCY_START_MS + i * LATENCY_STEP_MS
+)
 
 test('renderSummary reports the suite pass count from stats', () => {
   const md = renderSummary({ results: { stats: { successes: 7, failures: 3 } } })

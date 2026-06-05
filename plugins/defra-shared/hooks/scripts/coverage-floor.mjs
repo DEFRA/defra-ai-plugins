@@ -11,9 +11,9 @@ const DEFAULT_COVERAGE_FLOOR = 80
 function extractCoverage(output) {
   const rowLine = output.split('\n').find((line) => /^\s*(All files|TOTAL)/i.test(line))
   if (rowLine) {
-    const m = /\d+\.\d+|\d{2,}/.exec(rowLine)
-    if (m) {
-      return m[0]
+    const rowMatch = /\d+\.\d+|\d{2,}/.exec(rowLine)
+    if (rowMatch) {
+      return rowMatch[0]
     }
   }
   const m = /(\d+(?:\.\d+)?)\s*%/.exec(output)

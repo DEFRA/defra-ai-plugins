@@ -61,6 +61,14 @@ function renderLatencySection(data) {
   return lines
 }
 
+function buildMetricCounts(failureMetrics) {
+  const counts = new Map()
+  for (const m of failureMetrics) {
+    counts.set(m, (counts.get(m) ?? 0) + 1)
+  }
+  return counts
+}
+
 function renderAssertionFailures(data) {
   const lines = ['', '### Assertion-level failures']
   const failureMetrics = []
@@ -74,11 +82,7 @@ function renderAssertionFailures(data) {
   if (failureMetrics.length === 0) {
     lines.push('_none_')
   } else {
-    const counts = new Map()
-    for (const m of failureMetrics) {
-      counts.set(m, (counts.get(m) ?? 0) + 1)
-    }
-    for (const [metric, count] of counts) {
+    for (const [metric, count] of buildMetricCounts(failureMetrics)) {
       lines.push(`- ${metric}: ${count}`)
     }
   }

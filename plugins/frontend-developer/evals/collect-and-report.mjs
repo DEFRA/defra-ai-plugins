@@ -83,12 +83,12 @@ export function diffSnapshots(beforeText, afterText) {
   const after = parseSnapshot(afterText)
   const out = []
   for (const [path, hash] of after) {
-    if (!before.has(path)) {
-      out.push(`${path} (new)`)
-    } else if (before.get(path) !== hash) {
-      out.push(`${path} (modified)`)
+    if (before.has(path)) {
+      if (before.get(path) !== hash) {
+        out.push(`${path} (modified)`)
+      }
     } else {
-      // unchanged — no diff entry needed
+      out.push(`${path} (new)`)
     }
   }
   return out

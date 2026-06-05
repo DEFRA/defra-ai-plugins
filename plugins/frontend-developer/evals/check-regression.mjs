@@ -52,15 +52,12 @@ export function buildPromptPassMap(data) {
 export function findRegressions(baseline, fresh) {
   const regressions = []
   for (const [prompt, basePassed] of baseline) {
-    if (!basePassed) {
-      continue
-    }
-    if (!fresh.has(prompt)) {
-      regressions.push(`MISSING: ${prompt}`)
-    } else if (!fresh.get(prompt)) {
-      regressions.push(`FAIL: ${prompt}`)
-    } else {
-      // prompt still passes — no regression
+    if (basePassed) {
+      if (!fresh.has(prompt)) {
+        regressions.push(`MISSING: ${prompt}`)
+      } else if (!fresh.get(prompt)) {
+        regressions.push(`FAIL: ${prompt}`)
+      }
     }
   }
   return regressions
