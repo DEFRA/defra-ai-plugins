@@ -255,7 +255,8 @@ function reportPiiScan(out, fixtureDir) {
   // Copy the planted markdown out of the fixtures/ skip-path so the scanner
   // actually flags it (the hook now skips */eval-fixture/fixtures/* so the
   // planted file does not flag itself during regression runs).
-  const piiTmp = mkdtempSync(join(tmpdir(), 'pii-planted-')) + '.md'
+  const piiTmpDir = mkdtempSync(join(tmpdir(), 'pii-planted-'))
+  const piiTmp = join(piiTmpDir, 'pii.md')
   cpSync(`${fixtureDir}/fixtures/pii-planted.md`, piiTmp)
   runOne(
     out,
@@ -264,7 +265,7 @@ function reportPiiScan(out, fixtureDir) {
     undefined,
     JSON.stringify({ tool_input: { file_path: piiTmp } })
   )
-  rmSync(piiTmp, { force: true })
+  rmSync(piiTmpDir, { recursive: true, force: true })
 
   runOne(
     out,

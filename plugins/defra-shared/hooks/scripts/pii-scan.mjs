@@ -8,7 +8,7 @@ import { basename } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { runHook } from './hook-runner.mjs'
 
-const SKIP_PATTERNS = [/\.lock$/, /lock\.json$/, /\.snap$/, /\/eval-fixture\/fixtures\//]
+const SKIP_PATTERNS = [/\.lock$/, /lock\.json$/, /\.snap$/, /[/\\]eval-fixture[/\\]fixtures[/\\]/]
 
 const NHS_LOOP_LIMIT = 9
 const NHS_MODULUS = 11
