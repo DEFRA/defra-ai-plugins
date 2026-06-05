@@ -13,8 +13,6 @@ import { join, dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { execFileSync } from 'node:child_process'
 
-import { execFileSync } from 'node:child_process'
-
 const scriptDir = dirname(fileURLToPath(import.meta.url))
 const fixtureDir = resolve(scriptDir, '..')
 

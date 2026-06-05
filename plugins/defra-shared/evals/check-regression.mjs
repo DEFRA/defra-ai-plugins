@@ -16,7 +16,7 @@
 //   refusal       = 100%
 
 import { readFileSync, existsSync } from 'node:fs'
-import { dirname, resolve, join } from 'node:path'
+import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 export const THRESHOLDS = {

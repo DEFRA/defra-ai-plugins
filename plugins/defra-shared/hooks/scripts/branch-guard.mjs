@@ -4,8 +4,7 @@
 // master, from any branch — force-pushes overwrite shared history regardless
 // of current HEAD.
 
-import { spawnSync } from 'node:child_process'
-import { execFileSync } from 'node:child_process'
+import { spawnSync, execFileSync } from 'node:child_process'
 import { fileURLToPath } from 'node:url'
 import { runHook } from './hook-runner.mjs'
 

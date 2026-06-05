@@ -26,7 +26,7 @@
 import { readFileSync, mkdtempSync, cpSync, rmSync, readdirSync, statSync } from 'node:fs'
 import { execFileSync } from 'node:child_process'
 import { tmpdir } from 'node:os'
-import { join, relative, dirname } from 'node:path'
+import { join, relative } from 'node:path'
 import { driveHook } from '../eval-fixture/scripts/run-hook.mjs'
 
 const GIT_BIN = execFileSync('/usr/bin/which', ['git'], { encoding: 'utf8' }).trim()
