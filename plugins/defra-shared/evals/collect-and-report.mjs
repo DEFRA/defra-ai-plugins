@@ -258,14 +258,17 @@ function reportPiiScan(out, fixtureDir) {
   const piiTmpDir = mkdtempSync(join(tmpdir(), 'pii-planted-'))
   const piiTmp = join(piiTmpDir, 'pii.md')
   cpSync(`${fixtureDir}/fixtures/pii-planted.md`, piiTmp)
-  runOne(
-    out,
-    'pii-scan',
-    'planted-pii',
-    undefined,
-    JSON.stringify({ tool_input: { file_path: piiTmp } })
-  )
-  rmSync(piiTmpDir, { recursive: true, force: true })
+  try {
+    runOne(
+      out,
+      'pii-scan',
+      'planted-pii',
+      undefined,
+      JSON.stringify({ tool_input: { file_path: piiTmp } })
+    )
+  } finally {
+    rmSync(piiTmpDir, { recursive: true, force: true })
+  }
 
   runOne(
     out,
