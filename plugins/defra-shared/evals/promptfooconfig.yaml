@@ -22,15 +22,15 @@
 description: defra-shared plugin eval
 
 providers:
-  - id: exec:./run-copilot.sh
+  - id: exec:node ./run-copilot.mjs
     label: copilot-cli-defra-shared
-  - id: exec:./run-claude.sh
+  - id: exec:node ./run-claude.mjs
     label: claude-code-defra-shared
 
 prompts:
   - '{{prompt}}'
 
-# All test cases share one provider invocation per provider — the run-*.sh
+# All test cases share one provider invocation per provider — the run-*.mjs
 # scripts produce a single combined report that every assertion below
 # matches against. This is the same pattern as frontend-developer.
 

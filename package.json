@@ -12,13 +12,26 @@
     "lint:fix": "eslint scripts/ --fix",
     "format": "prettier --check .",
     "format:fix": "prettier --write .",
-    "test": "node scripts/validate-all.mjs",
+    "test": "node scripts/validate-all.mjs && node scripts/test-units.mjs",
     "validate": "node scripts/validate-all.mjs",
     "validate:fix": "node scripts/check-sorted.mjs --fix",
-    "evals:setup": "test -f node_modules/better-sqlite3/build/Release/better_sqlite3.node || (cd node_modules/better-sqlite3 && npx node-gyp rebuild)"
+    "evals:setup": "node scripts/evals-setup.mjs",
+    "evals:frontend:fixture:install": "npm --prefix plugins/frontend-developer/eval-fixture install",
+    "evals:frontend:fixture:test": "npm --prefix plugins/frontend-developer/eval-fixture test",
+    "evals:frontend:fixture:lint": "npm --prefix plugins/frontend-developer/eval-fixture run lint",
+    "evals:frontend": "npm run evals:frontend:fixture:install && npm run evals:setup && node scripts/evals.mjs eval frontend-developer copilot-cli-frontend-developer",
+    "evals:frontend:claude": "npm run evals:frontend:fixture:install && npm run evals:setup && node scripts/evals.mjs eval frontend-developer claude-code-frontend-developer",
+    "evals:frontend:view": "node scripts/evals.mjs view frontend-developer",
+    "evals:frontend:clean": "node scripts/evals.mjs clean frontend-developer"
+  },
+  "overrides": {
+    "fast-uri": "3.1.2",
+    "hono": "4.12.23",
+    "ip-address": "10.2.0",
+    "qs": "6.15.2"
   },
   "dependencies": {
-    "ajv": "8.17.1",
+    "ajv": "8.18.0",
     "ajv-formats": "3.0.1",
     "gray-matter": "4.0.3"
   },

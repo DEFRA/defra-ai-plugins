@@ -28,15 +28,16 @@ const MAX_DESCRIPTION_LENGTH = 500
  * @returns {string[]}
  */
 function validateDescription(data, prefix) {
-  const errors = []
-  if (typeof data.description !== 'string' || data.description.trim().length === 0) {
-    errors.push(`${prefix}: frontmatter "description" missing or empty`)
-  } else if (data.description.length > MAX_DESCRIPTION_LENGTH) {
-    errors.push(
-      `${prefix}: frontmatter "description" is ${data.description.length} chars (max ${MAX_DESCRIPTION_LENGTH})`
-    )
+  const { description } = data
+  if (typeof description !== 'string' || description.trim().length === 0) {
+    return [`${prefix}: frontmatter "description" missing or empty`]
   }
-  return errors
+  if (description.length > MAX_DESCRIPTION_LENGTH) {
+    return [
+      `${prefix}: frontmatter "description" is ${description.length} chars (max ${MAX_DESCRIPTION_LENGTH})`
+    ]
+  }
+  return []
 }
 
 /**
@@ -98,68 +99,76 @@ function validateClaudeAgent(data, prefix) {
  * @param {string} expectedName  the parent directory name (skill identifier)
  * @returns {string[]}
  */
-function validateSkill(data, prefix, expectedName) {
-  const errors = []
-  if (typeof data.name !== 'string' || data.name.trim().length === 0) {
-    errors.push(`${prefix}: frontmatter "name" missing or empty`)
-  } else if (data.name !== expectedName) {
-    errors.push(
-      `${prefix}: frontmatter "name" is "${data.name}" but parent directory is "${expectedName}"`
-    )
+function validateSkillName(name, prefix, expectedName) {
+  if (typeof name !== 'string' || name.trim().length === 0) {
+    return [`${prefix}: frontmatter "name" missing or empty`]
   }
-  errors.push(...validateDescription(data, prefix))
-  return errors
+  if (name !== expectedName) {
+    return [`${prefix}: frontmatter "name" is "${name}" but parent directory is "${expectedName}"`]
+  }
+  return []
+}
+
+function validateSkill(data, prefix, expectedName) {
+  return [
+    ...validateSkillName(data.name, prefix, expectedName),
+    ...validateDescription(data, prefix)
+  ]
+}
+
+/**
+ * Validate the frontmatter of a single entry point. Returns early on the fatal
+ * cases (unparseable / missing frontmatter) so the caller needs no loop control.
+ * @param {import('./lib/discover.mjs').EntryPoint} entry
+ * @param {string} dir plugin directory name
+ * @returns {string[]}
+ */
+function validateEntry(entry, dir) {
+  const prefix = `plugins/${dir}/${entry.relPath}`
+
+  let parsed
+  try {
+    parsed = matter(readFileSync(entry.absPath, 'utf8'))
+  } catch (err) {
+    return [`${prefix}: cannot parse frontmatter: ${err.message}`]
+  }
+
+  const { data } = parsed
+  if (!data || typeof data !== 'object') {
+    return [`${prefix}: missing frontmatter block`]
+  }
+
+  switch (entry.format) {
+    case 'copilot-agent':
+      return validateCopilotAgent(data, prefix)
+    case 'claude-agent':
+      return validateClaudeAgent(data, prefix)
+    case 'skill':
+      return validateSkill(data, prefix, entry.name)
+    default:
+      return []
+  }
 }
 
 /**
  * @returns {string[]} list of error messages (empty if valid)
  */
 export function validateFrontmatter() {
-  const errors = []
-
   if (!existsSync(PLUGINS_DIR)) {
     return ['plugins/: directory does not exist']
   }
 
-  const dirs = readdirSync(PLUGINS_DIR).filter((entry) => {
-    return statSync(resolve(PLUGINS_DIR, entry)).isDirectory()
-  })
+  const dirs = readdirSync(PLUGINS_DIR).filter((entry) =>
+    statSync(resolve(PLUGINS_DIR, entry)).isDirectory()
+  )
 
+  const errors = []
   for (const dir of dirs) {
     const pluginRoot = resolve(PLUGINS_DIR, dir)
-    const entries = discoverEntryPoints(pluginRoot)
-
-    for (const entry of entries) {
-      const prefix = `plugins/${dir}/${entry.relPath}`
-
-      let parsed
-      try {
-        parsed = matter(readFileSync(entry.absPath, 'utf8'))
-      } catch (err) {
-        errors.push(`${prefix}: cannot parse frontmatter: ${err.message}`)
-        continue
-      }
-
-      const { data } = parsed
-      if (!data || typeof data !== 'object') {
-        errors.push(`${prefix}: missing frontmatter block`)
-        continue
-      }
-
-      switch (entry.format) {
-        case 'copilot-agent':
-          errors.push(...validateCopilotAgent(data, prefix))
-          break
-        case 'claude-agent':
-          errors.push(...validateClaudeAgent(data, prefix))
-          break
-        case 'skill':
-          errors.push(...validateSkill(data, prefix, entry.name))
-          break
-      }
+    for (const entry of discoverEntryPoints(pluginRoot)) {
+      errors.push(...validateEntry(entry, dir))
     }
   }
-
   return errors
 }
 

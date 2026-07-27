@@ -8,7 +8,7 @@ import { fileURLToPath } from 'node:url'
 import config from './config/index.js'
 import { registerRoutes } from './routes/index.js'
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url))
+const rootDir = path.dirname(fileURLToPath(import.meta.url))
 
 const createServer = async () => {
   const server = Hapi.server({
@@ -26,7 +26,7 @@ const createServer = async () => {
   await server.register(Inert)
   await server.register(Crumb)
 
-  const viewsPath = path.join(__dirname, 'views')
+  const viewsPath = path.join(rootDir, 'views')
 
   server.views({
     engines: {
@@ -41,7 +41,7 @@ const createServer = async () => {
     compileOptions: {
       environment: nunjucks.configure([
         viewsPath,
-        path.join(__dirname, '..', 'node_modules', 'govuk-frontend', 'dist')
+        path.join(rootDir, '..', 'node_modules', 'govuk-frontend', 'dist')
       ], {
         autoescape: true,
         noCache: config.get('env') === 'development'
@@ -54,7 +54,7 @@ const createServer = async () => {
     path: '/public/{param*}',
     handler: {
       directory: {
-        path: path.join(__dirname, '..', 'public')
+        path: path.join(rootDir, '..', 'public')
       }
     }
   })

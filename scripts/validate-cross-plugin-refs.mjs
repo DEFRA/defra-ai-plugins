@@ -48,7 +48,7 @@ function findSkillReferences(body, registry) {
   /** @type {Set<string>} */
   const hits = new Set()
   for (const name of registry.keys()) {
-    const re = new RegExp(`\\b${name}\\b`)
+    const re = new RegExp(String.raw`\b${name}\b`)
     if (re.test(body)) {
       hits.add(name)
     }
@@ -81,29 +81,41 @@ function loadManifest(manifestPath) {
  * @param {Set<string>} declaredDeps
  * @returns {string[]}
  */
-function collectAgentRefErrors(dir, pluginRoot, skillRegistry, declaredDeps) {
+/**
+ * Undeclared-dependency errors for a single agent entry point. Returns [] for
+ * non-agent entries and for files whose frontmatter won't parse (those are
+ * reported by validate-frontmatter.mjs).
+ * @returns {string[]}
+ */
+function refErrorsForEntry(entry, dir, skillRegistry, declaredDeps) {
+  if (entry.format !== 'copilot-agent' && entry.format !== 'claude-agent') {
+    return []
+  }
+  let parsed
+  try {
+    parsed = matter(readFileSync(entry.absPath, 'utf8'))
+  } catch {
+    return []
+  }
+
   const errors = []
-  for (const entry of discoverEntryPoints(pluginRoot)) {
-    if (entry.format !== 'copilot-agent' && entry.format !== 'claude-agent') {
-      continue
-    }
-    let parsed
-    try {
-      parsed = matter(readFileSync(entry.absPath, 'utf8'))
-    } catch {
-      continue // validate-frontmatter.mjs reports parse errors
-    }
-    for (const skillName of findSkillReferences(parsed.content, skillRegistry)) {
-      const owningPlugin = skillRegistry.get(skillName)
-      if (owningPlugin === dir || declaredDeps.has(owningPlugin)) {
-        continue
-      }
+  for (const skillName of findSkillReferences(parsed.content, skillRegistry)) {
+    const owningPlugin = skillRegistry.get(skillName)
+    if (owningPlugin !== dir && !declaredDeps.has(owningPlugin)) {
       errors.push(
         `plugins/${dir}/${entry.relPath}: references skill "${skillName}" ` +
           `(owned by plugin "${owningPlugin}") but plugins/${dir}/plugin.json ` +
           `does not declare "${owningPlugin}" in "dependencies".`
       )
     }
+  }
+  return errors
+}
+
+function collectAgentRefErrors(dir, pluginRoot, skillRegistry, declaredDeps) {
+  const errors = []
+  for (const entry of discoverEntryPoints(pluginRoot)) {
+    errors.push(...refErrorsForEntry(entry, dir, skillRegistry, declaredDeps))
   }
   return errors
 }
@@ -153,8 +165,10 @@ export function validateCrossPluginRefs() {
       continue
     }
     const declaredDeps = new Set(Array.isArray(manifest.dependencies) ? manifest.dependencies : [])
-    errors.push(...collectAgentRefErrors(dir, pluginRoot, skillRegistry, declaredDeps))
-    errors.push(...collectDepErrors(dir, declaredDeps, dirs))
+    errors.push(
+      ...collectAgentRefErrors(dir, pluginRoot, skillRegistry, declaredDeps),
+      ...collectDepErrors(dir, declaredDeps, dirs)
+    )
   }
 
   return errors

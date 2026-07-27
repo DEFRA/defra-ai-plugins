@@ -134,15 +134,23 @@ source of truth for what's installable.
    | `lint_passes`           | The `exit_code: 0` check on the `=== LINT ===` block                  |
    | `refusal`               | Adversarial prompts the plugin should refuse on standards grounds     |
 
-   Run `make frontend-evals` locally to confirm your fixtures pass against the published
+   Run `npm run evals:frontend` locally to confirm your fixtures pass against the published
    plugin before opening the PR. See README §Evaluating for the full setup
    (Copilot CLI install, plugin install, model pinning).
 
+   > **⚠️ Local evals cost money / usage.** A run drives a real agent CLI through
+   > all fixtures (most do real model work): the Copilot run spends premium-request
+   > budget on your Copilot subscription, and the Claude run spends tokens/usage on
+   > whatever the `claude` CLI is authed with. A full run is ~6–8 min. CI gates the
+   > Copilot provider, so run these when you add or change fixtures — not for every
+   > commit.
+
    To sanity-check that the same fixtures port to a second provider, run
-   `make frontend-evals-claude` (Claude Code, requires `ANTHROPIC_API_KEY` and the
-   `claude` CLI). The Claude provider is local-only — there is no CI gate
-   or committed baseline for it; it exists to demonstrate that the harness
-   is portable across CLIs.
+   `npm run evals:frontend:claude` (Claude Code — needs the `claude` CLI
+   authenticated; a subscription login is enough, `ANTHROPIC_API_KEY` is optional).
+   The Claude provider is local-only — not part of the CI gate — but has its own
+   committed baseline (`promptfoo-results-claude.json`) and provider-aware
+   regression gate; it demonstrates that the harness is portable across CLIs.
 
 10. **Open a pull request** using the PR template and fill in the checklist.
 
@@ -172,7 +180,7 @@ npm run validate:fix
 A separate `Evals` workflow that drives Copilot CLI against the committed
 baseline on every PR is forthcoming — it's blocked on provisioning a
 `COPILOT_GITHUB_TOKEN` repository secret. Until it lands, run the harness
-locally with `make frontend-evals`. See README §Evaluating for the local flow.
+locally with `npm run evals:frontend`. See README §Evaluating for the local flow.
 
 ## Licence
 

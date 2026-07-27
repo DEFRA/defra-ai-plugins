@@ -89,7 +89,7 @@ Run locally:
 ```sh
 cd plugins/defra-shared/evals
 npx promptfoo eval
-./check-regression.sh output.json
+node check-regression.mjs output.json
 ```
 
 ## Suggested handoffs

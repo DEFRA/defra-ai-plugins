@@ -23,59 +23,76 @@ import { resolve, basename } from 'node:path'
  */
 
 /**
+ * True when `dir` exists and is a directory.
+ * @param {string} dir
+ * @returns {boolean}
+ */
+function isDir(dir) {
+  return existsSync(dir) && statSync(dir).isDirectory()
+}
+
+/**
+ * Entry points under agents/ — copilot-agent (`*.agent.md`) or claude-agent
+ * (any other `*.md`), keyed on the filename.
+ * @param {string} pluginRoot
+ * @returns {EntryPoint[]}
+ */
+function discoverAgents(pluginRoot) {
+  const agentsDir = resolve(pluginRoot, 'agents')
+  if (!isDir(agentsDir)) {
+    return []
+  }
+
+  /** @type {EntryPoint[]} */
+  const entries = []
+  for (const file of readdirSync(agentsDir)) {
+    if (!file.endsWith('.md')) {
+      continue
+    }
+    const isCopilot = file.endsWith('.agent.md')
+    entries.push({
+      absPath: resolve(agentsDir, file),
+      relPath: `agents/${file}`,
+      format: isCopilot ? 'copilot-agent' : 'claude-agent',
+      name: isCopilot ? file.replace(/\.agent\.md$/, '') : file.replace(/\.md$/, '')
+    })
+  }
+  return entries
+}
+
+/**
+ * Entry points under skills/ — one per `skills/<name>/SKILL.md`.
+ * @param {string} pluginRoot
+ * @returns {EntryPoint[]}
+ */
+function discoverSkills(pluginRoot) {
+  const skillsDir = resolve(pluginRoot, 'skills')
+  if (!isDir(skillsDir)) {
+    return []
+  }
+
+  /** @type {EntryPoint[]} */
+  const entries = []
+  for (const skillName of readdirSync(skillsDir)) {
+    const skillRoot = resolve(skillsDir, skillName)
+    const skillFile = resolve(skillRoot, 'SKILL.md')
+    if (statSync(skillRoot).isDirectory() && existsSync(skillFile)) {
+      entries.push({
+        absPath: skillFile,
+        relPath: `skills/${skillName}/SKILL.md`,
+        format: 'skill',
+        name: basename(skillRoot)
+      })
+    }
+  }
+  return entries
+}
+
+/**
  * Walk a single plugin directory and return every entry point it contains.
  * @param {string} pluginRoot absolute path to the plugin's root directory
  * @returns {EntryPoint[]}
  */
 export function discoverEntryPoints(pluginRoot) {
-  /** @type {EntryPoint[]} */
-  const entries = []
-
-  // agents/  → copilot-agent or claude-agent depending on filename
-  const agentsDir = resolve(pluginRoot, 'agents')
-  if (existsSync(agentsDir) && statSync(agentsDir).isDirectory()) {
-    for (const file of readdirSync(agentsDir)) {
-      if (!file.endsWith('.md')) {
-        continue
-      }
-      const absPath = resolve(agentsDir, file)
-      if (file.endsWith('.agent.md')) {
-        entries.push({
-          absPath,
-          relPath: `agents/${file}`,
-          format: 'copilot-agent',
-          name: file.replace(/\.agent\.md$/, '')
-        })
-      } else {
-        entries.push({
-          absPath,
-          relPath: `agents/${file}`,
-          format: 'claude-agent',
-          name: file.replace(/\.md$/, '')
-        })
-      }
-    }
-  }
-
-  // skills/<name>/SKILL.md  → skill
-  const skillsDir = resolve(pluginRoot, 'skills')
-  if (existsSync(skillsDir) && statSync(skillsDir).isDirectory()) {
-    for (const skillName of readdirSync(skillsDir)) {
-      const skillRoot = resolve(skillsDir, skillName)
-      if (!statSync(skillRoot).isDirectory()) {
-        continue
-      }
-      const skillFile = resolve(skillRoot, 'SKILL.md')
-      if (existsSync(skillFile)) {
-        entries.push({
-          absPath: skillFile,
-          relPath: `skills/${skillName}/SKILL.md`,
-          format: 'skill',
-          name: basename(skillRoot)
-        })
-      }
-    }
-  }
-
-  return entries
+  return [...discoverAgents(pluginRoot), ...discoverSkills(pluginRoot)]
 }

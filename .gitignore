@@ -5,7 +5,7 @@ coverage/
 .claude
 CLAUDE.md
 
-# Eval harness — see Makefile and plugins/*/evals/
+# Eval harness — see npm scripts (evals:*) and plugins/*/evals/
 plugins/*/evals/output*.json
 plugins/*/evals/.promptfoo/
 results/run-*/

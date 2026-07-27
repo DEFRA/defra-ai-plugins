@@ -11,11 +11,29 @@ import { REPO_ROOT, readJson, buildValidator } from './lib/load-schema.mjs'
 const MARKETPLACE_PATH = resolve(REPO_ROOT, '.github/plugin/marketplace.json')
 
 /**
+ * Structural check beyond JSON Schema: flag any plugin name that appears twice.
+ * @param {unknown[]} plugins
+ * @returns {string[]}
+ */
+function findDuplicateNames(plugins) {
+  const errors = []
+  const seen = new Set()
+  for (const [i, p] of plugins.entries()) {
+    if (!p || typeof p !== 'object' || typeof p.name !== 'string') {
+      continue
+    }
+    if (seen.has(p.name)) {
+      errors.push(`marketplace.json: plugins[${i}] duplicate plugin name "${p.name}"`)
+    }
+    seen.add(p.name)
+  }
+  return errors
+}
+
+/**
  * @returns {string[]} list of error messages (empty if valid)
  */
 export function validateMarketplace() {
-  const errors = []
-
   let marketplace
   try {
     marketplace = readJson(MARKETPLACE_PATH)
@@ -23,25 +41,14 @@ export function validateMarketplace() {
     return [`marketplace.json: cannot read or parse: ${err.message}`]
   }
 
+  const errors = []
   const schemaErrors = buildValidator('marketplace.schema.json')(marketplace)
   for (const e of schemaErrors) {
     errors.push(`marketplace.json: ${e}`)
   }
 
-  // Structural checks beyond what JSON Schema covers
   if (Array.isArray(marketplace.plugins)) {
-    const seen = new Set()
-    for (const [i, p] of marketplace.plugins.entries()) {
-      if (!p || typeof p !== 'object') {
-        continue
-      }
-      if (typeof p.name === 'string') {
-        if (seen.has(p.name)) {
-          errors.push(`marketplace.json: plugins[${i}] duplicate plugin name "${p.name}"`)
-        }
-        seen.add(p.name)
-      }
-    }
+    errors.push(...findDuplicateNames(marketplace.plugins))
   }
 
   return errors

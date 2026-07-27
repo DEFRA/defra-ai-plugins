@@ -10,7 +10,7 @@ standards so Copilot produces compliant code by default.
 
 > Primary target is GitHub Copilot CLI. The eval harness includes a
 > demonstration that the same fixtures run unchanged against Claude Code
-> (`make frontend-evals-claude`); cross-CLI plugin distribution is a future
+> (`npm run evals:frontend:claude`); cross-CLI plugin distribution is a future
 > iteration.
 
 ## Prerequisites
@@ -26,11 +26,10 @@ To use the plugins as a Copilot CLI user:
 
 Additionally, to develop in this repo or run the eval harness:
 
-| Tool                               | Why                                                                       |
-| ---------------------------------- | ------------------------------------------------------------------------- |
-| Node.js + `npm`                    | Repo validators (`npm test`) and the eval harness.                        |
-| `make`                             | Eval entry points (`make frontend-evals`, `make frontend-evals-claude`).  |
-| `claude` CLI + `ANTHROPIC_API_KEY` | Only for `make frontend-evals-claude`; not required for Copilot-only use. |
+| Tool                         | Why                                                                                                                                    |
+| ---------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| Node.js + `npm`              | Repo validators (`npm test`), the eval harness, and all build/scripting targets.                                                       |
+| `claude` CLI (authenticated) | Only for `npm run evals:frontend:claude`; subscription login is enough, `ANTHROPIC_API_KEY` optional. Not needed for Copilot-only use. |
 
 Optional — activate the tracked pre-commit hook so Prettier formats the repo on
 every commit (one-time, per checkout):
@@ -77,11 +76,11 @@ defra-ai-plugins/
     │   ├── eval-fixture/             # Skeleton app the agent operates on during eval
     │   └── evals/                    # Behavioural fixtures, provider scripts, baseline
     │       ├── promptfooconfig.yaml
-    │       ├── run-copilot.sh        # Default CI provider
-    │       ├── run-claude.sh         # Local-only demo of cross-provider support
-    │       ├── collect-and-report.sh # Shared snapshot/diff/lint/test helpers
-    │       ├── check-regression.sh   # Baseline regression gate
-    │       ├── summarise.sh          # Markdown summary for CI step output
+    │       ├── run-copilot.mjs       # Default CI provider
+    │       ├── run-claude.mjs        # Local-only demo of cross-provider support
+    │       ├── collect-and-report.mjs # Shared snapshot/diff/lint/test helpers
+    │       ├── check-regression.mjs  # Baseline regression gate
+    │       ├── summarise.mjs         # Markdown summary for CI step output
     │       └── baseline/             # Reference run for regression comparison
     └── ticket-writer/
         ├── plugin.json
@@ -133,11 +132,23 @@ follow the same `plugins/<plugin-name>/eval-fixture/` skeleton +
 `plugins/<plugin-name>/evals/` fixture set layout.
 
 A second provider, Claude Code, is wired up locally as a demonstration that the
-same fixtures port across CLIs unchanged (`make frontend-evals-claude`). It is
-**not** part of the CI gate — Copilot CLI is the only provider with a committed
-baseline and a regression gate.
+same fixtures port across CLIs unchanged (`npm run evals:frontend:claude`). It is
+**not** part of the CI gate — only the Copilot CLI run gates PRs in CI. Each
+provider has its own committed baseline (`promptfoo-results.json` for Copilot,
+`promptfoo-results-claude.json` for Claude) and the regression gate is
+provider-aware: a run is only ever compared against the baseline recorded with
+the same provider.
 
 ### Run locally
+
+> **⚠️ Running evals locally costs money / usage.** Each run drives a real agent
+> CLI through all 7 fixtures, 5 of which do real model work. The **Copilot** run
+> (`npm run evals:frontend`) spends **premium-request budget** on your Copilot
+> subscription. The **Claude** run (`npm run evals:frontend:claude`) spends
+> **tokens / usage** on whatever the `claude` CLI is authenticated with — your
+> subscription session, or your API key if `ANTHROPIC_API_KEY` is set. A full run
+> takes ~6–8 minutes. CI already gates the Copilot provider, so you don't need to
+> run these for every change — run them when you add or alter fixtures.
 
 Prerequisites:
 
@@ -151,61 +162,60 @@ copilot plugin install frontend-developer@defra-ai-plugins
 Then:
 
 ```sh
-make frontend-evals
+npm run evals:frontend
 ```
 
-Results land in `results/run-YYYY-MM-DD/promptfoo-results.json`. `make
-frontend-evals` also runs `check-regression.sh`, which compares against
+Results land in `results/run-YYYY-MM-DD/promptfoo-results.json`. `npm run
+evals:frontend` also runs `check-regression.mjs`, which compares against
 `plugins/frontend-developer/evals/baseline/promptfoo-results.json` and exits
 non-zero on any per-fixture regression.
 
 > **Node 24 / `better-sqlite3` native-binding gotcha** — promptfoo persists
 > results to SQLite via `better-sqlite3`. As of `better-sqlite3@12.9.0` there
 > is no prebuilt binary for Node 24's ABI, and `npm install` may complete
-> without compiling one from source. The `make frontend-evals` and
-> `make frontend-evals-claude` targets depend on `evals-setup`, which runs
-> `npm run evals:setup` — an idempotent script that rebuilds the binding if
-> the file is missing and no-ops otherwise. If you run promptfoo by hand
-> rather than via `make`, run `npm run evals:setup` first.
+> without compiling one from source. The `evals:frontend` and
+> `evals:frontend:claude` scripts depend on `evals:setup` — an idempotent
+> script that rebuilds the binding if the file is missing and no-ops
+> otherwise. If you run promptfoo by hand rather than via the npm scripts,
+> run `npm run evals:setup` first.
 
-To run the same suite against Claude Code instead (requires `ANTHROPIC_API_KEY`
-and `claude` CLI installed):
+To run the same suite against Claude Code instead (requires the `claude` CLI
+installed and authenticated — a subscription login is enough; `ANTHROPIC_API_KEY`
+is optional and only used for API billing if set):
 
 ```sh
-make frontend-evals-claude
+npm run evals:frontend:claude
 ```
+
+This spends tokens/usage on the model — see the cost warning above.
 
 ### Iterating on the plugin without reinstalling
 
-By default `claude` loads the plugin that was installed via
-`claude plugin install frontend-developer@defra-ai-plugins`, so edits to
-`plugins/frontend-developer/` are only picked up after a fresh
-`claude plugin install`. To skip that step while you iterate locally, set
-`CLAUDE_PLUGIN_DIR` to the absolute path of the plugin checkout — the
-Claude-provider eval script passes it through as `--plugin-dir`, which
-overrides the installed copy for that session only:
+The Claude-provider eval script always passes `--plugin-dir`, defaulting to the
+local plugin checkout (`plugins/frontend-developer`). So your edits there are
+picked up automatically — no `claude plugin install` needed, and crucially the
+plugin's governance hooks load (without `--plugin-dir`, headless `claude -p` runs
+with no hooks and the forbidden-tech refusal fixtures don't block). Set
+`CLAUDE_PLUGIN_DIR` only to point the eval at a different copy of the plugin:
 
 ```sh
-export CLAUDE_PLUGIN_DIR=/abs/path/to/plugins/frontend-developer
+export CLAUDE_PLUGIN_DIR=/abs/path/to/some/other/plugins/frontend-developer
 npx --no-install promptfoo eval \
   --filter-providers claude-code-frontend-developer \
   --filter-pattern 'Refuse'
 ```
 
-Leave the env var unset for CI or baseline runs against the installed
-plugin.
-
 To browse results in a UI:
 
 ```sh
-make frontend-evals-view
+npm run evals:frontend:view
 ```
 
-The default model is pinned in `plugins/frontend-developer/evals/run-copilot.sh`
+The default model is pinned in `plugins/frontend-developer/evals/run-copilot.mjs`
 (`COPILOT_MODEL=gpt-5-mini`). Override for ad-hoc experiments:
 
 ```sh
-COPILOT_MODEL=gpt-5 make frontend-evals
+COPILOT_MODEL=gpt-5 npm run evals:frontend
 ```
 
 Inside the provider script, the agent is invoked as `copilot --agent
@@ -221,7 +231,7 @@ CI automation for the eval harness is forthcoming — it depends on a
 Requests** permission) which has not yet been provisioned. The workflow
 definition, baseline regression gate, token-setup instructions, and GitHub
 Actions step-summary reporting will land in a follow-up PR. Until then, run the
-harness locally with `make frontend-evals` (see above).
+harness locally with `npm run evals:frontend` (see above).
 
 ## Contributing
 
