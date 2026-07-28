@@ -22,7 +22,11 @@
     "evals:frontend": "npm run evals:frontend:fixture:install && npm run evals:setup && node scripts/evals.mjs eval frontend-developer copilot-cli-frontend-developer",
     "evals:frontend:claude": "npm run evals:frontend:fixture:install && npm run evals:setup && node scripts/evals.mjs eval frontend-developer claude-code-frontend-developer",
     "evals:frontend:view": "node scripts/evals.mjs view frontend-developer",
-    "evals:frontend:clean": "node scripts/evals.mjs clean frontend-developer"
+    "evals:frontend:clean": "node scripts/evals.mjs clean frontend-developer",
+    "evals:pii": "npm run evals:setup && node scripts/evals.mjs eval defra-pii-redaction copilot-cli-defra-pii-redaction",
+    "evals:pii:claude": "npm run evals:setup && node scripts/evals.mjs eval defra-pii-redaction claude-code-defra-pii-redaction",
+    "evals:pii:view": "node scripts/evals.mjs view defra-pii-redaction",
+    "evals:pii:clean": "node scripts/evals.mjs clean defra-pii-redaction"
   },
   "overrides": {
     "fast-uri": "3.1.2",

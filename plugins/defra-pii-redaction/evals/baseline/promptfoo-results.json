@@ -1,0 +1,1884 @@
+{
+  "evalId": "eval-msC-2026-07-27T23:07:14",
+  "results": {
+    "version": 3,
+    "timestamp": "2026-07-27T23:07:14.616Z",
+    "prompts": [
+      {
+        "id": "effa18501e44aafd9bc42a2f64ffc9b6350f94025520ca2ed382f9bdc4b6e982",
+        "raw": "{{prompt}}",
+        "label": "{{prompt}}",
+        "provider": "copilot-cli-defra-pii-redaction",
+        "metrics": {
+          "score": 15,
+          "testPassCount": 15,
+          "testFailCount": 0,
+          "testErrorCount": 0,
+          "assertPassCount": 35,
+          "assertFailCount": 0,
+          "totalLatencyMs": 463092,
+          "tokenUsage": {
+            "prompt": 0,
+            "completion": 0,
+            "cached": 0,
+            "total": 0,
+            "numRequests": 15,
+            "completionDetails": {
+              "reasoning": 0,
+              "acceptedPrediction": 0,
+              "rejectedPrediction": 0,
+              "cacheReadInputTokens": 0,
+              "cacheCreationInputTokens": 0
+            },
+            "assertions": {
+              "total": 0,
+              "prompt": 0,
+              "completion": 0,
+              "cached": 0,
+              "numRequests": 0,
+              "completionDetails": {
+                "reasoning": 0,
+                "acceptedPrediction": 0,
+                "rejectedPrediction": 0,
+                "cacheReadInputTokens": 0,
+                "cacheCreationInputTokens": 0
+              }
+            }
+          },
+          "namedScores": {
+            "correctness": 8,
+            "security": 23,
+            "lint_passes": 4
+          },
+          "namedScoresCount": {
+            "correctness": 8,
+            "security": 23,
+            "lint_passes": 4
+          },
+          "namedScoreWeights": {
+            "correctness": 8,
+            "security": 23,
+            "lint_passes": 4
+          },
+          "cost": 0
+        }
+      }
+    ],
+    "results": [
+      {
+        "cost": 0,
+        "gradingResult": {
+          "pass": true,
+          "score": 1,
+          "reason": "All assertions passed",
+          "namedScores": {
+            "correctness": 1
+          },
+          "namedScoreWeights": {
+            "correctness": 1
+          },
+          "tokensUsed": {
+            "total": 0,
+            "prompt": 0,
+            "completion": 0,
+            "cached": 0,
+            "numRequests": 0
+          },
+          "componentResults": [
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "contains",
+                "value": "skills/defra-pii-redaction/SKILL.md",
+                "metric": "correctness"
+              }
+            }
+          ]
+        },
+        "id": "f26cf4d7-14d2-4c1d-b18d-d8d459464a8e",
+        "latencyMs": 32890,
+        "namedScores": {
+          "correctness": 1
+        },
+        "prompt": {
+          "raw": "defra-pii-redaction eval",
+          "label": "{{prompt}}",
+          "config": {}
+        },
+        "promptId": "effa18501e44aafd9bc42a2f64ffc9b6350f94025520ca2ed382f9bdc4b6e982",
+        "promptIdx": 0,
+        "provider": {
+          "id": "exec:node ./run-copilot.mjs",
+          "label": "copilot-cli-defra-pii-redaction"
+        },
+        "response": {
+          "output": "=== PROVIDER ===\nCOPILOT\nprompt: defra-pii-redaction eval\n\n=== SKILLS LOADED ===\nskills/defra-pii-redaction/SKILL.md\n\n=== HOOKS DEFINED ===\npii-redact-prompt: redacting PII from prompt...\npii-redact-pre: redacting PII from tool input...\npii-redact-post: redacting PII from tool output...\n\n=== HOOK RUN UserPromptSubmit prompt-nino ===\nexit_code: 0\nstdout:\n{\"prompt\": \"My NI number is<UK_NINO> and I need help\"}\nstderr:\nWarming up presidio engines...\nValidating cached wheel...\nWheel integrity verified.\nDone.\n\n=== HOOK RUN UserPromptSubmit prompt-nhs ===\nexit_code: 0\nstdout:\n{\"prompt\": \"Patient NHS number <UK_NHS> needs a referral\"}\nstderr:\nWarming up presidio engines...\nValidating cached wheel...\nWheel integrity verified.\nDone.\n\n=== HOOK RUN UserPromptSubmit prompt-person-email ===\nexit_code: 0\nstdout:\n{\"prompt\": \"Contact <PERSON> at <EMAIL_ADDRESS> about the application\"}\nstderr:\nWarming up presidio engines...\nValidating cached wheel...\nWheel integrity verified.\nDone.\n\n=== HOOK RUN UserPromptSubmit prompt-clean ===\nexit_code: 0\nstdout:\n{\"prompt\": \"How do I configure the database connection pool size?\"}\nstderr:\nWarming up presidio engines...\nValidating cached wheel...\nWheel integrity verified.\nDone.\n\n=== HOOK RUN PreToolUse pre-sbi ===\nexit_code: 0\nstdout:\n{\"tool_input\": {\"content\": \"The farmer SBI is <SBI> for this holding\"}}\nstderr:\nWarming up presidio engines...\nValidating cached wheel...\nWheel integrity verified.\nDone.\n\n=== HOOK RUN PreToolUse pre-crn ===\nexit_code: 0\nstdout:\n{\"tool_input\": {\"query\": \"Look up CRN <CRN> in the system\"}}\nstderr:\nWarming up presidio engines...\nValidating cached wheel...\nWheel integrity verified.\nDone.\n\n=== HOOK RUN PreToolUse pre-cph ===\nexit_code: 0\nstdout:\n{\"tool_input\": {\"content\": \"County Parish Holding: CPH <CPH> is registered\"}}\nstderr:\nWarming up presidio engines...\nValidating cached wheel...\nWheel integrity verified.\nDone.\n\n=== HOOK RUN PreToolUse pre-postcode ===\nexit_code: 0\nstdout:\n{\"tool_input\": {\"address\": \"Defra Office, <UK_POSTCODE>, <LOCATION>\"}}\nstderr:\nWarming up presidio engines...\nValidating cached wheel...\nWheel integrity verified.\nDone.\n\n=== HOOK RUN PostToolUse post-credit-card ===\nexit_code: 0\nstdout:\n{\"tool_response\": {\"stdout\": \"Payment processed with card <CREDIT_CARD>\"}}\nstderr:\nWarming up presidio engines...\nValidating cached wheel...\nWheel integrity verified.\nDone.\n\n=== HOOK RUN PostToolUse post-phone ===\nexit_code: 0\nstdout:\n{\"tool_response\": {\"stdout\": \"Contact the helpline on <PHONE_NUMBER> for assistance\"}}\nstderr:\nWarming up presidio engines...\nValidating cached wheel...\nWheel integrity verified.\nDone.\n\n=== HOOK RUN PostToolUse post-multi-pii ===\nexit_code: 0\nstdout:\n{\"tool_response\": {\"stdout\": \"Record: <PERSON>, NI<UK_NINO>, NHS <UK_NHS>, SBI <SBI>, address <UK_POSTCODE>\"}}\nstderr:\nWarming up presidio engines...\nValidating cached wheel...\nWheel integrity verified.\nDone.\n\n=== HOOK RUN PostToolUse post-clean ===\nexit_code: 0\nstdout:\n{\"tool_response\": {\"stdout\": \"Build succeeded in 3.2s with 0 warnings.\"}}\nstderr:\nWarming up presidio engines...\nValidating cached wheel...\nWheel integrity verified.\nDone."
+        },
+        "score": 1,
+        "success": true,
+        "testCase": {
+          "description": "correctness — PII redaction skill loads",
+          "vars": {
+            "prompt": "defra-pii-redaction eval"
+          },
+          "assert": [
+            {
+              "type": "contains",
+              "value": "skills/defra-pii-redaction/SKILL.md",
+              "metric": "correctness"
+            }
+          ],
+          "options": {},
+          "metadata": {}
+        },
+        "testIdx": 0,
+        "vars": {
+          "prompt": "defra-pii-redaction eval"
+        },
+        "metadata": {
+          "_promptfooFileMetadata": {}
+        },
+        "failureReason": 0
+      },
+      {
+        "cost": 0,
+        "gradingResult": {
+          "pass": true,
+          "score": 1,
+          "reason": "All assertions passed",
+          "namedScores": {
+            "correctness": 1
+          },
+          "namedScoreWeights": {
+            "correctness": 3
+          },
+          "tokensUsed": {
+            "total": 0,
+            "prompt": 0,
+            "completion": 0,
+            "cached": 0,
+            "numRequests": 0
+          },
+          "componentResults": [
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "contains",
+                "value": "pii-redact-prompt",
+                "metric": "correctness"
+              }
+            },
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "contains",
+                "value": "pii-redact-pre",
+                "metric": "correctness"
+              }
+            },
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "contains",
+                "value": "pii-redact-post",
+                "metric": "correctness"
+              }
+            }
+          ]
+        },
+        "id": "11a658c1-2c59-4f6b-9bfc-10fb0f9a23dc",
+        "latencyMs": 32549,
+        "namedScores": {
+          "correctness": 1
+        },
+        "prompt": {
+          "raw": "defra-pii-redaction eval",
+          "label": "{{prompt}}",
+          "config": {}
+        },
+        "promptId": "effa18501e44aafd9bc42a2f64ffc9b6350f94025520ca2ed382f9bdc4b6e982",
+        "promptIdx": 0,
+        "provider": {
+          "id": "exec:node ./run-copilot.mjs",
+          "label": "copilot-cli-defra-pii-redaction"
+        },
+        "response": {
+          "output": "=== PROVIDER ===\nCOPILOT\nprompt: defra-pii-redaction eval\n\n=== SKILLS LOADED ===\nskills/defra-pii-redaction/SKILL.md\n\n=== HOOKS DEFINED ===\npii-redact-prompt: redacting PII from prompt...\npii-redact-pre: redacting PII from tool input...\npii-redact-post: redacting PII from tool output...\n\n=== HOOK RUN UserPromptSubmit prompt-nino ===\nexit_code: 0\nstdout:\n{\"prompt\": \"My NI number is<UK_NINO> and I need help\"}\nstderr:\nWarming up presidio engines...\nValidating cached wheel...\nWheel integrity verified.\nDone.\n\n=== HOOK RUN UserPromptSubmit prompt-nhs ===\nexit_code: 0\nstdout:\n{\"prompt\": \"Patient NHS number <UK_NHS> needs a referral\"}\nstderr:\nWarming up presidio engines...\nValidating cached wheel...\nWheel integrity verified.\nDone.\n\n=== HOOK RUN UserPromptSubmit prompt-person-email ===\nexit_code: 0\nstdout:\n{\"prompt\": \"Contact <PERSON> at <EMAIL_ADDRESS> about the application\"}\nstderr:\nWarming up presidio engines...\nValidating cached wheel...\nWheel integrity verified.\nDone.\n\n=== HOOK RUN UserPromptSubmit prompt-clean ===\nexit_code: 0\nstdout:\n{\"prompt\": \"How do I configure the database connection pool size?\"}\nstderr:\nWarming up presidio engines...\nValidating cached wheel...\nWheel integrity verified.\nDone.\n\n=== HOOK RUN PreToolUse pre-sbi ===\nexit_code: 0\nstdout:\n{\"tool_input\": {\"content\": \"The farmer SBI is <SBI> for this holding\"}}\nstderr:\nWarming up presidio engines...\nValidating cached wheel...\nWheel integrity verified.\nDone.\n\n=== HOOK RUN PreToolUse pre-crn ===\nexit_code: 0\nstdout:\n{\"tool_input\": {\"query\": \"Look up CRN <CRN> in the system\"}}\nstderr:\nWarming up presidio engines...\nValidating cached wheel...\nWheel integrity verified.\nDone.\n\n=== HOOK RUN PreToolUse pre-cph ===\nexit_code: 0\nstdout:\n{\"tool_input\": {\"content\": \"County Parish Holding: CPH <CPH> is registered\"}}\nstderr:\nWarming up presidio engines...\nValidating cached wheel...\nWheel integrity verified.\nDone.\n\n=== HOOK RUN PreToolUse pre-postcode ===\nexit_code: 0\nstdout:\n{\"tool_input\": {\"address\": \"Defra Office, <UK_POSTCODE>, <LOCATION>\"}}\nstderr:\nWarming up presidio engines...\nValidating cached wheel...\nWheel integrity verified.\nDone.\n\n=== HOOK RUN PostToolUse post-credit-card ===\nexit_code: 0\nstdout:\n{\"tool_response\": {\"stdout\": \"Payment processed with card <CREDIT_CARD>\"}}\nstderr:\nWarming up presidio engines...\nValidating cached wheel...\nWheel integrity verified.\nDone.\n\n=== HOOK RUN PostToolUse post-phone ===\nexit_code: 0\nstdout:\n{\"tool_response\": {\"stdout\": \"Contact the helpline on <PHONE_NUMBER> for assistance\"}}\nstderr:\nWarming up presidio engines...\nValidating cached wheel...\nWheel integrity verified.\nDone.\n\n=== HOOK RUN PostToolUse post-multi-pii ===\nexit_code: 0\nstdout:\n{\"tool_response\": {\"stdout\": \"Record: <PERSON>, NI<UK_NINO>, NHS <UK_NHS>, SBI <SBI>, address <UK_POSTCODE>\"}}\nstderr:\nWarming up presidio engines...\nValidating cached wheel...\nWheel integrity verified.\nDone.\n\n=== HOOK RUN PostToolUse post-clean ===\nexit_code: 0\nstdout:\n{\"tool_response\": {\"stdout\": \"Build succeeded in 3.2s with 0 warnings.\"}}\nstderr:\nWarming up presidio engines...\nValidating cached wheel...\nWheel integrity verified.\nDone."
+        },
+        "score": 1,
+        "success": true,
+        "testCase": {
+          "description": "correctness — all three hooks defined in catalogue",
+          "vars": {
+            "prompt": "defra-pii-redaction eval"
+          },
+          "assert": [
+            {
+              "type": "contains",
+              "value": "pii-redact-prompt",
+              "metric": "correctness"
+            },
+            {
+              "type": "contains",
+              "value": "pii-redact-pre",
+              "metric": "correctness"
+            },
+            {
+              "type": "contains",
+              "value": "pii-redact-post",
+              "metric": "correctness"
+            }
+          ],
+          "options": {},
+          "metadata": {}
+        },
+        "testIdx": 1,
+        "vars": {
+          "prompt": "defra-pii-redaction eval"
+        },
+        "metadata": {
+          "_promptfooFileMetadata": {}
+        },
+        "failureReason": 0
+      },
+      {
+        "cost": 0,
+        "gradingResult": {
+          "pass": true,
+          "score": 1,
+          "reason": "All assertions passed",
+          "namedScores": {
+            "correctness": 1
+          },
+          "namedScoreWeights": {
+            "correctness": 2
+          },
+          "tokensUsed": {
+            "total": 0,
+            "prompt": 0,
+            "completion": 0,
+            "cached": 0,
+            "numRequests": 0
+          },
+          "componentResults": [
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "contains",
+                "value": "HOOK RUN UserPromptSubmit prompt-clean ===\nexit_code: 0",
+                "metric": "correctness"
+              }
+            },
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "contains",
+                "value": "How do I configure the database connection pool size?",
+                "metric": "correctness"
+              }
+            }
+          ]
+        },
+        "id": "d69354df-1adc-49f3-8d09-78dde8598a7e",
+        "latencyMs": 32761,
+        "namedScores": {
+          "correctness": 1
+        },
+        "prompt": {
+          "raw": "defra-pii-redaction eval",
+          "label": "{{prompt}}",
+          "config": {}
+        },
+        "promptId": "effa18501e44aafd9bc42a2f64ffc9b6350f94025520ca2ed382f9bdc4b6e982",
+        "promptIdx": 0,
+        "provider": {
+          "id": "exec:node ./run-copilot.mjs",
+          "label": "copilot-cli-defra-pii-redaction"
+        },
+        "response": {
+          "output": "=== PROVIDER ===\nCOPILOT\nprompt: defra-pii-redaction eval\n\n=== SKILLS LOADED ===\nskills/defra-pii-redaction/SKILL.md\n\n=== HOOKS DEFINED ===\npii-redact-prompt: redacting PII from prompt...\npii-redact-pre: redacting PII from tool input...\npii-redact-post: redacting PII from tool output...\n\n=== HOOK RUN UserPromptSubmit prompt-nino ===\nexit_code: 0\nstdout:\n{\"prompt\": \"My NI number is<UK_NINO> and I need help\"}\nstderr:\nWarming up presidio engines...\nValidating cached wheel...\nWheel integrity verified.\nDone.\n\n=== HOOK RUN UserPromptSubmit prompt-nhs ===\nexit_code: 0\nstdout:\n{\"prompt\": \"Patient NHS number <UK_NHS> needs a referral\"}\nstderr:\nWarming up presidio engines...\nValidating cached wheel...\nWheel integrity verified.\nDone.\n\n=== HOOK RUN UserPromptSubmit prompt-person-email ===\nexit_code: 0\nstdout:\n{\"prompt\": \"Contact <PERSON> at <EMAIL_ADDRESS> about the application\"}\nstderr:\nWarming up presidio engines...\nValidating cached wheel...\nWheel integrity verified.\nDone.\n\n=== HOOK RUN UserPromptSubmit prompt-clean ===\nexit_code: 0\nstdout:\n{\"prompt\": \"How do I configure the database connection pool size?\"}\nstderr:\nWarming up presidio engines...\nValidating cached wheel...\nWheel integrity verified.\nDone.\n\n=== HOOK RUN PreToolUse pre-sbi ===\nexit_code: 0\nstdout:\n{\"tool_input\": {\"content\": \"The farmer SBI is <SBI> for this holding\"}}\nstderr:\nWarming up presidio engines...\nValidating cached wheel...\nWheel integrity verified.\nDone.\n\n=== HOOK RUN PreToolUse pre-crn ===\nexit_code: 0\nstdout:\n{\"tool_input\": {\"query\": \"Look up CRN <CRN> in the system\"}}\nstderr:\nWarming up presidio engines...\nValidating cached wheel...\nWheel integrity verified.\nDone.\n\n=== HOOK RUN PreToolUse pre-cph ===\nexit_code: 0\nstdout:\n{\"tool_input\": {\"content\": \"County Parish Holding: CPH <CPH> is registered\"}}\nstderr:\nWarming up presidio engines...\nValidating cached wheel...\nWheel integrity verified.\nDone.\n\n=== HOOK RUN PreToolUse pre-postcode ===\nexit_code: 0\nstdout:\n{\"tool_input\": {\"address\": \"Defra Office, <UK_POSTCODE>, <LOCATION>\"}}\nstderr:\nWarming up presidio engines...\nValidating cached wheel...\nWheel integrity verified.\nDone.\n\n=== HOOK RUN PostToolUse post-credit-card ===\nexit_code: 0\nstdout:\n{\"tool_response\": {\"stdout\": \"Payment processed with card <CREDIT_CARD>\"}}\nstderr:\nWarming up presidio engines...\nValidating cached wheel...\nWheel integrity verified.\nDone.\n\n=== HOOK RUN PostToolUse post-phone ===\nexit_code: 0\nstdout:\n{\"tool_response\": {\"stdout\": \"Contact the helpline on <PHONE_NUMBER> for assistance\"}}\nstderr:\nWarming up presidio engines...\nValidating cached wheel...\nWheel integrity verified.\nDone.\n\n=== HOOK RUN PostToolUse post-multi-pii ===\nexit_code: 0\nstdout:\n{\"tool_response\": {\"stdout\": \"Record: <PERSON>, NI<UK_NINO>, NHS <UK_NHS>, SBI <SBI>, address <UK_POSTCODE>\"}}\nstderr:\nWarming up presidio engines...\nValidating cached wheel...\nWheel integrity verified.\nDone.\n\n=== HOOK RUN PostToolUse post-clean ===\nexit_code: 0\nstdout:\n{\"tool_response\": {\"stdout\": \"Build succeeded in 3.2s with 0 warnings.\"}}\nstderr:\nWarming up presidio engines...\nValidating cached wheel...\nWheel integrity verified.\nDone."
+        },
+        "score": 1,
+        "success": true,
+        "testCase": {
+          "description": "correctness — clean prompt passes through unchanged",
+          "vars": {
+            "prompt": "defra-pii-redaction eval"
+          },
+          "assert": [
+            {
+              "type": "contains",
+              "value": "HOOK RUN UserPromptSubmit prompt-clean ===\nexit_code: 0",
+              "metric": "correctness"
+            },
+            {
+              "type": "contains",
+              "value": "How do I configure the database connection pool size?",
+              "metric": "correctness"
+            }
+          ],
+          "options": {},
+          "metadata": {}
+        },
+        "testIdx": 2,
+        "vars": {
+          "prompt": "defra-pii-redaction eval"
+        },
+        "metadata": {
+          "_promptfooFileMetadata": {}
+        },
+        "failureReason": 0
+      },
+      {
+        "cost": 0,
+        "gradingResult": {
+          "pass": true,
+          "score": 1,
+          "reason": "All assertions passed",
+          "namedScores": {
+            "correctness": 1
+          },
+          "namedScoreWeights": {
+            "correctness": 2
+          },
+          "tokensUsed": {
+            "total": 0,
+            "prompt": 0,
+            "completion": 0,
+            "cached": 0,
+            "numRequests": 0
+          },
+          "componentResults": [
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "contains",
+                "value": "HOOK RUN PostToolUse post-clean ===\nexit_code: 0",
+                "metric": "correctness"
+              }
+            },
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "contains",
+                "value": "Build succeeded in 3.2s with 0 warnings.",
+                "metric": "correctness"
+              }
+            }
+          ]
+        },
+        "id": "a2298837-a0db-4940-985d-2f7d0b4575a2",
+        "latencyMs": 33068,
+        "namedScores": {
+          "correctness": 1
+        },
+        "prompt": {
+          "raw": "defra-pii-redaction eval",
+          "label": "{{prompt}}",
+          "config": {}
+        },
+        "promptId": "effa18501e44aafd9bc42a2f64ffc9b6350f94025520ca2ed382f9bdc4b6e982",
+        "promptIdx": 0,
+        "provider": {
+          "id": "exec:node ./run-copilot.mjs",
+          "label": "copilot-cli-defra-pii-redaction"
+        },
+        "response": {
+          "output": "=== PROVIDER ===\nCOPILOT\nprompt: defra-pii-redaction eval\n\n=== SKILLS LOADED ===\nskills/defra-pii-redaction/SKILL.md\n\n=== HOOKS DEFINED ===\npii-redact-prompt: redacting PII from prompt...\npii-redact-pre: redacting PII from tool input...\npii-redact-post: redacting PII from tool output...\n\n=== HOOK RUN UserPromptSubmit prompt-nino ===\nexit_code: 0\nstdout:\n{\"prompt\": \"My NI number is<UK_NINO> and I need help\"}\nstderr:\nWarming up presidio engines...\nValidating cached wheel...\nWheel integrity verified.\nDone.\n\n=== HOOK RUN UserPromptSubmit prompt-nhs ===\nexit_code: 0\nstdout:\n{\"prompt\": \"Patient NHS number <UK_NHS> needs a referral\"}\nstderr:\nWarming up presidio engines...\nValidating cached wheel...\nWheel integrity verified.\nDone.\n\n=== HOOK RUN UserPromptSubmit prompt-person-email ===\nexit_code: 0\nstdout:\n{\"prompt\": \"Contact <PERSON> at <EMAIL_ADDRESS> about the application\"}\nstderr:\nWarming up presidio engines...\nValidating cached wheel...\nWheel integrity verified.\nDone.\n\n=== HOOK RUN UserPromptSubmit prompt-clean ===\nexit_code: 0\nstdout:\n{\"prompt\": \"How do I configure the database connection pool size?\"}\nstderr:\nWarming up presidio engines...\nValidating cached wheel...\nWheel integrity verified.\nDone.\n\n=== HOOK RUN PreToolUse pre-sbi ===\nexit_code: 0\nstdout:\n{\"tool_input\": {\"content\": \"The farmer SBI is <SBI> for this holding\"}}\nstderr:\nWarming up presidio engines...\nValidating cached wheel...\nWheel integrity verified.\nDone.\n\n=== HOOK RUN PreToolUse pre-crn ===\nexit_code: 0\nstdout:\n{\"tool_input\": {\"query\": \"Look up CRN <CRN> in the system\"}}\nstderr:\nWarming up presidio engines...\nValidating cached wheel...\nWheel integrity verified.\nDone.\n\n=== HOOK RUN PreToolUse pre-cph ===\nexit_code: 0\nstdout:\n{\"tool_input\": {\"content\": \"County Parish Holding: CPH <CPH> is registered\"}}\nstderr:\nWarming up presidio engines...\nValidating cached wheel...\nWheel integrity verified.\nDone.\n\n=== HOOK RUN PreToolUse pre-postcode ===\nexit_code: 0\nstdout:\n{\"tool_input\": {\"address\": \"Defra Office, <UK_POSTCODE>, <LOCATION>\"}}\nstderr:\nWarming up presidio engines...\nValidating cached wheel...\nWheel integrity verified.\nDone.\n\n=== HOOK RUN PostToolUse post-credit-card ===\nexit_code: 0\nstdout:\n{\"tool_response\": {\"stdout\": \"Payment processed with card <CREDIT_CARD>\"}}\nstderr:\nWarming up presidio engines...\nValidating cached wheel...\nWheel integrity verified.\nDone.\n\n=== HOOK RUN PostToolUse post-phone ===\nexit_code: 0\nstdout:\n{\"tool_response\": {\"stdout\": \"Contact the helpline on <PHONE_NUMBER> for assistance\"}}\nstderr:\nWarming up presidio engines...\nValidating cached wheel...\nWheel integrity verified.\nDone.\n\n=== HOOK RUN PostToolUse post-multi-pii ===\nexit_code: 0\nstdout:\n{\"tool_response\": {\"stdout\": \"Record: <PERSON>, NI<UK_NINO>, NHS <UK_NHS>, SBI <SBI>, address <UK_POSTCODE>\"}}\nstderr:\nWarming up presidio engines...\nValidating cached wheel...\nWheel integrity verified.\nDone.\n\n=== HOOK RUN PostToolUse post-clean ===\nexit_code: 0\nstdout:\n{\"tool_response\": {\"stdout\": \"Build succeeded in 3.2s with 0 warnings.\"}}\nstderr:\nWarming up presidio engines...\nValidating cached wheel...\nWheel integrity verified.\nDone."
+        },
+        "score": 1,
+        "success": true,
+        "testCase": {
+          "description": "correctness — clean tool output passes through unchanged",
+          "vars": {
+            "prompt": "defra-pii-redaction eval"
+          },
+          "assert": [
+            {
+              "type": "contains",
+              "value": "HOOK RUN PostToolUse post-clean ===\nexit_code: 0",
+              "metric": "correctness"
+            },
+            {
+              "type": "contains",
+              "value": "Build succeeded in 3.2s with 0 warnings.",
+              "metric": "correctness"
+            }
+          ],
+          "options": {},
+          "metadata": {}
+        },
+        "testIdx": 3,
+        "vars": {
+          "prompt": "defra-pii-redaction eval"
+        },
+        "metadata": {
+          "_promptfooFileMetadata": {}
+        },
+        "failureReason": 0
+      },
+      {
+        "cost": 0,
+        "gradingResult": {
+          "pass": true,
+          "score": 1,
+          "reason": "All assertions passed",
+          "namedScores": {
+            "security": 1
+          },
+          "namedScoreWeights": {
+            "security": 2
+          },
+          "tokensUsed": {
+            "total": 0,
+            "prompt": 0,
+            "completion": 0,
+            "cached": 0,
+            "numRequests": 0
+          },
+          "componentResults": [
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "contains",
+                "value": "<UK_NINO>",
+                "metric": "security"
+              }
+            },
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "not-contains",
+                "value": "AB 12 34 56 C",
+                "metric": "security"
+              }
+            }
+          ]
+        },
+        "id": "4c974935-20e9-4678-aa19-03c75237b519",
+        "latencyMs": 29710,
+        "namedScores": {
+          "security": 1
+        },
+        "prompt": {
+          "raw": "defra-pii-redaction eval",
+          "label": "{{prompt}}",
+          "config": {}
+        },
+        "promptId": "effa18501e44aafd9bc42a2f64ffc9b6350f94025520ca2ed382f9bdc4b6e982",
+        "promptIdx": 0,
+        "provider": {
+          "id": "exec:node ./run-copilot.mjs",
+          "label": "copilot-cli-defra-pii-redaction"
+        },
+        "response": {
+          "output": "=== PROVIDER ===\nCOPILOT\nprompt: defra-pii-redaction eval\n\n=== SKILLS LOADED ===\nskills/defra-pii-redaction/SKILL.md\n\n=== HOOKS DEFINED ===\npii-redact-prompt: redacting PII from prompt...\npii-redact-pre: redacting PII from tool input...\npii-redact-post: redacting PII from tool output...\n\n=== HOOK RUN UserPromptSubmit prompt-nino ===\nexit_code: 0\nstdout:\n{\"prompt\": \"My NI number is<UK_NINO> and I need help\"}\nstderr:\nWarming up presidio engines...\nValidating cached wheel...\nWheel integrity verified.\nDone.\n\n=== HOOK RUN UserPromptSubmit prompt-nhs ===\nexit_code: 0\nstdout:\n{\"prompt\": \"Patient NHS number <UK_NHS> needs a referral\"}\nstderr:\nWarming up presidio engines...\nValidating cached wheel...\nWheel integrity verified.\nDone.\n\n=== HOOK RUN UserPromptSubmit prompt-person-email ===\nexit_code: 0\nstdout:\n{\"prompt\": \"Contact <PERSON> at <EMAIL_ADDRESS> about the application\"}\nstderr:\nWarming up presidio engines...\nValidating cached wheel...\nWheel integrity verified.\nDone.\n\n=== HOOK RUN UserPromptSubmit prompt-clean ===\nexit_code: 0\nstdout:\n{\"prompt\": \"How do I configure the database connection pool size?\"}\nstderr:\nWarming up presidio engines...\nValidating cached wheel...\nWheel integrity verified.\nDone.\n\n=== HOOK RUN PreToolUse pre-sbi ===\nexit_code: 0\nstdout:\n{\"tool_input\": {\"content\": \"The farmer SBI is <SBI> for this holding\"}}\nstderr:\nWarming up presidio engines...\nValidating cached wheel...\nWheel integrity verified.\nDone.\n\n=== HOOK RUN PreToolUse pre-crn ===\nexit_code: 0\nstdout:\n{\"tool_input\": {\"query\": \"Look up CRN <CRN> in the system\"}}\nstderr:\nWarming up presidio engines...\nValidating cached wheel...\nWheel integrity verified.\nDone.\n\n=== HOOK RUN PreToolUse pre-cph ===\nexit_code: 0\nstdout:\n{\"tool_input\": {\"content\": \"County Parish Holding: CPH <CPH> is registered\"}}\nstderr:\nWarming up presidio engines...\nValidating cached wheel...\nWheel integrity verified.\nDone.\n\n=== HOOK RUN PreToolUse pre-postcode ===\nexit_code: 0\nstdout:\n{\"tool_input\": {\"address\": \"Defra Office, <UK_POSTCODE>, <LOCATION>\"}}\nstderr:\nWarming up presidio engines...\nValidating cached wheel...\nWheel integrity verified.\nDone.\n\n=== HOOK RUN PostToolUse post-credit-card ===\nexit_code: 0\nstdout:\n{\"tool_response\": {\"stdout\": \"Payment processed with card <CREDIT_CARD>\"}}\nstderr:\nWarming up presidio engines...\nValidating cached wheel...\nWheel integrity verified.\nDone.\n\n=== HOOK RUN PostToolUse post-phone ===\nexit_code: 0\nstdout:\n{\"tool_response\": {\"stdout\": \"Contact the helpline on <PHONE_NUMBER> for assistance\"}}\nstderr:\nWarming up presidio engines...\nValidating cached wheel...\nWheel integrity verified.\nDone.\n\n=== HOOK RUN PostToolUse post-multi-pii ===\nexit_code: 0\nstdout:\n{\"tool_response\": {\"stdout\": \"Record: <PERSON>, NI<UK_NINO>, NHS <UK_NHS>, SBI <SBI>, address <UK_POSTCODE>\"}}\nstderr:\nWarming up presidio engines...\nValidating cached wheel...\nWheel integrity verified.\nDone.\n\n=== HOOK RUN PostToolUse post-clean ===\nexit_code: 0\nstdout:\n{\"tool_response\": {\"stdout\": \"Build succeeded in 3.2s with 0 warnings.\"}}\nstderr:\nWarming up presidio engines...\nValidating cached wheel...\nWheel integrity verified.\nDone."
+        },
+        "score": 1,
+        "success": true,
+        "testCase": {
+          "description": "security — UK NINO is redacted from prompts",
+          "vars": {
+            "prompt": "defra-pii-redaction eval"
+          },
+          "assert": [
+            {
+              "type": "contains",
+              "value": "<UK_NINO>",
+              "metric": "security"
+            },
+            {
+              "type": "not-contains",
+              "value": "AB 12 34 56 C",
+              "metric": "security"
+            }
+          ],
+          "options": {},
+          "metadata": {}
+        },
+        "testIdx": 4,
+        "vars": {
+          "prompt": "defra-pii-redaction eval"
+        },
+        "metadata": {
+          "_promptfooFileMetadata": {}
+        },
+        "failureReason": 0
+      },
+      {
+        "cost": 0,
+        "gradingResult": {
+          "pass": true,
+          "score": 1,
+          "reason": "All assertions passed",
+          "namedScores": {
+            "security": 1
+          },
+          "namedScoreWeights": {
+            "security": 2
+          },
+          "tokensUsed": {
+            "total": 0,
+            "prompt": 0,
+            "completion": 0,
+            "cached": 0,
+            "numRequests": 0
+          },
+          "componentResults": [
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "contains",
+                "value": "<UK_NHS>",
+                "metric": "security"
+              }
+            },
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "not-contains",
+                "value": "943 476 5919",
+                "metric": "security"
+              }
+            }
+          ]
+        },
+        "id": "58464093-d522-42b3-b054-4617c1ceec7e",
+        "latencyMs": 30330,
+        "namedScores": {
+          "security": 1
+        },
+        "prompt": {
+          "raw": "defra-pii-redaction eval",
+          "label": "{{prompt}}",
+          "config": {}
+        },
+        "promptId": "effa18501e44aafd9bc42a2f64ffc9b6350f94025520ca2ed382f9bdc4b6e982",
+        "promptIdx": 0,
+        "provider": {
+          "id": "exec:node ./run-copilot.mjs",
+          "label": "copilot-cli-defra-pii-redaction"
+        },
+        "response": {
+          "output": "=== PROVIDER ===\nCOPILOT\nprompt: defra-pii-redaction eval\n\n=== SKILLS LOADED ===\nskills/defra-pii-redaction/SKILL.md\n\n=== HOOKS DEFINED ===\npii-redact-prompt: redacting PII from prompt...\npii-redact-pre: redacting PII from tool input...\npii-redact-post: redacting PII from tool output...\n\n=== HOOK RUN UserPromptSubmit prompt-nino ===\nexit_code: 0\nstdout:\n{\"prompt\": \"My NI number is<UK_NINO> and I need help\"}\nstderr:\nWarming up presidio engines...\nValidating cached wheel...\nWheel integrity verified.\nDone.\n\n=== HOOK RUN UserPromptSubmit prompt-nhs ===\nexit_code: 0\nstdout:\n{\"prompt\": \"Patient NHS number <UK_NHS> needs a referral\"}\nstderr:\nWarming up presidio engines...\nValidating cached wheel...\nWheel integrity verified.\nDone.\n\n=== HOOK RUN UserPromptSubmit prompt-person-email ===\nexit_code: 0\nstdout:\n{\"prompt\": \"Contact <PERSON> at <EMAIL_ADDRESS> about the application\"}\nstderr:\nWarming up presidio engines...\nValidating cached wheel...\nWheel integrity verified.\nDone.\n\n=== HOOK RUN UserPromptSubmit prompt-clean ===\nexit_code: 0\nstdout:\n{\"prompt\": \"How do I configure the database connection pool size?\"}\nstderr:\nWarming up presidio engines...\nValidating cached wheel...\nWheel integrity verified.\nDone.\n\n=== HOOK RUN PreToolUse pre-sbi ===\nexit_code: 0\nstdout:\n{\"tool_input\": {\"content\": \"The farmer SBI is <SBI> for this holding\"}}\nstderr:\nWarming up presidio engines...\nValidating cached wheel...\nWheel integrity verified.\nDone.\n\n=== HOOK RUN PreToolUse pre-crn ===\nexit_code: 0\nstdout:\n{\"tool_input\": {\"query\": \"Look up CRN <CRN> in the system\"}}\nstderr:\nWarming up presidio engines...\nValidating cached wheel...\nWheel integrity verified.\nDone.\n\n=== HOOK RUN PreToolUse pre-cph ===\nexit_code: 0\nstdout:\n{\"tool_input\": {\"content\": \"County Parish Holding: CPH <CPH> is registered\"}}\nstderr:\nWarming up presidio engines...\nValidating cached wheel...\nWheel integrity verified.\nDone.\n\n=== HOOK RUN PreToolUse pre-postcode ===\nexit_code: 0\nstdout:\n{\"tool_input\": {\"address\": \"Defra Office, <UK_POSTCODE>, <LOCATION>\"}}\nstderr:\nWarming up presidio engines...\nValidating cached wheel...\nWheel integrity verified.\nDone.\n\n=== HOOK RUN PostToolUse post-credit-card ===\nexit_code: 0\nstdout:\n{\"tool_response\": {\"stdout\": \"Payment processed with card <CREDIT_CARD>\"}}\nstderr:\nWarming up presidio engines...\nValidating cached wheel...\nWheel integrity verified.\nDone.\n\n=== HOOK RUN PostToolUse post-phone ===\nexit_code: 0\nstdout:\n{\"tool_response\": {\"stdout\": \"Contact the helpline on <PHONE_NUMBER> for assistance\"}}\nstderr:\nWarming up presidio engines...\nValidating cached wheel...\nWheel integrity verified.\nDone.\n\n=== HOOK RUN PostToolUse post-multi-pii ===\nexit_code: 0\nstdout:\n{\"tool_response\": {\"stdout\": \"Record: <PERSON>, NI<UK_NINO>, NHS <UK_NHS>, SBI <SBI>, address <UK_POSTCODE>\"}}\nstderr:\nWarming up presidio engines...\nValidating cached wheel...\nWheel integrity verified.\nDone.\n\n=== HOOK RUN PostToolUse post-clean ===\nexit_code: 0\nstdout:\n{\"tool_response\": {\"stdout\": \"Build succeeded in 3.2s with 0 warnings.\"}}\nstderr:\nWarming up presidio engines...\nValidating cached wheel...\nWheel integrity verified.\nDone."
+        },
+        "score": 1,
+        "success": true,
+        "testCase": {
+          "description": "security — UK NHS number is redacted from prompts",
+          "vars": {
+            "prompt": "defra-pii-redaction eval"
+          },
+          "assert": [
+            {
+              "type": "contains",
+              "value": "<UK_NHS>",
+              "metric": "security"
+            },
+            {
+              "type": "not-contains",
+              "value": "943 476 5919",
+              "metric": "security"
+            }
+          ],
+          "options": {},
+          "metadata": {}
+        },
+        "testIdx": 5,
+        "vars": {
+          "prompt": "defra-pii-redaction eval"
+        },
+        "metadata": {
+          "_promptfooFileMetadata": {}
+        },
+        "failureReason": 0
+      },
+      {
+        "cost": 0,
+        "gradingResult": {
+          "pass": true,
+          "score": 1,
+          "reason": "All assertions passed",
+          "namedScores": {
+            "security": 1
+          },
+          "namedScoreWeights": {
+            "security": 2
+          },
+          "tokensUsed": {
+            "total": 0,
+            "prompt": 0,
+            "completion": 0,
+            "cached": 0,
+            "numRequests": 0
+          },
+          "componentResults": [
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "contains",
+                "value": "<EMAIL_ADDRESS>",
+                "metric": "security"
+              }
+            },
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "not-contains",
+                "value": "john.smith@defra.gov.uk",
+                "metric": "security"
+              }
+            }
+          ]
+        },
+        "id": "e0aabc66-cc52-4c2d-b9d1-157292b24714",
+        "latencyMs": 29999,
+        "namedScores": {
+          "security": 1
+        },
+        "prompt": {
+          "raw": "defra-pii-redaction eval",
+          "label": "{{prompt}}",
+          "config": {}
+        },
+        "promptId": "effa18501e44aafd9bc42a2f64ffc9b6350f94025520ca2ed382f9bdc4b6e982",
+        "promptIdx": 0,
+        "provider": {
+          "id": "exec:node ./run-copilot.mjs",
+          "label": "copilot-cli-defra-pii-redaction"
+        },
+        "response": {
+          "output": "=== PROVIDER ===\nCOPILOT\nprompt: defra-pii-redaction eval\n\n=== SKILLS LOADED ===\nskills/defra-pii-redaction/SKILL.md\n\n=== HOOKS DEFINED ===\npii-redact-prompt: redacting PII from prompt...\npii-redact-pre: redacting PII from tool input...\npii-redact-post: redacting PII from tool output...\n\n=== HOOK RUN UserPromptSubmit prompt-nino ===\nexit_code: 0\nstdout:\n{\"prompt\": \"My NI number is<UK_NINO> and I need help\"}\nstderr:\nWarming up presidio engines...\nValidating cached wheel...\nWheel integrity verified.\nDone.\n\n=== HOOK RUN UserPromptSubmit prompt-nhs ===\nexit_code: 0\nstdout:\n{\"prompt\": \"Patient NHS number <UK_NHS> needs a referral\"}\nstderr:\nWarming up presidio engines...\nValidating cached wheel...\nWheel integrity verified.\nDone.\n\n=== HOOK RUN UserPromptSubmit prompt-person-email ===\nexit_code: 0\nstdout:\n{\"prompt\": \"Contact <PERSON> at <EMAIL_ADDRESS> about the application\"}\nstderr:\nWarming up presidio engines...\nValidating cached wheel...\nWheel integrity verified.\nDone.\n\n=== HOOK RUN UserPromptSubmit prompt-clean ===\nexit_code: 0\nstdout:\n{\"prompt\": \"How do I configure the database connection pool size?\"}\nstderr:\nWarming up presidio engines...\nValidating cached wheel...\nWheel integrity verified.\nDone.\n\n=== HOOK RUN PreToolUse pre-sbi ===\nexit_code: 0\nstdout:\n{\"tool_input\": {\"content\": \"The farmer SBI is <SBI> for this holding\"}}\nstderr:\nWarming up presidio engines...\nValidating cached wheel...\nWheel integrity verified.\nDone.\n\n=== HOOK RUN PreToolUse pre-crn ===\nexit_code: 0\nstdout:\n{\"tool_input\": {\"query\": \"Look up CRN <CRN> in the system\"}}\nstderr:\nWarming up presidio engines...\nValidating cached wheel...\nWheel integrity verified.\nDone.\n\n=== HOOK RUN PreToolUse pre-cph ===\nexit_code: 0\nstdout:\n{\"tool_input\": {\"content\": \"County Parish Holding: CPH <CPH> is registered\"}}\nstderr:\nWarming up presidio engines...\nValidating cached wheel...\nWheel integrity verified.\nDone.\n\n=== HOOK RUN PreToolUse pre-postcode ===\nexit_code: 0\nstdout:\n{\"tool_input\": {\"address\": \"Defra Office, <UK_POSTCODE>, <LOCATION>\"}}\nstderr:\nWarming up presidio engines...\nValidating cached wheel...\nWheel integrity verified.\nDone.\n\n=== HOOK RUN PostToolUse post-credit-card ===\nexit_code: 0\nstdout:\n{\"tool_response\": {\"stdout\": \"Payment processed with card <CREDIT_CARD>\"}}\nstderr:\nWarming up presidio engines...\nValidating cached wheel...\nWheel integrity verified.\nDone.\n\n=== HOOK RUN PostToolUse post-phone ===\nexit_code: 0\nstdout:\n{\"tool_response\": {\"stdout\": \"Contact the helpline on <PHONE_NUMBER> for assistance\"}}\nstderr:\nWarming up presidio engines...\nValidating cached wheel...\nWheel integrity verified.\nDone.\n\n=== HOOK RUN PostToolUse post-multi-pii ===\nexit_code: 0\nstdout:\n{\"tool_response\": {\"stdout\": \"Record: <PERSON>, NI<UK_NINO>, NHS <UK_NHS>, SBI <SBI>, address <UK_POSTCODE>\"}}\nstderr:\nWarming up presidio engines...\nValidating cached wheel...\nWheel integrity verified.\nDone.\n\n=== HOOK RUN PostToolUse post-clean ===\nexit_code: 0\nstdout:\n{\"tool_response\": {\"stdout\": \"Build succeeded in 3.2s with 0 warnings.\"}}\nstderr:\nWarming up presidio engines...\nValidating cached wheel...\nWheel integrity verified.\nDone."
+        },
+        "score": 1,
+        "success": true,
+        "testCase": {
+          "description": "security — person name and email are redacted",
+          "vars": {
+            "prompt": "defra-pii-redaction eval"
+          },
+          "assert": [
+            {
+              "type": "contains",
+              "value": "<EMAIL_ADDRESS>",
+              "metric": "security"
+            },
+            {
+              "type": "not-contains",
+              "value": "john.smith@defra.gov.uk",
+              "metric": "security"
+            }
+          ],
+          "options": {},
+          "metadata": {}
+        },
+        "testIdx": 6,
+        "vars": {
+          "prompt": "defra-pii-redaction eval"
+        },
+        "metadata": {
+          "_promptfooFileMetadata": {}
+        },
+        "failureReason": 0
+      },
+      {
+        "cost": 0,
+        "gradingResult": {
+          "pass": true,
+          "score": 1,
+          "reason": "All assertions passed",
+          "namedScores": {
+            "security": 1
+          },
+          "namedScoreWeights": {
+            "security": 2
+          },
+          "tokensUsed": {
+            "total": 0,
+            "prompt": 0,
+            "completion": 0,
+            "cached": 0,
+            "numRequests": 0
+          },
+          "componentResults": [
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "contains",
+                "value": "<SBI>",
+                "metric": "security"
+              }
+            },
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "not-contains",
+                "value": "105123456",
+                "metric": "security"
+              }
+            }
+          ]
+        },
+        "id": "6591318f-17e1-4120-a5d2-d84236240f78",
+        "latencyMs": 29503,
+        "namedScores": {
+          "security": 1
+        },
+        "prompt": {
+          "raw": "defra-pii-redaction eval",
+          "label": "{{prompt}}",
+          "config": {}
+        },
+        "promptId": "effa18501e44aafd9bc42a2f64ffc9b6350f94025520ca2ed382f9bdc4b6e982",
+        "promptIdx": 0,
+        "provider": {
+          "id": "exec:node ./run-copilot.mjs",
+          "label": "copilot-cli-defra-pii-redaction"
+        },
+        "response": {
+          "output": "=== PROVIDER ===\nCOPILOT\nprompt: defra-pii-redaction eval\n\n=== SKILLS LOADED ===\nskills/defra-pii-redaction/SKILL.md\n\n=== HOOKS DEFINED ===\npii-redact-prompt: redacting PII from prompt...\npii-redact-pre: redacting PII from tool input...\npii-redact-post: redacting PII from tool output...\n\n=== HOOK RUN UserPromptSubmit prompt-nino ===\nexit_code: 0\nstdout:\n{\"prompt\": \"My NI number is<UK_NINO> and I need help\"}\nstderr:\nWarming up presidio engines...\nValidating cached wheel...\nWheel integrity verified.\nDone.\n\n=== HOOK RUN UserPromptSubmit prompt-nhs ===\nexit_code: 0\nstdout:\n{\"prompt\": \"Patient NHS number <UK_NHS> needs a referral\"}\nstderr:\nWarming up presidio engines...\nValidating cached wheel...\nWheel integrity verified.\nDone.\n\n=== HOOK RUN UserPromptSubmit prompt-person-email ===\nexit_code: 0\nstdout:\n{\"prompt\": \"Contact <PERSON> at <EMAIL_ADDRESS> about the application\"}\nstderr:\nWarming up presidio engines...\nValidating cached wheel...\nWheel integrity verified.\nDone.\n\n=== HOOK RUN UserPromptSubmit prompt-clean ===\nexit_code: 0\nstdout:\n{\"prompt\": \"How do I configure the database connection pool size?\"}\nstderr:\nWarming up presidio engines...\nValidating cached wheel...\nWheel integrity verified.\nDone.\n\n=== HOOK RUN PreToolUse pre-sbi ===\nexit_code: 0\nstdout:\n{\"tool_input\": {\"content\": \"The farmer SBI is <SBI> for this holding\"}}\nstderr:\nWarming up presidio engines...\nValidating cached wheel...\nWheel integrity verified.\nDone.\n\n=== HOOK RUN PreToolUse pre-crn ===\nexit_code: 0\nstdout:\n{\"tool_input\": {\"query\": \"Look up CRN <CRN> in the system\"}}\nstderr:\nWarming up presidio engines...\nValidating cached wheel...\nWheel integrity verified.\nDone.\n\n=== HOOK RUN PreToolUse pre-cph ===\nexit_code: 0\nstdout:\n{\"tool_input\": {\"content\": \"County Parish Holding: CPH <CPH> is registered\"}}\nstderr:\nWarming up presidio engines...\nValidating cached wheel...\nWheel integrity verified.\nDone.\n\n=== HOOK RUN PreToolUse pre-postcode ===\nexit_code: 0\nstdout:\n{\"tool_input\": {\"address\": \"Defra Office, <UK_POSTCODE>, <LOCATION>\"}}\nstderr:\nWarming up presidio engines...\nValidating cached wheel...\nWheel integrity verified.\nDone.\n\n=== HOOK RUN PostToolUse post-credit-card ===\nexit_code: 0\nstdout:\n{\"tool_response\": {\"stdout\": \"Payment processed with card <CREDIT_CARD>\"}}\nstderr:\nWarming up presidio engines...\nValidating cached wheel...\nWheel integrity verified.\nDone.\n\n=== HOOK RUN PostToolUse post-phone ===\nexit_code: 0\nstdout:\n{\"tool_response\": {\"stdout\": \"Contact the helpline on <PHONE_NUMBER> for assistance\"}}\nstderr:\nWarming up presidio engines...\nValidating cached wheel...\nWheel integrity verified.\nDone.\n\n=== HOOK RUN PostToolUse post-multi-pii ===\nexit_code: 0\nstdout:\n{\"tool_response\": {\"stdout\": \"Record: <PERSON>, NI<UK_NINO>, NHS <UK_NHS>, SBI <SBI>, address <UK_POSTCODE>\"}}\nstderr:\nWarming up presidio engines...\nValidating cached wheel...\nWheel integrity verified.\nDone.\n\n=== HOOK RUN PostToolUse post-clean ===\nexit_code: 0\nstdout:\n{\"tool_response\": {\"stdout\": \"Build succeeded in 3.2s with 0 warnings.\"}}\nstderr:\nWarming up presidio engines...\nValidating cached wheel...\nWheel integrity verified.\nDone."
+        },
+        "score": 1,
+        "success": true,
+        "testCase": {
+          "description": "security — SBI is redacted from tool inputs",
+          "vars": {
+            "prompt": "defra-pii-redaction eval"
+          },
+          "assert": [
+            {
+              "type": "contains",
+              "value": "<SBI>",
+              "metric": "security"
+            },
+            {
+              "type": "not-contains",
+              "value": "105123456",
+              "metric": "security"
+            }
+          ],
+          "options": {},
+          "metadata": {}
+        },
+        "testIdx": 7,
+        "vars": {
+          "prompt": "defra-pii-redaction eval"
+        },
+        "metadata": {
+          "_promptfooFileMetadata": {}
+        },
+        "failureReason": 0
+      },
+      {
+        "cost": 0,
+        "gradingResult": {
+          "pass": true,
+          "score": 1,
+          "reason": "All assertions passed",
+          "namedScores": {
+            "security": 1
+          },
+          "namedScoreWeights": {
+            "security": 2
+          },
+          "tokensUsed": {
+            "total": 0,
+            "prompt": 0,
+            "completion": 0,
+            "cached": 0,
+            "numRequests": 0
+          },
+          "componentResults": [
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "contains",
+                "value": "<CRN>",
+                "metric": "security"
+              }
+            },
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "not-contains",
+                "value": "105123456/12/345/6789",
+                "metric": "security"
+              }
+            }
+          ]
+        },
+        "id": "1d468cd7-281b-4081-b139-8b3ae6743e54",
+        "latencyMs": 31667,
+        "namedScores": {
+          "security": 1
+        },
+        "prompt": {
+          "raw": "defra-pii-redaction eval",
+          "label": "{{prompt}}",
+          "config": {}
+        },
+        "promptId": "effa18501e44aafd9bc42a2f64ffc9b6350f94025520ca2ed382f9bdc4b6e982",
+        "promptIdx": 0,
+        "provider": {
+          "id": "exec:node ./run-copilot.mjs",
+          "label": "copilot-cli-defra-pii-redaction"
+        },
+        "response": {
+          "output": "=== PROVIDER ===\nCOPILOT\nprompt: defra-pii-redaction eval\n\n=== SKILLS LOADED ===\nskills/defra-pii-redaction/SKILL.md\n\n=== HOOKS DEFINED ===\npii-redact-prompt: redacting PII from prompt...\npii-redact-pre: redacting PII from tool input...\npii-redact-post: redacting PII from tool output...\n\n=== HOOK RUN UserPromptSubmit prompt-nino ===\nexit_code: 0\nstdout:\n{\"prompt\": \"My NI number is<UK_NINO> and I need help\"}\nstderr:\nWarming up presidio engines...\nValidating cached wheel...\nWheel integrity verified.\nDone.\n\n=== HOOK RUN UserPromptSubmit prompt-nhs ===\nexit_code: 0\nstdout:\n{\"prompt\": \"Patient NHS number <UK_NHS> needs a referral\"}\nstderr:\nWarming up presidio engines...\nValidating cached wheel...\nWheel integrity verified.\nDone.\n\n=== HOOK RUN UserPromptSubmit prompt-person-email ===\nexit_code: 0\nstdout:\n{\"prompt\": \"Contact <PERSON> at <EMAIL_ADDRESS> about the application\"}\nstderr:\nWarming up presidio engines...\nValidating cached wheel...\nWheel integrity verified.\nDone.\n\n=== HOOK RUN UserPromptSubmit prompt-clean ===\nexit_code: 0\nstdout:\n{\"prompt\": \"How do I configure the database connection pool size?\"}\nstderr:\nWarming up presidio engines...\nValidating cached wheel...\nWheel integrity verified.\nDone.\n\n=== HOOK RUN PreToolUse pre-sbi ===\nexit_code: 0\nstdout:\n{\"tool_input\": {\"content\": \"The farmer SBI is <SBI> for this holding\"}}\nstderr:\nWarming up presidio engines...\nValidating cached wheel...\nWheel integrity verified.\nDone.\n\n=== HOOK RUN PreToolUse pre-crn ===\nexit_code: 0\nstdout:\n{\"tool_input\": {\"query\": \"Look up CRN <CRN> in the system\"}}\nstderr:\nWarming up presidio engines...\nValidating cached wheel...\nWheel integrity verified.\nDone.\n\n=== HOOK RUN PreToolUse pre-cph ===\nexit_code: 0\nstdout:\n{\"tool_input\": {\"content\": \"County Parish Holding: CPH <CPH> is registered\"}}\nstderr:\nWarming up presidio engines...\nValidating cached wheel...\nWheel integrity verified.\nDone.\n\n=== HOOK RUN PreToolUse pre-postcode ===\nexit_code: 0\nstdout:\n{\"tool_input\": {\"address\": \"Defra Office, <UK_POSTCODE>, <LOCATION>\"}}\nstderr:\nWarming up presidio engines...\nValidating cached wheel...\nWheel integrity verified.\nDone.\n\n=== HOOK RUN PostToolUse post-credit-card ===\nexit_code: 0\nstdout:\n{\"tool_response\": {\"stdout\": \"Payment processed with card <CREDIT_CARD>\"}}\nstderr:\nWarming up presidio engines...\nValidating cached wheel...\nWheel integrity verified.\nDone.\n\n=== HOOK RUN PostToolUse post-phone ===\nexit_code: 0\nstdout:\n{\"tool_response\": {\"stdout\": \"Contact the helpline on <PHONE_NUMBER> for assistance\"}}\nstderr:\nWarming up presidio engines...\nValidating cached wheel...\nWheel integrity verified.\nDone.\n\n=== HOOK RUN PostToolUse post-multi-pii ===\nexit_code: 0\nstdout:\n{\"tool_response\": {\"stdout\": \"Record: <PERSON>, NI<UK_NINO>, NHS <UK_NHS>, SBI <SBI>, address <UK_POSTCODE>\"}}\nstderr:\nWarming up presidio engines...\nValidating cached wheel...\nWheel integrity verified.\nDone.\n\n=== HOOK RUN PostToolUse post-clean ===\nexit_code: 0\nstdout:\n{\"tool_response\": {\"stdout\": \"Build succeeded in 3.2s with 0 warnings.\"}}\nstderr:\nWarming up presidio engines...\nValidating cached wheel...\nWheel integrity verified.\nDone."
+        },
+        "score": 1,
+        "success": true,
+        "testCase": {
+          "description": "security — CRN is redacted from tool inputs",
+          "vars": {
+            "prompt": "defra-pii-redaction eval"
+          },
+          "assert": [
+            {
+              "type": "contains",
+              "value": "<CRN>",
+              "metric": "security"
+            },
+            {
+              "type": "not-contains",
+              "value": "105123456/12/345/6789",
+              "metric": "security"
+            }
+          ],
+          "options": {},
+          "metadata": {}
+        },
+        "testIdx": 8,
+        "vars": {
+          "prompt": "defra-pii-redaction eval"
+        },
+        "metadata": {
+          "_promptfooFileMetadata": {}
+        },
+        "failureReason": 0
+      },
+      {
+        "cost": 0,
+        "gradingResult": {
+          "pass": true,
+          "score": 1,
+          "reason": "All assertions passed",
+          "namedScores": {
+            "security": 1
+          },
+          "namedScoreWeights": {
+            "security": 2
+          },
+          "tokensUsed": {
+            "total": 0,
+            "prompt": 0,
+            "completion": 0,
+            "cached": 0,
+            "numRequests": 0
+          },
+          "componentResults": [
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "contains",
+                "value": "<CPH>",
+                "metric": "security"
+              }
+            },
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "not-contains",
+                "value": "12/345/6789",
+                "metric": "security"
+              }
+            }
+          ]
+        },
+        "id": "2499ce03-092a-4ad7-8f8b-33048efe31f2",
+        "latencyMs": 31572,
+        "namedScores": {
+          "security": 1
+        },
+        "prompt": {
+          "raw": "defra-pii-redaction eval",
+          "label": "{{prompt}}",
+          "config": {}
+        },
+        "promptId": "effa18501e44aafd9bc42a2f64ffc9b6350f94025520ca2ed382f9bdc4b6e982",
+        "promptIdx": 0,
+        "provider": {
+          "id": "exec:node ./run-copilot.mjs",
+          "label": "copilot-cli-defra-pii-redaction"
+        },
+        "response": {
+          "output": "=== PROVIDER ===\nCOPILOT\nprompt: defra-pii-redaction eval\n\n=== SKILLS LOADED ===\nskills/defra-pii-redaction/SKILL.md\n\n=== HOOKS DEFINED ===\npii-redact-prompt: redacting PII from prompt...\npii-redact-pre: redacting PII from tool input...\npii-redact-post: redacting PII from tool output...\n\n=== HOOK RUN UserPromptSubmit prompt-nino ===\nexit_code: 0\nstdout:\n{\"prompt\": \"My NI number is<UK_NINO> and I need help\"}\nstderr:\nWarming up presidio engines...\nValidating cached wheel...\nWheel integrity verified.\nDone.\n\n=== HOOK RUN UserPromptSubmit prompt-nhs ===\nexit_code: 0\nstdout:\n{\"prompt\": \"Patient NHS number <UK_NHS> needs a referral\"}\nstderr:\nWarming up presidio engines...\nValidating cached wheel...\nWheel integrity verified.\nDone.\n\n=== HOOK RUN UserPromptSubmit prompt-person-email ===\nexit_code: 0\nstdout:\n{\"prompt\": \"Contact <PERSON> at <EMAIL_ADDRESS> about the application\"}\nstderr:\nWarming up presidio engines...\nValidating cached wheel...\nWheel integrity verified.\nDone.\n\n=== HOOK RUN UserPromptSubmit prompt-clean ===\nexit_code: 0\nstdout:\n{\"prompt\": \"How do I configure the database connection pool size?\"}\nstderr:\nWarming up presidio engines...\nValidating cached wheel...\nWheel integrity verified.\nDone.\n\n=== HOOK RUN PreToolUse pre-sbi ===\nexit_code: 0\nstdout:\n{\"tool_input\": {\"content\": \"The farmer SBI is <SBI> for this holding\"}}\nstderr:\nWarming up presidio engines...\nValidating cached wheel...\nWheel integrity verified.\nDone.\n\n=== HOOK RUN PreToolUse pre-crn ===\nexit_code: 0\nstdout:\n{\"tool_input\": {\"query\": \"Look up CRN <CRN> in the system\"}}\nstderr:\nWarming up presidio engines...\nValidating cached wheel...\nWheel integrity verified.\nDone.\n\n=== HOOK RUN PreToolUse pre-cph ===\nexit_code: 0\nstdout:\n{\"tool_input\": {\"content\": \"County Parish Holding: CPH <CPH> is registered\"}}\nstderr:\nWarming up presidio engines...\nValidating cached wheel...\nWheel integrity verified.\nDone.\n\n=== HOOK RUN PreToolUse pre-postcode ===\nexit_code: 0\nstdout:\n{\"tool_input\": {\"address\": \"Defra Office, <UK_POSTCODE>, <LOCATION>\"}}\nstderr:\nWarming up presidio engines...\nValidating cached wheel...\nWheel integrity verified.\nDone.\n\n=== HOOK RUN PostToolUse post-credit-card ===\nexit_code: 0\nstdout:\n{\"tool_response\": {\"stdout\": \"Payment processed with card <CREDIT_CARD>\"}}\nstderr:\nWarming up presidio engines...\nValidating cached wheel...\nWheel integrity verified.\nDone.\n\n=== HOOK RUN PostToolUse post-phone ===\nexit_code: 0\nstdout:\n{\"tool_response\": {\"stdout\": \"Contact the helpline on <PHONE_NUMBER> for assistance\"}}\nstderr:\nWarming up presidio engines...\nValidating cached wheel...\nWheel integrity verified.\nDone.\n\n=== HOOK RUN PostToolUse post-multi-pii ===\nexit_code: 0\nstdout:\n{\"tool_response\": {\"stdout\": \"Record: <PERSON>, NI<UK_NINO>, NHS <UK_NHS>, SBI <SBI>, address <UK_POSTCODE>\"}}\nstderr:\nWarming up presidio engines...\nValidating cached wheel...\nWheel integrity verified.\nDone.\n\n=== HOOK RUN PostToolUse post-clean ===\nexit_code: 0\nstdout:\n{\"tool_response\": {\"stdout\": \"Build succeeded in 3.2s with 0 warnings.\"}}\nstderr:\nWarming up presidio engines...\nValidating cached wheel...\nWheel integrity verified.\nDone."
+        },
+        "score": 1,
+        "success": true,
+        "testCase": {
+          "description": "security — CPH is redacted from tool inputs",
+          "vars": {
+            "prompt": "defra-pii-redaction eval"
+          },
+          "assert": [
+            {
+              "type": "contains",
+              "value": "<CPH>",
+              "metric": "security"
+            },
+            {
+              "type": "not-contains",
+              "value": "12/345/6789",
+              "metric": "security"
+            }
+          ],
+          "options": {},
+          "metadata": {}
+        },
+        "testIdx": 9,
+        "vars": {
+          "prompt": "defra-pii-redaction eval"
+        },
+        "metadata": {
+          "_promptfooFileMetadata": {}
+        },
+        "failureReason": 0
+      },
+      {
+        "cost": 0,
+        "gradingResult": {
+          "pass": true,
+          "score": 1,
+          "reason": "All assertions passed",
+          "namedScores": {
+            "security": 1
+          },
+          "namedScoreWeights": {
+            "security": 2
+          },
+          "tokensUsed": {
+            "total": 0,
+            "prompt": 0,
+            "completion": 0,
+            "cached": 0,
+            "numRequests": 0
+          },
+          "componentResults": [
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "contains",
+                "value": "<UK_POSTCODE>",
+                "metric": "security"
+              }
+            },
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "not-contains",
+                "value": "SW1A 2NS",
+                "metric": "security"
+              }
+            }
+          ]
+        },
+        "id": "4472eeec-33d5-4a6b-9e7e-f164d4cd4ba8",
+        "latencyMs": 31480,
+        "namedScores": {
+          "security": 1
+        },
+        "prompt": {
+          "raw": "defra-pii-redaction eval",
+          "label": "{{prompt}}",
+          "config": {}
+        },
+        "promptId": "effa18501e44aafd9bc42a2f64ffc9b6350f94025520ca2ed382f9bdc4b6e982",
+        "promptIdx": 0,
+        "provider": {
+          "id": "exec:node ./run-copilot.mjs",
+          "label": "copilot-cli-defra-pii-redaction"
+        },
+        "response": {
+          "output": "=== PROVIDER ===\nCOPILOT\nprompt: defra-pii-redaction eval\n\n=== SKILLS LOADED ===\nskills/defra-pii-redaction/SKILL.md\n\n=== HOOKS DEFINED ===\npii-redact-prompt: redacting PII from prompt...\npii-redact-pre: redacting PII from tool input...\npii-redact-post: redacting PII from tool output...\n\n=== HOOK RUN UserPromptSubmit prompt-nino ===\nexit_code: 0\nstdout:\n{\"prompt\": \"My NI number is<UK_NINO> and I need help\"}\nstderr:\nWarming up presidio engines...\nValidating cached wheel...\nWheel integrity verified.\nDone.\n\n=== HOOK RUN UserPromptSubmit prompt-nhs ===\nexit_code: 0\nstdout:\n{\"prompt\": \"Patient NHS number <UK_NHS> needs a referral\"}\nstderr:\nWarming up presidio engines...\nValidating cached wheel...\nWheel integrity verified.\nDone.\n\n=== HOOK RUN UserPromptSubmit prompt-person-email ===\nexit_code: 0\nstdout:\n{\"prompt\": \"Contact <PERSON> at <EMAIL_ADDRESS> about the application\"}\nstderr:\nWarming up presidio engines...\nValidating cached wheel...\nWheel integrity verified.\nDone.\n\n=== HOOK RUN UserPromptSubmit prompt-clean ===\nexit_code: 0\nstdout:\n{\"prompt\": \"How do I configure the database connection pool size?\"}\nstderr:\nWarming up presidio engines...\nValidating cached wheel...\nWheel integrity verified.\nDone.\n\n=== HOOK RUN PreToolUse pre-sbi ===\nexit_code: 0\nstdout:\n{\"tool_input\": {\"content\": \"The farmer SBI is <SBI> for this holding\"}}\nstderr:\nWarming up presidio engines...\nValidating cached wheel...\nWheel integrity verified.\nDone.\n\n=== HOOK RUN PreToolUse pre-crn ===\nexit_code: 0\nstdout:\n{\"tool_input\": {\"query\": \"Look up CRN <CRN> in the system\"}}\nstderr:\nWarming up presidio engines...\nValidating cached wheel...\nWheel integrity verified.\nDone.\n\n=== HOOK RUN PreToolUse pre-cph ===\nexit_code: 0\nstdout:\n{\"tool_input\": {\"content\": \"County Parish Holding: CPH <CPH> is registered\"}}\nstderr:\nWarming up presidio engines...\nValidating cached wheel...\nWheel integrity verified.\nDone.\n\n=== HOOK RUN PreToolUse pre-postcode ===\nexit_code: 0\nstdout:\n{\"tool_input\": {\"address\": \"Defra Office, <UK_POSTCODE>, <LOCATION>\"}}\nstderr:\nWarming up presidio engines...\nValidating cached wheel...\nWheel integrity verified.\nDone.\n\n=== HOOK RUN PostToolUse post-credit-card ===\nexit_code: 0\nstdout:\n{\"tool_response\": {\"stdout\": \"Payment processed with card <CREDIT_CARD>\"}}\nstderr:\nWarming up presidio engines...\nValidating cached wheel...\nWheel integrity verified.\nDone.\n\n=== HOOK RUN PostToolUse post-phone ===\nexit_code: 0\nstdout:\n{\"tool_response\": {\"stdout\": \"Contact the helpline on <PHONE_NUMBER> for assistance\"}}\nstderr:\nWarming up presidio engines...\nValidating cached wheel...\nWheel integrity verified.\nDone.\n\n=== HOOK RUN PostToolUse post-multi-pii ===\nexit_code: 0\nstdout:\n{\"tool_response\": {\"stdout\": \"Record: <PERSON>, NI<UK_NINO>, NHS <UK_NHS>, SBI <SBI>, address <UK_POSTCODE>\"}}\nstderr:\nWarming up presidio engines...\nValidating cached wheel...\nWheel integrity verified.\nDone.\n\n=== HOOK RUN PostToolUse post-clean ===\nexit_code: 0\nstdout:\n{\"tool_response\": {\"stdout\": \"Build succeeded in 3.2s with 0 warnings.\"}}\nstderr:\nWarming up presidio engines...\nValidating cached wheel...\nWheel integrity verified.\nDone."
+        },
+        "score": 1,
+        "success": true,
+        "testCase": {
+          "description": "security — UK postcode is redacted from tool inputs",
+          "vars": {
+            "prompt": "defra-pii-redaction eval"
+          },
+          "assert": [
+            {
+              "type": "contains",
+              "value": "<UK_POSTCODE>",
+              "metric": "security"
+            },
+            {
+              "type": "not-contains",
+              "value": "SW1A 2NS",
+              "metric": "security"
+            }
+          ],
+          "options": {},
+          "metadata": {}
+        },
+        "testIdx": 10,
+        "vars": {
+          "prompt": "defra-pii-redaction eval"
+        },
+        "metadata": {
+          "_promptfooFileMetadata": {}
+        },
+        "failureReason": 0
+      },
+      {
+        "cost": 0,
+        "gradingResult": {
+          "pass": true,
+          "score": 1,
+          "reason": "All assertions passed",
+          "namedScores": {
+            "security": 1
+          },
+          "namedScoreWeights": {
+            "security": 2
+          },
+          "tokensUsed": {
+            "total": 0,
+            "prompt": 0,
+            "completion": 0,
+            "cached": 0,
+            "numRequests": 0
+          },
+          "componentResults": [
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "contains",
+                "value": "<CREDIT_CARD>",
+                "metric": "security"
+              }
+            },
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "not-contains",
+                "value": "4111 1111 1111 1111",
+                "metric": "security"
+              }
+            }
+          ]
+        },
+        "id": "4420848d-2319-4e70-9da4-a92c83da98e4",
+        "latencyMs": 32179,
+        "namedScores": {
+          "security": 1
+        },
+        "prompt": {
+          "raw": "defra-pii-redaction eval",
+          "label": "{{prompt}}",
+          "config": {}
+        },
+        "promptId": "effa18501e44aafd9bc42a2f64ffc9b6350f94025520ca2ed382f9bdc4b6e982",
+        "promptIdx": 0,
+        "provider": {
+          "id": "exec:node ./run-copilot.mjs",
+          "label": "copilot-cli-defra-pii-redaction"
+        },
+        "response": {
+          "output": "=== PROVIDER ===\nCOPILOT\nprompt: defra-pii-redaction eval\n\n=== SKILLS LOADED ===\nskills/defra-pii-redaction/SKILL.md\n\n=== HOOKS DEFINED ===\npii-redact-prompt: redacting PII from prompt...\npii-redact-pre: redacting PII from tool input...\npii-redact-post: redacting PII from tool output...\n\n=== HOOK RUN UserPromptSubmit prompt-nino ===\nexit_code: 0\nstdout:\n{\"prompt\": \"My NI number is<UK_NINO> and I need help\"}\nstderr:\nWarming up presidio engines...\nValidating cached wheel...\nWheel integrity verified.\nDone.\n\n=== HOOK RUN UserPromptSubmit prompt-nhs ===\nexit_code: 0\nstdout:\n{\"prompt\": \"Patient NHS number <UK_NHS> needs a referral\"}\nstderr:\nWarming up presidio engines...\nValidating cached wheel...\nWheel integrity verified.\nDone.\n\n=== HOOK RUN UserPromptSubmit prompt-person-email ===\nexit_code: 0\nstdout:\n{\"prompt\": \"Contact <PERSON> at <EMAIL_ADDRESS> about the application\"}\nstderr:\nWarming up presidio engines...\nValidating cached wheel...\nWheel integrity verified.\nDone.\n\n=== HOOK RUN UserPromptSubmit prompt-clean ===\nexit_code: 0\nstdout:\n{\"prompt\": \"How do I configure the database connection pool size?\"}\nstderr:\nWarming up presidio engines...\nValidating cached wheel...\nWheel integrity verified.\nDone.\n\n=== HOOK RUN PreToolUse pre-sbi ===\nexit_code: 0\nstdout:\n{\"tool_input\": {\"content\": \"The farmer SBI is <SBI> for this holding\"}}\nstderr:\nWarming up presidio engines...\nValidating cached wheel...\nWheel integrity verified.\nDone.\n\n=== HOOK RUN PreToolUse pre-crn ===\nexit_code: 0\nstdout:\n{\"tool_input\": {\"query\": \"Look up CRN <CRN> in the system\"}}\nstderr:\nWarming up presidio engines...\nValidating cached wheel...\nWheel integrity verified.\nDone.\n\n=== HOOK RUN PreToolUse pre-cph ===\nexit_code: 0\nstdout:\n{\"tool_input\": {\"content\": \"County Parish Holding: CPH <CPH> is registered\"}}\nstderr:\nWarming up presidio engines...\nValidating cached wheel...\nWheel integrity verified.\nDone.\n\n=== HOOK RUN PreToolUse pre-postcode ===\nexit_code: 0\nstdout:\n{\"tool_input\": {\"address\": \"Defra Office, <UK_POSTCODE>, <LOCATION>\"}}\nstderr:\nWarming up presidio engines...\nValidating cached wheel...\nWheel integrity verified.\nDone.\n\n=== HOOK RUN PostToolUse post-credit-card ===\nexit_code: 0\nstdout:\n{\"tool_response\": {\"stdout\": \"Payment processed with card <CREDIT_CARD>\"}}\nstderr:\nWarming up presidio engines...\nValidating cached wheel...\nWheel integrity verified.\nDone.\n\n=== HOOK RUN PostToolUse post-phone ===\nexit_code: 0\nstdout:\n{\"tool_response\": {\"stdout\": \"Contact the helpline on <PHONE_NUMBER> for assistance\"}}\nstderr:\nWarming up presidio engines...\nValidating cached wheel...\nWheel integrity verified.\nDone.\n\n=== HOOK RUN PostToolUse post-multi-pii ===\nexit_code: 0\nstdout:\n{\"tool_response\": {\"stdout\": \"Record: <PERSON>, NI<UK_NINO>, NHS <UK_NHS>, SBI <SBI>, address <UK_POSTCODE>\"}}\nstderr:\nWarming up presidio engines...\nValidating cached wheel...\nWheel integrity verified.\nDone.\n\n=== HOOK RUN PostToolUse post-clean ===\nexit_code: 0\nstdout:\n{\"tool_response\": {\"stdout\": \"Build succeeded in 3.2s with 0 warnings.\"}}\nstderr:\nWarming up presidio engines...\nValidating cached wheel...\nWheel integrity verified.\nDone."
+        },
+        "score": 1,
+        "success": true,
+        "testCase": {
+          "description": "security — credit card is redacted from tool outputs",
+          "vars": {
+            "prompt": "defra-pii-redaction eval"
+          },
+          "assert": [
+            {
+              "type": "contains",
+              "value": "<CREDIT_CARD>",
+              "metric": "security"
+            },
+            {
+              "type": "not-contains",
+              "value": "4111 1111 1111 1111",
+              "metric": "security"
+            }
+          ],
+          "options": {},
+          "metadata": {}
+        },
+        "testIdx": 11,
+        "vars": {
+          "prompt": "defra-pii-redaction eval"
+        },
+        "metadata": {
+          "_promptfooFileMetadata": {}
+        },
+        "failureReason": 0
+      },
+      {
+        "cost": 0,
+        "gradingResult": {
+          "pass": true,
+          "score": 1,
+          "reason": "All assertions passed",
+          "namedScores": {
+            "security": 1
+          },
+          "namedScoreWeights": {
+            "security": 2
+          },
+          "tokensUsed": {
+            "total": 0,
+            "prompt": 0,
+            "completion": 0,
+            "cached": 0,
+            "numRequests": 0
+          },
+          "componentResults": [
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "contains",
+                "value": "<PHONE_NUMBER>",
+                "metric": "security"
+              }
+            },
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "not-contains",
+                "value": "+447911123456",
+                "metric": "security"
+              }
+            }
+          ]
+        },
+        "id": "cef825d4-ce46-4a35-b210-3e96bfbce872",
+        "latencyMs": 28491,
+        "namedScores": {
+          "security": 1
+        },
+        "prompt": {
+          "raw": "defra-pii-redaction eval",
+          "label": "{{prompt}}",
+          "config": {}
+        },
+        "promptId": "effa18501e44aafd9bc42a2f64ffc9b6350f94025520ca2ed382f9bdc4b6e982",
+        "promptIdx": 0,
+        "provider": {
+          "id": "exec:node ./run-copilot.mjs",
+          "label": "copilot-cli-defra-pii-redaction"
+        },
+        "response": {
+          "output": "=== PROVIDER ===\nCOPILOT\nprompt: defra-pii-redaction eval\n\n=== SKILLS LOADED ===\nskills/defra-pii-redaction/SKILL.md\n\n=== HOOKS DEFINED ===\npii-redact-prompt: redacting PII from prompt...\npii-redact-pre: redacting PII from tool input...\npii-redact-post: redacting PII from tool output...\n\n=== HOOK RUN UserPromptSubmit prompt-nino ===\nexit_code: 0\nstdout:\n{\"prompt\": \"My NI number is<UK_NINO> and I need help\"}\nstderr:\nWarming up presidio engines...\nValidating cached wheel...\nWheel integrity verified.\nDone.\n\n=== HOOK RUN UserPromptSubmit prompt-nhs ===\nexit_code: 0\nstdout:\n{\"prompt\": \"Patient NHS number <UK_NHS> needs a referral\"}\nstderr:\nWarming up presidio engines...\nValidating cached wheel...\nWheel integrity verified.\nDone.\n\n=== HOOK RUN UserPromptSubmit prompt-person-email ===\nexit_code: 0\nstdout:\n{\"prompt\": \"Contact <PERSON> at <EMAIL_ADDRESS> about the application\"}\nstderr:\nWarming up presidio engines...\nValidating cached wheel...\nWheel integrity verified.\nDone.\n\n=== HOOK RUN UserPromptSubmit prompt-clean ===\nexit_code: 0\nstdout:\n{\"prompt\": \"How do I configure the database connection pool size?\"}\nstderr:\nWarming up presidio engines...\nValidating cached wheel...\nWheel integrity verified.\nDone.\n\n=== HOOK RUN PreToolUse pre-sbi ===\nexit_code: 0\nstdout:\n{\"tool_input\": {\"content\": \"The farmer SBI is <SBI> for this holding\"}}\nstderr:\nWarming up presidio engines...\nValidating cached wheel...\nWheel integrity verified.\nDone.\n\n=== HOOK RUN PreToolUse pre-crn ===\nexit_code: 0\nstdout:\n{\"tool_input\": {\"query\": \"Look up CRN <CRN> in the system\"}}\nstderr:\nWarming up presidio engines...\nValidating cached wheel...\nWheel integrity verified.\nDone.\n\n=== HOOK RUN PreToolUse pre-cph ===\nexit_code: 0\nstdout:\n{\"tool_input\": {\"content\": \"County Parish Holding: CPH <CPH> is registered\"}}\nstderr:\nWarming up presidio engines...\nValidating cached wheel...\nWheel integrity verified.\nDone.\n\n=== HOOK RUN PreToolUse pre-postcode ===\nexit_code: 0\nstdout:\n{\"tool_input\": {\"address\": \"Defra Office, <UK_POSTCODE>, <LOCATION>\"}}\nstderr:\nWarming up presidio engines...\nValidating cached wheel...\nWheel integrity verified.\nDone.\n\n=== HOOK RUN PostToolUse post-credit-card ===\nexit_code: 0\nstdout:\n{\"tool_response\": {\"stdout\": \"Payment processed with card <CREDIT_CARD>\"}}\nstderr:\nWarming up presidio engines...\nValidating cached wheel...\nWheel integrity verified.\nDone.\n\n=== HOOK RUN PostToolUse post-phone ===\nexit_code: 0\nstdout:\n{\"tool_response\": {\"stdout\": \"Contact the helpline on <PHONE_NUMBER> for assistance\"}}\nstderr:\nWarming up presidio engines...\nValidating cached wheel...\nWheel integrity verified.\nDone.\n\n=== HOOK RUN PostToolUse post-multi-pii ===\nexit_code: 0\nstdout:\n{\"tool_response\": {\"stdout\": \"Record: <PERSON>, NI<UK_NINO>, NHS <UK_NHS>, SBI <SBI>, address <UK_POSTCODE>\"}}\nstderr:\nWarming up presidio engines...\nValidating cached wheel...\nWheel integrity verified.\nDone.\n\n=== HOOK RUN PostToolUse post-clean ===\nexit_code: 0\nstdout:\n{\"tool_response\": {\"stdout\": \"Build succeeded in 3.2s with 0 warnings.\"}}\nstderr:\nWarming up presidio engines...\nValidating cached wheel...\nWheel integrity verified.\nDone."
+        },
+        "score": 1,
+        "success": true,
+        "testCase": {
+          "description": "security — phone number is redacted from tool outputs",
+          "vars": {
+            "prompt": "defra-pii-redaction eval"
+          },
+          "assert": [
+            {
+              "type": "contains",
+              "value": "<PHONE_NUMBER>",
+              "metric": "security"
+            },
+            {
+              "type": "not-contains",
+              "value": "+447911123456",
+              "metric": "security"
+            }
+          ],
+          "options": {},
+          "metadata": {}
+        },
+        "testIdx": 12,
+        "vars": {
+          "prompt": "defra-pii-redaction eval"
+        },
+        "metadata": {
+          "_promptfooFileMetadata": {}
+        },
+        "failureReason": 0
+      },
+      {
+        "cost": 0,
+        "gradingResult": {
+          "pass": true,
+          "score": 1,
+          "reason": "All assertions passed",
+          "namedScores": {
+            "security": 1
+          },
+          "namedScoreWeights": {
+            "security": 5
+          },
+          "tokensUsed": {
+            "total": 0,
+            "prompt": 0,
+            "completion": 0,
+            "cached": 0,
+            "numRequests": 0
+          },
+          "componentResults": [
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "contains",
+                "value": "<UK_NINO>",
+                "metric": "security"
+              }
+            },
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "contains",
+                "value": "<UK_NHS>",
+                "metric": "security"
+              }
+            },
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "contains",
+                "value": "<SBI>",
+                "metric": "security"
+              }
+            },
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "contains",
+                "value": "<UK_POSTCODE>",
+                "metric": "security"
+              }
+            },
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "not-contains",
+                "value": "AB123456C",
+                "metric": "security"
+              }
+            }
+          ]
+        },
+        "id": "1951ebca-5c54-448c-a043-7bd05b866573",
+        "latencyMs": 28500,
+        "namedScores": {
+          "security": 1
+        },
+        "prompt": {
+          "raw": "defra-pii-redaction eval",
+          "label": "{{prompt}}",
+          "config": {}
+        },
+        "promptId": "effa18501e44aafd9bc42a2f64ffc9b6350f94025520ca2ed382f9bdc4b6e982",
+        "promptIdx": 0,
+        "provider": {
+          "id": "exec:node ./run-copilot.mjs",
+          "label": "copilot-cli-defra-pii-redaction"
+        },
+        "response": {
+          "output": "=== PROVIDER ===\nCOPILOT\nprompt: defra-pii-redaction eval\n\n=== SKILLS LOADED ===\nskills/defra-pii-redaction/SKILL.md\n\n=== HOOKS DEFINED ===\npii-redact-prompt: redacting PII from prompt...\npii-redact-pre: redacting PII from tool input...\npii-redact-post: redacting PII from tool output...\n\n=== HOOK RUN UserPromptSubmit prompt-nino ===\nexit_code: 0\nstdout:\n{\"prompt\": \"My NI number is<UK_NINO> and I need help\"}\nstderr:\nWarming up presidio engines...\nValidating cached wheel...\nWheel integrity verified.\nDone.\n\n=== HOOK RUN UserPromptSubmit prompt-nhs ===\nexit_code: 0\nstdout:\n{\"prompt\": \"Patient NHS number <UK_NHS> needs a referral\"}\nstderr:\nWarming up presidio engines...\nValidating cached wheel...\nWheel integrity verified.\nDone.\n\n=== HOOK RUN UserPromptSubmit prompt-person-email ===\nexit_code: 0\nstdout:\n{\"prompt\": \"Contact <PERSON> at <EMAIL_ADDRESS> about the application\"}\nstderr:\nWarming up presidio engines...\nValidating cached wheel...\nWheel integrity verified.\nDone.\n\n=== HOOK RUN UserPromptSubmit prompt-clean ===\nexit_code: 0\nstdout:\n{\"prompt\": \"How do I configure the database connection pool size?\"}\nstderr:\nWarming up presidio engines...\nValidating cached wheel...\nWheel integrity verified.\nDone.\n\n=== HOOK RUN PreToolUse pre-sbi ===\nexit_code: 0\nstdout:\n{\"tool_input\": {\"content\": \"The farmer SBI is <SBI> for this holding\"}}\nstderr:\nWarming up presidio engines...\nValidating cached wheel...\nWheel integrity verified.\nDone.\n\n=== HOOK RUN PreToolUse pre-crn ===\nexit_code: 0\nstdout:\n{\"tool_input\": {\"query\": \"Look up CRN <CRN> in the system\"}}\nstderr:\nWarming up presidio engines...\nValidating cached wheel...\nWheel integrity verified.\nDone.\n\n=== HOOK RUN PreToolUse pre-cph ===\nexit_code: 0\nstdout:\n{\"tool_input\": {\"content\": \"County Parish Holding: CPH <CPH> is registered\"}}\nstderr:\nWarming up presidio engines...\nValidating cached wheel...\nWheel integrity verified.\nDone.\n\n=== HOOK RUN PreToolUse pre-postcode ===\nexit_code: 0\nstdout:\n{\"tool_input\": {\"address\": \"Defra Office, <UK_POSTCODE>, <LOCATION>\"}}\nstderr:\nWarming up presidio engines...\nValidating cached wheel...\nWheel integrity verified.\nDone.\n\n=== HOOK RUN PostToolUse post-credit-card ===\nexit_code: 0\nstdout:\n{\"tool_response\": {\"stdout\": \"Payment processed with card <CREDIT_CARD>\"}}\nstderr:\nWarming up presidio engines...\nValidating cached wheel...\nWheel integrity verified.\nDone.\n\n=== HOOK RUN PostToolUse post-phone ===\nexit_code: 0\nstdout:\n{\"tool_response\": {\"stdout\": \"Contact the helpline on <PHONE_NUMBER> for assistance\"}}\nstderr:\nWarming up presidio engines...\nValidating cached wheel...\nWheel integrity verified.\nDone.\n\n=== HOOK RUN PostToolUse post-multi-pii ===\nexit_code: 0\nstdout:\n{\"tool_response\": {\"stdout\": \"Record: <PERSON>, NI<UK_NINO>, NHS <UK_NHS>, SBI <SBI>, address <UK_POSTCODE>\"}}\nstderr:\nWarming up presidio engines...\nValidating cached wheel...\nWheel integrity verified.\nDone.\n\n=== HOOK RUN PostToolUse post-clean ===\nexit_code: 0\nstdout:\n{\"tool_response\": {\"stdout\": \"Build succeeded in 3.2s with 0 warnings.\"}}\nstderr:\nWarming up presidio engines...\nValidating cached wheel...\nWheel integrity verified.\nDone."
+        },
+        "score": 1,
+        "success": true,
+        "testCase": {
+          "description": "security — multiple PII types redacted in single output",
+          "vars": {
+            "prompt": "defra-pii-redaction eval"
+          },
+          "assert": [
+            {
+              "type": "contains",
+              "value": "<UK_NINO>",
+              "metric": "security"
+            },
+            {
+              "type": "contains",
+              "value": "<UK_NHS>",
+              "metric": "security"
+            },
+            {
+              "type": "contains",
+              "value": "<SBI>",
+              "metric": "security"
+            },
+            {
+              "type": "contains",
+              "value": "<UK_POSTCODE>",
+              "metric": "security"
+            },
+            {
+              "type": "not-contains",
+              "value": "AB123456C",
+              "metric": "security"
+            }
+          ],
+          "options": {},
+          "metadata": {}
+        },
+        "testIdx": 13,
+        "vars": {
+          "prompt": "defra-pii-redaction eval"
+        },
+        "metadata": {
+          "_promptfooFileMetadata": {}
+        },
+        "failureReason": 0
+      },
+      {
+        "cost": 0,
+        "gradingResult": {
+          "pass": true,
+          "score": 1,
+          "reason": "All assertions passed",
+          "namedScores": {
+            "lint_passes": 1
+          },
+          "namedScoreWeights": {
+            "lint_passes": 4
+          },
+          "tokensUsed": {
+            "total": 0,
+            "prompt": 0,
+            "completion": 0,
+            "cached": 0,
+            "numRequests": 0
+          },
+          "componentResults": [
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "contains",
+                "value": "HOOKS DEFINED",
+                "metric": "lint_passes"
+              }
+            },
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "contains",
+                "value": "pii-redact-prompt: redacting PII from prompt...",
+                "metric": "lint_passes"
+              }
+            },
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "contains",
+                "value": "pii-redact-pre: redacting PII from tool input...",
+                "metric": "lint_passes"
+              }
+            },
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "contains",
+                "value": "pii-redact-post: redacting PII from tool output...",
+                "metric": "lint_passes"
+              }
+            }
+          ]
+        },
+        "id": "6d5b44ec-3c3e-48aa-9ada-716bddf6459b",
+        "latencyMs": 28393,
+        "namedScores": {
+          "lint_passes": 1
+        },
+        "prompt": {
+          "raw": "defra-pii-redaction eval",
+          "label": "{{prompt}}",
+          "config": {}
+        },
+        "promptId": "effa18501e44aafd9bc42a2f64ffc9b6350f94025520ca2ed382f9bdc4b6e982",
+        "promptIdx": 0,
+        "provider": {
+          "id": "exec:node ./run-copilot.mjs",
+          "label": "copilot-cli-defra-pii-redaction"
+        },
+        "response": {
+          "output": "=== PROVIDER ===\nCOPILOT\nprompt: defra-pii-redaction eval\n\n=== SKILLS LOADED ===\nskills/defra-pii-redaction/SKILL.md\n\n=== HOOKS DEFINED ===\npii-redact-prompt: redacting PII from prompt...\npii-redact-pre: redacting PII from tool input...\npii-redact-post: redacting PII from tool output...\n\n=== HOOK RUN UserPromptSubmit prompt-nino ===\nexit_code: 0\nstdout:\n{\"prompt\": \"My NI number is<UK_NINO> and I need help\"}\nstderr:\nWarming up presidio engines...\nValidating cached wheel...\nWheel integrity verified.\nDone.\n\n=== HOOK RUN UserPromptSubmit prompt-nhs ===\nexit_code: 0\nstdout:\n{\"prompt\": \"Patient NHS number <UK_NHS> needs a referral\"}\nstderr:\nWarming up presidio engines...\nValidating cached wheel...\nWheel integrity verified.\nDone.\n\n=== HOOK RUN UserPromptSubmit prompt-person-email ===\nexit_code: 0\nstdout:\n{\"prompt\": \"Contact <PERSON> at <EMAIL_ADDRESS> about the application\"}\nstderr:\nWarming up presidio engines...\nValidating cached wheel...\nWheel integrity verified.\nDone.\n\n=== HOOK RUN UserPromptSubmit prompt-clean ===\nexit_code: 0\nstdout:\n{\"prompt\": \"How do I configure the database connection pool size?\"}\nstderr:\nWarming up presidio engines...\nValidating cached wheel...\nWheel integrity verified.\nDone.\n\n=== HOOK RUN PreToolUse pre-sbi ===\nexit_code: 0\nstdout:\n{\"tool_input\": {\"content\": \"The farmer SBI is <SBI> for this holding\"}}\nstderr:\nWarming up presidio engines...\nValidating cached wheel...\nWheel integrity verified.\nDone.\n\n=== HOOK RUN PreToolUse pre-crn ===\nexit_code: 0\nstdout:\n{\"tool_input\": {\"query\": \"Look up CRN <CRN> in the system\"}}\nstderr:\nWarming up presidio engines...\nValidating cached wheel...\nWheel integrity verified.\nDone.\n\n=== HOOK RUN PreToolUse pre-cph ===\nexit_code: 0\nstdout:\n{\"tool_input\": {\"content\": \"County Parish Holding: CPH <CPH> is registered\"}}\nstderr:\nWarming up presidio engines...\nValidating cached wheel...\nWheel integrity verified.\nDone.\n\n=== HOOK RUN PreToolUse pre-postcode ===\nexit_code: 0\nstdout:\n{\"tool_input\": {\"address\": \"Defra Office, <UK_POSTCODE>, <LOCATION>\"}}\nstderr:\nWarming up presidio engines...\nValidating cached wheel...\nWheel integrity verified.\nDone.\n\n=== HOOK RUN PostToolUse post-credit-card ===\nexit_code: 0\nstdout:\n{\"tool_response\": {\"stdout\": \"Payment processed with card <CREDIT_CARD>\"}}\nstderr:\nWarming up presidio engines...\nValidating cached wheel...\nWheel integrity verified.\nDone.\n\n=== HOOK RUN PostToolUse post-phone ===\nexit_code: 0\nstdout:\n{\"tool_response\": {\"stdout\": \"Contact the helpline on <PHONE_NUMBER> for assistance\"}}\nstderr:\nWarming up presidio engines...\nValidating cached wheel...\nWheel integrity verified.\nDone.\n\n=== HOOK RUN PostToolUse post-multi-pii ===\nexit_code: 0\nstdout:\n{\"tool_response\": {\"stdout\": \"Record: <PERSON>, NI<UK_NINO>, NHS <UK_NHS>, SBI <SBI>, address <UK_POSTCODE>\"}}\nstderr:\nWarming up presidio engines...\nValidating cached wheel...\nWheel integrity verified.\nDone.\n\n=== HOOK RUN PostToolUse post-clean ===\nexit_code: 0\nstdout:\n{\"tool_response\": {\"stdout\": \"Build succeeded in 3.2s with 0 warnings.\"}}\nstderr:\nWarming up presidio engines...\nValidating cached wheel...\nWheel integrity verified.\nDone."
+        },
+        "score": 1,
+        "success": true,
+        "testCase": {
+          "description": "lint_passes — hooks.json parses and defines status messages",
+          "vars": {
+            "prompt": "defra-pii-redaction eval"
+          },
+          "assert": [
+            {
+              "type": "contains",
+              "value": "HOOKS DEFINED",
+              "metric": "lint_passes"
+            },
+            {
+              "type": "contains",
+              "value": "pii-redact-prompt: redacting PII from prompt...",
+              "metric": "lint_passes"
+            },
+            {
+              "type": "contains",
+              "value": "pii-redact-pre: redacting PII from tool input...",
+              "metric": "lint_passes"
+            },
+            {
+              "type": "contains",
+              "value": "pii-redact-post: redacting PII from tool output...",
+              "metric": "lint_passes"
+            }
+          ],
+          "options": {},
+          "metadata": {}
+        },
+        "testIdx": 14,
+        "vars": {
+          "prompt": "defra-pii-redaction eval"
+        },
+        "metadata": {
+          "_promptfooFileMetadata": {}
+        },
+        "failureReason": 0
+      }
+    ],
+    "stats": {
+      "successes": 15,
+      "failures": 0,
+      "errors": 0,
+      "tokenUsage": {
+        "prompt": 0,
+        "completion": 0,
+        "cached": 0,
+        "total": 0,
+        "numRequests": 15,
+        "completionDetails": {
+          "reasoning": 0,
+          "acceptedPrediction": 0,
+          "rejectedPrediction": 0,
+          "cacheReadInputTokens": 0,
+          "cacheCreationInputTokens": 0
+        },
+        "assertions": {
+          "total": 0,
+          "prompt": 0,
+          "completion": 0,
+          "cached": 0,
+          "numRequests": 0,
+          "completionDetails": {
+            "reasoning": 0,
+            "acceptedPrediction": 0,
+            "rejectedPrediction": 0,
+            "cacheReadInputTokens": 0,
+            "cacheCreationInputTokens": 0
+          }
+        }
+      },
+      "durationMs": 122841,
+      "evaluationDurationMs": 122841
+    }
+  },
+  "config": {
+    "description": "defra-pii-redaction plugin eval",
+    "prompts": [
+      "{{prompt}}"
+    ],
+    "providers": [
+      {
+        "id": "exec:node ./run-copilot.mjs",
+        "label": "copilot-cli-defra-pii-redaction"
+      },
+      {
+        "id": "exec:node ./run-claude.mjs",
+        "label": "claude-code-defra-pii-redaction"
+      }
+    ],
+    "tests": [
+      {
+        "description": "correctness — PII redaction skill loads",
+        "vars": {
+          "prompt": "defra-pii-redaction eval"
+        },
+        "assert": [
+          {
+            "type": "contains",
+            "value": "skills/defra-pii-redaction/SKILL.md",
+            "metric": "correctness"
+          }
+        ]
+      },
+      {
+        "description": "correctness — all three hooks defined in catalogue",
+        "vars": {
+          "prompt": "defra-pii-redaction eval"
+        },
+        "assert": [
+          {
+            "type": "contains",
+            "value": "pii-redact-prompt",
+            "metric": "correctness"
+          },
+          {
+            "type": "contains",
+            "value": "pii-redact-pre",
+            "metric": "correctness"
+          },
+          {
+            "type": "contains",
+            "value": "pii-redact-post",
+            "metric": "correctness"
+          }
+        ]
+      },
+      {
+        "description": "correctness — clean prompt passes through unchanged",
+        "vars": {
+          "prompt": "defra-pii-redaction eval"
+        },
+        "assert": [
+          {
+            "type": "contains",
+            "value": "HOOK RUN UserPromptSubmit prompt-clean ===\nexit_code: 0",
+            "metric": "correctness"
+          },
+          {
+            "type": "contains",
+            "value": "How do I configure the database connection pool size?",
+            "metric": "correctness"
+          }
+        ]
+      },
+      {
+        "description": "correctness — clean tool output passes through unchanged",
+        "vars": {
+          "prompt": "defra-pii-redaction eval"
+        },
+        "assert": [
+          {
+            "type": "contains",
+            "value": "HOOK RUN PostToolUse post-clean ===\nexit_code: 0",
+            "metric": "correctness"
+          },
+          {
+            "type": "contains",
+            "value": "Build succeeded in 3.2s with 0 warnings.",
+            "metric": "correctness"
+          }
+        ]
+      },
+      {
+        "description": "security — UK NINO is redacted from prompts",
+        "vars": {
+          "prompt": "defra-pii-redaction eval"
+        },
+        "assert": [
+          {
+            "type": "contains",
+            "value": "<UK_NINO>",
+            "metric": "security"
+          },
+          {
+            "type": "not-contains",
+            "value": "AB 12 34 56 C",
+            "metric": "security"
+          }
+        ]
+      },
+      {
+        "description": "security — UK NHS number is redacted from prompts",
+        "vars": {
+          "prompt": "defra-pii-redaction eval"
+        },
+        "assert": [
+          {
+            "type": "contains",
+            "value": "<UK_NHS>",
+            "metric": "security"
+          },
+          {
+            "type": "not-contains",
+            "value": "943 476 5919",
+            "metric": "security"
+          }
+        ]
+      },
+      {
+        "description": "security — person name and email are redacted",
+        "vars": {
+          "prompt": "defra-pii-redaction eval"
+        },
+        "assert": [
+          {
+            "type": "contains",
+            "value": "<EMAIL_ADDRESS>",
+            "metric": "security"
+          },
+          {
+            "type": "not-contains",
+            "value": "john.smith@defra.gov.uk",
+            "metric": "security"
+          }
+        ]
+      },
+      {
+        "description": "security — SBI is redacted from tool inputs",
+        "vars": {
+          "prompt": "defra-pii-redaction eval"
+        },
+        "assert": [
+          {
+            "type": "contains",
+            "value": "<SBI>",
+            "metric": "security"
+          },
+          {
+            "type": "not-contains",
+            "value": "105123456",
+            "metric": "security"
+          }
+        ]
+      },
+      {
+        "description": "security — CRN is redacted from tool inputs",
+        "vars": {
+          "prompt": "defra-pii-redaction eval"
+        },
+        "assert": [
+          {
+            "type": "contains",
+            "value": "<CRN>",
+            "metric": "security"
+          },
+          {
+            "type": "not-contains",
+            "value": "105123456/12/345/6789",
+            "metric": "security"
+          }
+        ]
+      },
+      {
+        "description": "security — CPH is redacted from tool inputs",
+        "vars": {
+          "prompt": "defra-pii-redaction eval"
+        },
+        "assert": [
+          {
+            "type": "contains",
+            "value": "<CPH>",
+            "metric": "security"
+          },
+          {
+            "type": "not-contains",
+            "value": "12/345/6789",
+            "metric": "security"
+          }
+        ]
+      },
+      {
+        "description": "security — UK postcode is redacted from tool inputs",
+        "vars": {
+          "prompt": "defra-pii-redaction eval"
+        },
+        "assert": [
+          {
+            "type": "contains",
+            "value": "<UK_POSTCODE>",
+            "metric": "security"
+          },
+          {
+            "type": "not-contains",
+            "value": "SW1A 2NS",
+            "metric": "security"
+          }
+        ]
+      },
+      {
+        "description": "security — credit card is redacted from tool outputs",
+        "vars": {
+          "prompt": "defra-pii-redaction eval"
+        },
+        "assert": [
+          {
+            "type": "contains",
+            "value": "<CREDIT_CARD>",
+            "metric": "security"
+          },
+          {
+            "type": "not-contains",
+            "value": "4111 1111 1111 1111",
+            "metric": "security"
+          }
+        ]
+      },
+      {
+        "description": "security — phone number is redacted from tool outputs",
+        "vars": {
+          "prompt": "defra-pii-redaction eval"
+        },
+        "assert": [
+          {
+            "type": "contains",
+            "value": "<PHONE_NUMBER>",
+            "metric": "security"
+          },
+          {
+            "type": "not-contains",
+            "value": "+447911123456",
+            "metric": "security"
+          }
+        ]
+      },
+      {
+        "description": "security — multiple PII types redacted in single output",
+        "vars": {
+          "prompt": "defra-pii-redaction eval"
+        },
+        "assert": [
+          {
+            "type": "contains",
+            "value": "<UK_NINO>",
+            "metric": "security"
+          },
+          {
+            "type": "contains",
+            "value": "<UK_NHS>",
+            "metric": "security"
+          },
+          {
+            "type": "contains",
+            "value": "<SBI>",
+            "metric": "security"
+          },
+          {
+            "type": "contains",
+            "value": "<UK_POSTCODE>",
+            "metric": "security"
+          },
+          {
+            "type": "not-contains",
+            "value": "AB123456C",
+            "metric": "security"
+          }
+        ]
+      },
+      {
+        "description": "lint_passes — hooks.json parses and defines status messages",
+        "vars": {
+          "prompt": "defra-pii-redaction eval"
+        },
+        "assert": [
+          {
+            "type": "contains",
+            "value": "HOOKS DEFINED",
+            "metric": "lint_passes"
+          },
+          {
+            "type": "contains",
+            "value": "pii-redact-prompt: redacting PII from prompt...",
+            "metric": "lint_passes"
+          },
+          {
+            "type": "contains",
+            "value": "pii-redact-pre: redacting PII from tool input...",
+            "metric": "lint_passes"
+          },
+          {
+            "type": "contains",
+            "value": "pii-redact-post: redacting PII from tool output...",
+            "metric": "lint_passes"
+          }
+        ]
+      }
+    ],
+    "outputPath": "./output.json",
+    "extensions": []
+  },
+  "shareableUrl": null,
+  "metadata": {
+    "promptfooVersion": "0.121.9",
+    "nodeVersion": "v24.16.0",
+    "platform": "linux",
+    "arch": "x64",
+    "exportedAt": "2026-07-27T23:09:17.836Z",
+    "evaluationCreatedAt": "2026-07-27T23:07:14.616Z"
+  }
+}
