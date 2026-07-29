@@ -5,9 +5,9 @@
 // Unlike defra-shared's run-hook.mjs, this does NOT need a project directory
 // or git state — the PII script only reads/writes JSON.
 
-import { readFileSync } from 'node:fs'
+import { readFileSync, accessSync, constants as fsConstants } from 'node:fs'
 import { spawnSync } from 'node:child_process'
-import { dirname, resolve, join } from 'node:path'
+import { dirname, resolve, join, delimiter } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 const scriptDir = dirname(fileURLToPath(import.meta.url))
@@ -17,8 +17,28 @@ const redactScript = join(pluginDir, 'scripts', 'redact_pii.py')
 
 const TIMEOUT_MS = 120_000
 
+// Resolve the executable to an absolute path ourselves instead of letting
+// the OS search PATH at spawn time (PATH-hijacking risk, see javascript:S4036).
+function resolveExecutable(name) {
+  const exts = process.platform === 'win32' ? ['.exe', '.cmd', '.bat', ''] : ['']
+  for (const dir of (process.env.PATH ?? '').split(delimiter)) {
+    for (const ext of exts) {
+      const candidate = join(dir, name + ext)
+      try {
+        accessSync(candidate, fsConstants.X_OK)
+        return candidate
+      } catch {
+        // not found in this directory, keep searching
+      }
+    }
+  }
+  throw new Error(`Unable to resolve executable '${name}' on PATH`)
+}
+
+const uvPath = resolveExecutable('uv')
+
 export function driveHook({ input, args = [] }) {
-  const result = spawnSync('uv', ['run', redactScript, ...args], {
+  const result = spawnSync(uvPath, ['run', redactScript, ...args], {
     input,
     encoding: 'utf8',
     timeout: TIMEOUT_MS,
@@ -35,7 +55,7 @@ export function driveHook({ input, args = [] }) {
 }
 
 export function preload() {
-  const result = spawnSync('uv', ['run', redactScript, '--preload'], {
+  const result = spawnSync(uvPath, ['run', redactScript, '--preload'], {
     encoding: 'utf8',
     timeout: TIMEOUT_MS,
     env: {

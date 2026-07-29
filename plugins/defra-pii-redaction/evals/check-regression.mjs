@@ -12,8 +12,8 @@
 //   security     = 100%
 //   lint_passes  = 100%
 
-import { readFileSync, existsSync } from 'node:fs'
-import { dirname, join } from 'node:path'
+import { readFileSync, existsSync, realpathSync } from 'node:fs'
+import { dirname, join, sep } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 export const THRESHOLDS = {
@@ -32,7 +32,9 @@ export function metricPassRate(data, metric) {
       }
     }
   }
-  if (hits.length === 0) return null
+  if (hits.length === 0) {
+    return null
+  }
   return (hits.filter(Boolean).length * 100) / hits.length
 }
 
@@ -43,7 +45,9 @@ export function findRegressions(newData, baselineData, thresholds = THRESHOLDS) 
 
   for (const [metric, threshold] of Object.entries(thresholds)) {
     const rate = metricPassRate(newData, metric)
-    if (rate === null) continue
+    if (rate === null) {
+      continue
+    }
     if (Math.floor(rate) < threshold) {
       regressions.push(`${metric}: ${rate}% < ${threshold}% threshold`)
     }
@@ -53,7 +57,9 @@ export function findRegressions(newData, baselineData, thresholds = THRESHOLDS) 
     for (const metric of Object.keys(thresholds)) {
       const newRate = metricPassRate(newData, metric)
       const baseRate = metricPassRate(baselineData, metric)
-      if (newRate === null || baseRate === null) continue
+      if (newRate === null || baseRate === null) {
+        continue
+      }
       const drop = Math.floor(baseRate) - Math.floor(newRate)
       if (drop > MAX_DROP_PP) {
         regressions.push(`${metric}: ${newRate}% is ${drop}pp below baseline ${baseRate}%`)
@@ -62,6 +68,18 @@ export function findRegressions(newData, baselineData, thresholds = THRESHOLDS) 
   }
 
   return regressions
+}
+
+// Resolve and validate a CLI-supplied path, preventing it from escaping the
+// current working directory (defends against path injection via an LLM
+// agent invoking this script with a manipulated path).
+function safePath(filePath) {
+  const resolved = realpathSync(filePath)
+  const baseDir = realpathSync(process.cwd())
+  if (resolved !== baseDir && !resolved.startsWith(baseDir + sep)) {
+    throw new Error(`path '${filePath}' is outside the allowed directory`)
+  }
+  return resolved
 }
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
@@ -76,14 +94,14 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
 
   let newData
   try {
-    newData = JSON.parse(readFileSync(newPath, 'utf8'))
+    newData = JSON.parse(readFileSync(safePath(newPath), 'utf8'))
   } catch {
-    console.error(`::error::New results file not found: ${newPath}`)
+    console.error(`::error::New results file not found or invalid: ${newPath}`)
     process.exit(2)
   }
 
   const baselineData = existsSync(baselinePath)
-    ? JSON.parse(readFileSync(baselinePath, 'utf8'))
+    ? JSON.parse(readFileSync(safePath(baselinePath), 'utf8'))
     : null
 
   const regressions = findRegressions(newData, baselineData)

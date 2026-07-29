@@ -129,8 +129,11 @@ function findSkillFiles(skillsDir) {
     for (const entry of readdirSync(dir)) {
       const p = join(dir, entry)
       const s = statSync(p)
-      if (s.isDirectory()) walk(p)
-      else if (entry === 'SKILL.md') out.push(p)
+      if (s.isDirectory()) {
+        walk(p)
+      } else if (entry === 'SKILL.md') {
+        out.push(p)
+      }
     }
   }
   try { walk(skillsDir) } catch { /* skills dir may not exist */ }
@@ -150,14 +153,16 @@ export function listHookStatusMessages(config) {
 }
 
 function runOne(out, event, label, input) {
-  out.push(`=== HOOK RUN ${event} ${label} ===`)
   const { exitCode, stdout, stderr } = driveHook({ input })
-  out.push(`exit_code: ${exitCode}`)
-  out.push('stdout:')
-  if (stdout) out.push(stdout.replace(/\n$/, ''))
-  out.push('stderr:')
-  if (stderr) out.push(stderr.replace(/\n$/, ''))
-  out.push('')
+  out.push(
+    `=== HOOK RUN ${event} ${label} ===`,
+    `exit_code: ${exitCode}`,
+    'stdout:',
+    ...(stdout ? [stdout.replace(/\n$/, '')] : []),
+    'stderr:',
+    ...(stderr ? [stderr.replace(/\n$/, '')] : []),
+    ''
+  )
 }
 
 export function report({ provider, prompt, fixtureDir }) {
@@ -168,19 +173,15 @@ export function report({ provider, prompt, fixtureDir }) {
   out.push('=== PROVIDER ===', provider, `prompt: ${prompt}`, '')
 
   // Skills
-  out.push('=== SKILLS LOADED ===')
-  for (const file of findSkillFiles(join(pluginDir, 'skills'))) {
-    out.push(relative(pluginDir, file))
-  }
-  out.push('')
+  out.push(
+    '=== SKILLS LOADED ===',
+    ...findSkillFiles(join(pluginDir, 'skills')).map((file) => relative(pluginDir, file)),
+    ''
+  )
 
   // Hooks defined
-  out.push('=== HOOKS DEFINED ===')
   const hooksConfig = JSON.parse(readFileSync(join(pluginDir, 'hooks', 'hooks.json'), 'utf8'))
-  for (const msg of listHookStatusMessages(hooksConfig)) {
-    out.push(msg)
-  }
-  out.push('')
+  out.push('=== HOOKS DEFINED ===', ...listHookStatusMessages(hooksConfig), '')
 
   // Preload (warm up model/deps once before running test cases)
   preload()
