@@ -12,11 +12,11 @@ Unlike the advisory `pii-scan` hook in `defra-shared` (which warns after a file 
 
 **Three hooks (all synchronous, blocking):**
 
-| Hook | Event | Matcher | What it does |
-| --- | --- | --- | --- |
-| `pii-redact-prompt` | `UserPromptSubmit` | (all prompts) | Redacts PII from the user's prompt before it reaches the LLM |
-| `pii-redact-pre` | `PreToolUse` | (all tools) | Redacts PII from tool inputs before the tool executes |
-| `pii-redact-post` | `PostToolUse` | (all tools) | Redacts PII from tool outputs before they are fed back into LLM context |
+| Hook                | Event              | Matcher       | What it does                                                            |
+| ------------------- | ------------------ | ------------- | ----------------------------------------------------------------------- |
+| `pii-redact-prompt` | `UserPromptSubmit` | (all prompts) | Redacts PII from the user's prompt before it reaches the LLM            |
+| `pii-redact-pre`    | `PreToolUse`       | (all tools)   | Redacts PII from tool inputs before the tool executes                   |
+| `pii-redact-post`   | `PostToolUse`      | (all tools)   | Redacts PII from tool outputs before they are fed back into LLM context |
 
 ## The redaction script
 

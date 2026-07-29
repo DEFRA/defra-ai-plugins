@@ -5,13 +5,16 @@ import { metricPassRate, findRegressions, THRESHOLDS } from './check-regression.
 function resultsWith(...components) {
   return {
     results: {
-      results: [{
-        gradingResult: {
-          componentResults: components.map(([metric, pass]) => ({
-            pass, assertion: { metric }
-          }))
+      results: [
+        {
+          gradingResult: {
+            componentResults: components.map(([metric, pass]) => ({
+              pass,
+              assertion: { metric }
+            }))
+          }
         }
-      }]
+      ]
     }
   }
 }
@@ -42,52 +45,56 @@ test('metricPassRate does not match prefix collisions', () => {
 })
 
 test('findRegressions: clean run returns empty array', () => {
-  const data = resultsWith(
-    ['correctness', true],
-    ['security', true],
-    ['lint_passes', true]
-  )
+  const data = resultsWith(['correctness', true], ['security', true], ['lint_passes', true])
   assert.deepEqual(findRegressions(data, null), [])
 })
 
 test('findRegressions flags security below 100%', () => {
   const data = resultsWith(['security', true], ['security', false])
   const out = findRegressions(data, null)
-  assert.ok(out.some(r => r.startsWith('security:')))
+  assert.ok(out.some((r) => r.startsWith('security:')))
 })
 
 test('findRegressions allows correctness at 90%', () => {
   const components = []
-  for (let i = 0; i < 9; i++) components.push(['correctness', true])
+  for (let i = 0; i < 9; i++) {
+    components.push(['correctness', true])
+  }
   components.push(['correctness', false])
   const data = resultsWith(...components)
   const out = findRegressions(data, null)
-  assert.ok(!out.some(r => r.startsWith('correctness:')))
+  assert.ok(!out.some((r) => r.startsWith('correctness:')))
 })
 
 test('findRegressions flags correctness below 90%', () => {
   const components = []
-  for (let i = 0; i < 8; i++) components.push(['correctness', true])
+  for (let i = 0; i < 8; i++) {
+    components.push(['correctness', true])
+  }
   components.push(['correctness', false])
   components.push(['correctness', false])
   const data = resultsWith(...components)
   const out = findRegressions(data, null)
-  assert.ok(out.some(r => r.startsWith('correctness:')))
+  assert.ok(out.some((r) => r.startsWith('correctness:')))
 })
 
 test('findRegressions detects baseline drop > 5pp', () => {
   const newData = resultsWith(
-    ['security', true], ['security', true],
-    ['security', true], ['security', false],
+    ['security', true],
+    ['security', true],
+    ['security', true],
+    ['security', false],
     ['security', false]
   )
   const baseData = resultsWith(
-    ['security', true], ['security', true],
-    ['security', true], ['security', true],
+    ['security', true],
+    ['security', true],
+    ['security', true],
+    ['security', true],
     ['security', true]
   )
   const out = findRegressions(newData, baseData)
-  assert.ok(out.some(r => r.includes('below baseline')))
+  assert.ok(out.some((r) => r.includes('below baseline')))
 })
 
 test('THRESHOLDS has correct values for this plugin', () => {

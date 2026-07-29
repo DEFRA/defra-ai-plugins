@@ -31,19 +31,19 @@ test('listHookStatusMessages falls back to "(no statusMessage)"', () => {
 })
 
 test('FIXTURES covers all three event types', () => {
-  const events = new Set(FIXTURES.map(f => f.event))
+  const events = new Set(FIXTURES.map((f) => f.event))
   assert.ok(events.has('UserPromptSubmit'))
   assert.ok(events.has('PreToolUse'))
   assert.ok(events.has('PostToolUse'))
 })
 
 test('FIXTURES includes clean (no-PII) cases', () => {
-  const clean = FIXTURES.filter(f => f.piiValues.length === 0)
+  const clean = FIXTURES.filter((f) => f.piiValues.length === 0)
   assert.ok(clean.length >= 2, 'at least two clean fixtures expected')
 })
 
 test('FIXTURES includes Defra-specific PII types', () => {
-  const allPlaceholders = FIXTURES.flatMap(f => f.expectedPlaceholders)
+  const allPlaceholders = FIXTURES.flatMap((f) => f.expectedPlaceholders)
   assert.ok(allPlaceholders.includes('<SBI>'))
   assert.ok(allPlaceholders.includes('<CRN>'))
   assert.ok(allPlaceholders.includes('<CPH>'))

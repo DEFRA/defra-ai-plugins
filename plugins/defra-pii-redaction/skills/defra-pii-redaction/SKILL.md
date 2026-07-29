@@ -10,11 +10,11 @@ This plugin provides three deterministic guardrail hooks that intercept all data
 
 ## What it intercepts
 
-| Hook | Event | What is redacted |
-| --- | --- | --- |
-| `pii-redact-prompt` | `UserPromptSubmit` | User prompt text before it reaches the LLM |
-| `pii-redact-pre` | `PreToolUse` | All tool inputs before the tool executes |
-| `pii-redact-post` | `PostToolUse` | All tool outputs before they are fed back into LLM context |
+| Hook                | Event              | What is redacted                                           |
+| ------------------- | ------------------ | ---------------------------------------------------------- |
+| `pii-redact-prompt` | `UserPromptSubmit` | User prompt text before it reaches the LLM                 |
+| `pii-redact-pre`    | `PreToolUse`       | All tool inputs before the tool executes                   |
+| `pii-redact-post`   | `PostToolUse`      | All tool outputs before they are fed back into LLM context |
 
 All three hooks are **synchronous and blocking** — execution does not proceed until redaction is complete.
 

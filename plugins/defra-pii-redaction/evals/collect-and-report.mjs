@@ -136,7 +136,11 @@ function findSkillFiles(skillsDir) {
       }
     }
   }
-  try { walk(skillsDir) } catch { /* skills dir may not exist */ }
+  try {
+    walk(skillsDir)
+  } catch {
+    /* skills dir may not exist */
+  }
   return out.sort((a, b) => a.localeCompare(b))
 }
 
