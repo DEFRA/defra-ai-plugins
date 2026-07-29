@@ -7,7 +7,26 @@
 // eyeballing locally.
 
 import { readFileSync, existsSync } from 'node:fs'
+import { resolve, relative, isAbsolute } from 'node:path'
 import { fileURLToPath } from 'node:url'
+
+/**
+ * Resolve `filePath` and ensure it does not escape the current working
+ * directory. Prevents an LLM-driven CLI invocation from reading or
+ * overwriting arbitrary files via a path-traversal argument.
+ *
+ * @param {string} filePath - Untrusted path supplied via CLI argument.
+ * @returns {string} The resolved, validated absolute path.
+ */
+function safePath(filePath) {
+  const baseDir = process.cwd()
+  const resolved = resolve(baseDir, filePath)
+  const rel = relative(baseDir, resolved)
+  if (rel.startsWith('..') || isAbsolute(rel)) {
+    throw new Error(`path '${filePath}' is outside the allowed directory`)
+  }
+  return resolved
+}
 
 const PROMPT_TRUNCATE_LENGTH = 80
 const P95_PERCENTILE = 0.95
@@ -109,10 +128,17 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
     console.error('usage: summarise.mjs <results.json>')
     process.exit(1)
   }
-  if (!existsSync(resultPath)) {
+  let resolvedResultPath
+  try {
+    resolvedResultPath = safePath(resultPath)
+  } catch (err) {
+    console.error(`::error::${err.message}`)
+    process.exit(1)
+  }
+  if (!existsSync(resolvedResultPath)) {
     console.error(`::error::No result file at ${resultPath}`)
     process.exit(1)
   }
-  const data = JSON.parse(readFileSync(resultPath, 'utf8'))
+  const data = JSON.parse(readFileSync(resolvedResultPath, 'utf8'))
   process.stdout.write(renderSummary(data) + '\n')
 }

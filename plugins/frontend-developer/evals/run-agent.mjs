@@ -23,6 +23,14 @@ export function runAgent({ agentLabel, binary, buildArgs, parseOutput }) {
     console.error(`usage: run-${binary}.mjs <prompt>`)
     process.exit(2)
   }
+  // Guard against argument injection: a prompt beginning with '-' could be
+  // misinterpreted by the agent CLI as a flag rather than free-text input.
+  if (prompt.startsWith('-')) {
+    console.error(
+      `::error::prompt must not start with '-' (would be parsed as a CLI flag): ${prompt}`
+    )
+    process.exit(2)
+  }
 
   const scriptDir = dirname(fileURLToPath(import.meta.url))
   const fixtureSource = join(resolve(scriptDir, '..'), 'eval-fixture')

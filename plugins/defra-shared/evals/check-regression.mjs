@@ -16,8 +16,26 @@
 //   refusal       = 100%
 
 import { readFileSync, existsSync } from 'node:fs'
-import { dirname, join } from 'node:path'
+import { dirname, join, resolve, relative, isAbsolute } from 'node:path'
 import { fileURLToPath } from 'node:url'
+
+/**
+ * Resolve `filePath` and ensure it does not escape the current working
+ * directory. Prevents an LLM-driven CLI invocation from reading or
+ * overwriting arbitrary files via a path-traversal argument.
+ *
+ * @param {string} filePath - Untrusted path supplied via CLI argument.
+ * @returns {string} The resolved, validated absolute path.
+ */
+function safePath(filePath) {
+  const baseDir = process.cwd()
+  const resolved = resolve(baseDir, filePath)
+  const rel = relative(baseDir, resolved)
+  if (rel.startsWith('..') || isAbsolute(rel)) {
+    throw new Error(`path '${filePath}' is outside the allowed directory`)
+  }
+  return resolved
+}
 
 export const THRESHOLDS = {
   correctness: 90,
@@ -108,15 +126,23 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
 
   let newData
   try {
-    newData = JSON.parse(readFileSync(newPath, 'utf8'))
+    newData = JSON.parse(readFileSync(safePath(newPath), 'utf8'))
   } catch {
     console.error(`::error::New results file not found: ${newPath}`)
     process.exit(2)
   }
 
-  const baselineData = existsSync(baselinePath)
-    ? JSON.parse(readFileSync(baselinePath, 'utf8'))
-    : null
+  let resolvedBaselinePath
+  try {
+    resolvedBaselinePath = safePath(baselinePath)
+  } catch {
+    resolvedBaselinePath = null
+  }
+
+  const baselineData =
+    resolvedBaselinePath && existsSync(resolvedBaselinePath)
+      ? JSON.parse(readFileSync(resolvedBaselinePath, 'utf8'))
+      : null
 
   const regressions = findRegressions(newData, baselineData)
 
