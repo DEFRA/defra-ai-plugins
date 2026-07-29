@@ -133,6 +133,8 @@ function findSkillFiles(skillsDir) {
         walk(p)
       } else if (entry === 'SKILL.md') {
         out.push(p)
+      } else {
+        /* not a skill file, ignore */
       }
     }
   }
@@ -173,11 +175,12 @@ export function report({ provider, prompt, fixtureDir }) {
   const pluginDir = join(fixtureDir, '..')
   const out = []
 
-  // Header
-  out.push('=== PROVIDER ===', provider, `prompt: ${prompt}`, '')
-
-  // Skills
+  // Header and skills
   out.push(
+    '=== PROVIDER ===',
+    provider,
+    `prompt: ${prompt}`,
+    '',
     '=== SKILLS LOADED ===',
     ...findSkillFiles(join(pluginDir, 'skills')).map((file) => relative(pluginDir, file)),
     ''
