@@ -23,6 +23,20 @@ jobs:
           node-version: lts/*
           cache: npm
 
+      - name: Set up Python and uv
+        uses: astral-sh/setup-uv@v4
+        with:
+          python-version: "3.13"
+
+      - name: Cache spaCy model
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/defra-pii-redaction
+          key: spacy-en-core-web-sm-3.8.0
+
+      - name: Preload PII redaction model
+        run: uv run plugins/defra-pii-redaction/scripts/redact_pii.py --preload
+
       - name: Install dependencies
         run: npm ci --ignore-scripts
 
