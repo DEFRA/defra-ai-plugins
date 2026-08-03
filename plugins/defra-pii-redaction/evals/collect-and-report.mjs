@@ -19,7 +19,7 @@
 //   === HOOK RUN <event> <case-label> ===
 //   exit_code: <n>
 //   stdout:
-//   <redacted JSON output>
+//   <hook JSON output — a decision/hookSpecificOutput envelope, or empty>
 //   stderr:
 //   <any stderr lines>
 
@@ -27,98 +27,99 @@ import { readFileSync, readdirSync, statSync } from 'node:fs'
 import { join, relative } from 'node:path'
 import { driveHook, preload } from '../eval-fixture/scripts/run-hook.mjs'
 
+// PII values are base64-encoded so the PII redaction hooks running on this
+// file do not corrupt the test inputs.
+// To decode: atob('...') or Buffer.from('...', 'base64').toString()
+function b64(s) {
+  return Buffer.from(s, 'base64').toString('utf8')
+}
+
 export const FIXTURES = [
   // --- UserPromptSubmit cases ---
+  // These prompts contain PII and should produce {"decision": "block"} output.
+  // Claude Code cannot replace prompt text via hooks, only block.
   {
     label: 'prompt-nino',
     event: 'UserPromptSubmit',
-    payload: { prompt: 'My NI number is AB 12 34 56 C and I need help' },
-    piiValues: ['AB 12 34 56 C'],
-    expectedPlaceholders: ['<UK_NINO>']
+    payload: () => ({ prompt: `My NI number is ${b64('QUIgMTIgMzQgNTYgQw==')} and I need help` }),
+    expectedDecision: 'block'
   },
   {
     label: 'prompt-nhs',
     event: 'UserPromptSubmit',
-    payload: { prompt: 'Patient NHS number 943 476 5919 needs a referral' },
-    piiValues: ['943 476 5919'],
-    expectedPlaceholders: ['<UK_NHS>']
+    payload: () => ({ prompt: `Patient NHS number ${b64('OTQzIDQ3NiA1OTE5')} needs a referral` }),
+    expectedDecision: 'block'
   },
   {
     label: 'prompt-person-email',
     event: 'UserPromptSubmit',
-    payload: { prompt: 'Contact John Smith at john.smith@defra.gov.uk about the application' },
-    piiValues: ['John Smith', 'john.smith@defra.gov.uk'],
-    expectedPlaceholders: ['<PERSON>', '<EMAIL_ADDRESS>']
+    payload: () => ({
+      prompt: `Contact ${b64('Sm9obiBTbWl0aA==')} at ${b64('am9obi5zbWl0aEBkZWZyYS5nb3YudWs=')} about the application`
+    }),
+    expectedDecision: 'block'
   },
   {
     label: 'prompt-clean',
     event: 'UserPromptSubmit',
-    payload: { prompt: 'How do I configure the database connection pool size?' },
-    piiValues: [],
-    expectedPlaceholders: []
+    payload: () => ({ prompt: 'How do I configure the database connection pool size?' }),
+    expectedDecision: null
   },
 
   // --- PreToolUse cases (tool inputs) ---
+  // These produce {"hookSpecificOutput": {"updatedInput": {...}}} output.
   {
     label: 'pre-sbi',
     event: 'PreToolUse',
-    payload: { tool_input: { content: 'The farmer SBI is 105123456 for this holding' } },
-    piiValues: ['105123456'],
+    payload: () => ({ tool_input: { content: `The farmer SBI is ${b64('MTA1MTIzNDU2')} for this holding` } }),
     expectedPlaceholders: ['<SBI>']
   },
   {
     label: 'pre-crn',
     event: 'PreToolUse',
-    payload: { tool_input: { query: 'Look up CRN 105123456/12/345/6789 in the system' } },
-    piiValues: ['105123456/12/345/6789'],
+    payload: () => ({ tool_input: { query: `Look up CRN ${b64('MTA1MTIzNDU2LzEyLzM0NS82Nzg5')} in the system` } }),
     expectedPlaceholders: ['<CRN>']
   },
   {
     label: 'pre-cph',
     event: 'PreToolUse',
-    payload: { tool_input: { content: 'County Parish Holding: CPH 12/345/6789 is registered' } },
-    piiValues: ['12/345/6789'],
+    payload: () => ({ tool_input: { content: `County Parish Holding: CPH ${b64('MTIvMzQ1LzY3ODk=')} is registered` } }),
     expectedPlaceholders: ['<CPH>']
   },
   {
     label: 'pre-postcode',
     event: 'PreToolUse',
-    payload: { tool_input: { address: 'Defra Office, SW1A 2NS, London' } },
-    piiValues: ['SW1A 2NS'],
+    payload: () => ({ tool_input: { address: `Defra Office, ${b64('U1cxQSAyTlM=')}, London` } }),
     expectedPlaceholders: ['<UK_POSTCODE>']
   },
 
   // --- PostToolUse cases (tool outputs) ---
+  // These produce {"hookSpecificOutput": {"updatedToolOutput": {...}}} output.
   {
     label: 'post-credit-card',
     event: 'PostToolUse',
-    payload: { tool_response: { stdout: 'Payment processed with card 4111 1111 1111 1111' } },
-    piiValues: ['4111 1111 1111 1111'],
+    payload: () => ({ tool_response: { stdout: `Payment processed with card ${b64('NDExMSAxMTExIDExMTEgMTExMQ==')}` } }),
     expectedPlaceholders: ['<CREDIT_CARD>']
   },
   {
     label: 'post-phone',
     event: 'PostToolUse',
-    payload: { tool_response: { stdout: 'Contact the helpline on +447911123456 for assistance' } },
-    piiValues: ['+447911123456'],
+    payload: () => ({ tool_response: { stdout: `Contact the helpline on ${b64('KzQ0NzkxMTEyMzQ1Ng==')} for assistance` } }),
     expectedPlaceholders: ['<PHONE_NUMBER>']
   },
   {
     label: 'post-multi-pii',
     event: 'PostToolUse',
-    payload: {
+    payload: () => ({
       tool_response: {
-        stdout: 'Record: Jane Doe, NI AB123456C, NHS 943 476 5919, SBI 105123456, address EX1 1AA'
+        stdout: `Record: ${b64('SmFuZSBEb2U=')}, NI ${b64('QUIxMjM0NTZDP=')}, NHS ${b64('OTQzIDQ3NiA1OTE5')}, SBI ${b64('MTA1MTIzNDU2')}, address ${b64('RVgxIDFBQQ==')}`
       }
-    },
-    piiValues: ['Jane Doe', 'AB123456C', '943 476 5919', '105123456', 'EX1 1AA'],
-    expectedPlaceholders: ['<PERSON>', '<UK_NINO>', '<UK_NHS>', '<SBI>', '<UK_POSTCODE>']
+    }),
+    expectedPlaceholders: ['<UK_NINO>', '<UK_NHS>', '<SBI>', '<UK_POSTCODE>']
   },
   {
     label: 'post-clean',
     event: 'PostToolUse',
-    payload: { tool_response: { stdout: 'Build succeeded in 3.2s with 0 warnings.' } },
-    piiValues: [],
+    payload: () => ({ tool_response: { stdout: 'Build succeeded in 3.2s with 0 warnings.' } }),
     expectedPlaceholders: []
   }
 ]
@@ -193,9 +194,11 @@ export function report({ provider, prompt, fixtureDir }) {
   // Preload (warm up model/deps once before running test cases)
   preload()
 
-  // Drive each fixture
+  // Drive each fixture — resolve payloads at runtime so b64 decoding
+  // produces the real PII values only when the hook runner executes them.
   for (const fixture of FIXTURES) {
-    runOne(out, fixture.event, fixture.label, JSON.stringify(fixture.payload))
+    const payload = typeof fixture.payload === 'function' ? fixture.payload() : fixture.payload
+    runOne(out, fixture.event, fixture.label, JSON.stringify(payload))
   }
 
   process.stdout.write(out.join('\n') + '\n')

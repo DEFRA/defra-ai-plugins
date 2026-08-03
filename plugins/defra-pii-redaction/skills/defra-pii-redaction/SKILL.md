@@ -10,25 +10,32 @@ This plugin provides three deterministic guardrail hooks that intercept all data
 
 ## What it intercepts
 
-| Hook                | Event              | What is redacted                                           |
-| ------------------- | ------------------ | ---------------------------------------------------------- |
-| `pii-redact-prompt` | `UserPromptSubmit` | User prompt text before it reaches the LLM                 |
-| `pii-redact-pre`    | `PreToolUse`       | All tool inputs before the tool executes                   |
-| `pii-redact-post`   | `PostToolUse`      | All tool outputs before they are fed back into LLM context |
+| Hook                | Event              | What happens                                                                                 |
+| ------------------- | ------------------ | -------------------------------------------------------------------------------------------- |
+| `pii-redact-prompt` | `UserPromptSubmit` | Prompts containing PII are **blocked** — Claude Code cannot replace prompt text, only block  |
+| `pii-redact-pre`    | `PreToolUse`       | PII in tool inputs is redacted before the tool executes                                      |
+| `pii-redact-post`   | `PostToolUse`      | PII in tool outputs is redacted before the results are fed back into LLM context             |
 
 All three hooks are **synchronous and blocking** — execution does not proceed until redaction is complete.
+
+### UserPromptSubmit behaviour
+
+Claude Code's hook API does not support replacing prompt text. When a prompt contains PII, the hook returns `{"decision": "block"}` with a human-readable reason asking the user to rephrase without personal data. Clean prompts exit 0 with no output and proceed normally.
 
 ## The redaction script
 
 Redaction is delegated to `scripts/redact_pii.py` inside the plugin directory. The script:
 
 - Reads raw JSON from stdin (the full hook payload)
-- Writes a redacted version of the same structure to stdout
+- Detects the event type from the payload shape
+- For `UserPromptSubmit`: returns a block decision if PII is detected; exits 0 silently for clean prompts
+- For `PreToolUse`: returns `hookSpecificOutput.updatedInput` with PII replaced; exits 0 silently for clean inputs
+- For `PostToolUse`: returns `hookSpecificOutput.updatedToolOutput` with PII replaced; exits 0 silently for clean outputs
 - Exits 0 on success, non-zero on failure
 
-The plugin resolves the script path using the `${CLAUDE_PLUGIN_ROOT}` environment variable, which the host app (Copilot CLI or Claude Code) sets automatically to the plugin's install directory. If the script cannot be found, the hook degrades gracefully by passing the data through unmodified.
+The plugin resolves the script path using `${PLUGIN_ROOT:-$CLAUDE_PLUGIN_ROOT}`. Copilot CLI sets `PLUGIN_ROOT` and Claude Code sets `CLAUDE_PLUGIN_ROOT` automatically to the plugin's install directory; the fallback lets the same hook command work on either host. If the script cannot be found, the hook degrades gracefully by passing the data through unmodified.
 
-> **Windows note:** hook commands use POSIX shell parameter expansion (`${CLAUDE_PLUGIN_ROOT}`), so both Copilot CLI and Claude Code must invoke them through a POSIX-compatible shell (e.g. Git Bash or WSL). Under a native `cmd.exe`/PowerShell session without such a shell available, the variable will not expand, `uv run` will fail to find the script, and the hook will silently degrade to pass-through (no redaction, no error).
+> **Windows note:** hook commands use POSIX shell parameter expansion (`${PLUGIN_ROOT:-$CLAUDE_PLUGIN_ROOT}`), so both Copilot CLI and Claude Code must invoke them through a POSIX-compatible shell (e.g. Git Bash or WSL). Under a native `cmd.exe`/PowerShell session without such a shell available, the variable will not expand, `uv run` will fail to find the script, and the hook will silently degrade to pass-through (no redaction, no error).
 
 ## Prerequisites
 

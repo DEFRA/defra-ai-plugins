@@ -2,7 +2,7 @@
 // Regression gate for the defra-pii-redaction eval suite.
 //
 // Reads a promptfoo result file, compares per-metric pass-rates to
-// thresholds, and exits non-zero if any metric falls below threshold or
+// thresholds, and exits 1 if any metric falls below threshold or
 // regresses by more than 5pp compared with the committed baseline.
 //
 // Usage: node check-regression.mjs <new-results.json> [baseline.json]
@@ -38,7 +38,7 @@ export function metricPassRate(data, metric) {
   return (hits.filter(Boolean).length * 100) / hits.length
 }
 
-const MAX_DROP_PP = 5
+const BASELINE_DROP_THRESHOLD = 5
 
 export function findRegressions(newData, baselineData, thresholds = THRESHOLDS) {
   const regressions = []
@@ -61,7 +61,7 @@ export function findRegressions(newData, baselineData, thresholds = THRESHOLDS) 
         continue
       }
       const drop = Math.floor(baseRate) - Math.floor(newRate)
-      if (drop > MAX_DROP_PP) {
+      if (drop > BASELINE_DROP_THRESHOLD) {
         regressions.push(`${metric}: ${newRate}% is ${drop}pp below baseline ${baseRate}%`)
       }
     }
@@ -75,7 +75,7 @@ export function findRegressions(newData, baselineData, thresholds = THRESHOLDS) 
 // agent invoking this script with a manipulated path).
 function safePath(filePath) {
   const resolved = realpathSync(filePath)
-  const baseDir = realpathSync(process.cwd())
+  const baseDir = dirname(fileURLToPath(import.meta.url))
   if (resolved !== baseDir && !resolved.startsWith(baseDir + sep)) {
     throw new Error(`path '${filePath}' is outside the allowed directory`)
   }
@@ -96,7 +96,7 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
   try {
     newData = JSON.parse(readFileSync(safePath(newPath), 'utf8'))
   } catch {
-    console.error(`::error::New results file not found or invalid: ${newPath}`)
+    console.error(`ERROR: New results file not found or invalid: ${newPath}`)
     process.exit(2)
   }
 
@@ -111,7 +111,7 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
     process.exit(0)
   }
 
-  console.error(`::error::${regressions.length} regression(s) in defra-pii-redaction evals:`)
+  console.error(`ERROR: ${regressions.length} regression(s) in defra-pii-redaction evals:`)
   for (const r of regressions) {
     console.error(`  ${r}`)
   }

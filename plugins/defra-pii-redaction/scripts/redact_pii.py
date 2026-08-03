@@ -261,6 +261,22 @@ def load_model() -> None:
     print("Done.", file=sys.stderr)
 
 
+# Tools that write content to disk. Redacting their inputs would corrupt the
+# files being written; the content is already in Claude's context before the
+# tool is called, so intercepting it here adds no protection.
+_WRITE_TOOLS: frozenset[str] = frozenset({"Write", "Edit", "NotebookEdit"})
+
+
+def _detect_event(payload: dict[str, Any]) -> str | None:
+    if "prompt" in payload and "tool_input" not in payload:
+        return "UserPromptSubmit"
+    if "tool_response" in payload:
+        return "PostToolUse"
+    if "tool_input" in payload and payload.get("tool_name") not in _WRITE_TOOLS:
+        return "PreToolUse"
+    return None
+
+
 def main() -> None:
     load_model()
 
@@ -292,9 +308,56 @@ def main() -> None:
         sys.stdout.write(raw)
         sys.exit(0)
 
+    event = _detect_event(payload)
+    if event is None:
+        sys.exit(0)
+
     try:
-        redacted = redact_payload(payload)
-        sys.stdout.write(json.dumps(redacted))
+        analyzer = _build_analyzer()
+        anonymizer = _build_anonymizer()
+
+        if event == "UserPromptSubmit":
+            prompt = payload.get("prompt", "")
+            redacted = _redact_text(prompt, analyzer, anonymizer)
+            if redacted != prompt:
+                # Claude Code cannot replace prompt text via hooks — block the
+                # prompt so PII never reaches the model.
+                output: dict[str, Any] = {
+                    "decision": "block",
+                    "reason": (
+                        "Prompt contains personal information (PII). "
+                        "Please rephrase without including names, email addresses, "
+                        "NI numbers, NHS numbers, phone numbers, postcodes, "
+                        "or other personal data."
+                    ),
+                }
+                sys.stdout.write(json.dumps(output))
+
+        elif event == "PreToolUse":
+            tool_input = payload.get("tool_input", {})
+            redacted_input = _redact_value(tool_input, analyzer, anonymizer)
+            if redacted_input != tool_input:
+                output = {
+                    "hookSpecificOutput": {
+                        "hookEventName": "PreToolUse",
+                        "permissionDecision": "allow",
+                        "updatedInput": redacted_input,
+                    }
+                }
+                sys.stdout.write(json.dumps(output))
+
+        elif event == "PostToolUse":
+            tool_response = payload.get("tool_response", {})
+            redacted_response = _redact_value(tool_response, analyzer, anonymizer)
+            if redacted_response != tool_response:
+                output = {
+                    "hookSpecificOutput": {
+                        "hookEventName": "PostToolUse",
+                        "updatedToolOutput": redacted_response,
+                    }
+                }
+                sys.stdout.write(json.dumps(output))
+
     except Exception as e:
         sys.stderr.write(f"ERROR: Redaction failed: {e}\n")
         sys.exit(1)

@@ -12,31 +12,35 @@ Unlike the advisory `pii-scan` hook in `defra-shared` (which warns after a file 
 
 **Three hooks (all synchronous, blocking):**
 
-| Hook                | Event              | Matcher       | What it does                                                            |
-| ------------------- | ------------------ | ------------- | ----------------------------------------------------------------------- |
-| `pii-redact-prompt` | `UserPromptSubmit` | (all prompts) | Redacts PII from the user's prompt before it reaches the LLM            |
-| `pii-redact-pre`    | `PreToolUse`       | (all tools)   | Redacts PII from tool inputs before the tool executes                   |
-| `pii-redact-post`   | `PostToolUse`      | (all tools)   | Redacts PII from tool outputs before they are fed back into LLM context |
+| Hook                | Event              | Matcher       | What it does                                                                                      |
+| ------------------- | ------------------ | ------------- | ------------------------------------------------------------------------------------------------- |
+| `pii-redact-prompt` | `UserPromptSubmit` | (all prompts) | Blocks prompts that contain PII — Claude Code cannot replace prompt text, only block it           |
+| `pii-redact-pre`    | `PreToolUse`       | (all tools)   | Redacts PII from tool inputs before the tool executes (via `hookSpecificOutput.updatedInput`)     |
+| `pii-redact-post`   | `PostToolUse`      | (all tools)   | Redacts PII from tool outputs before they reach the model (via `hookSpecificOutput.updatedToolOutput`) |
+
+### UserPromptSubmit behaviour
+
+Claude Code's hook API does not support replacing prompt text — a `UserPromptSubmit` hook can only **block** a prompt or add context. When a submitted prompt contains PII, this hook returns `{"decision": "block"}` with a human-readable reason, preventing the prompt from reaching the model. Clean prompts (no PII detected) exit 0 with no output and proceed normally.
 
 ## The redaction script
 
 Redaction is delegated to `scripts/redact_pii.py` inside the plugin directory. The hooks resolve the script at:
 
 ```
-${CLAUDE_PLUGIN_ROOT}/scripts/redact_pii.py
+${PLUGIN_ROOT:-$CLAUDE_PLUGIN_ROOT}/scripts/redact_pii.py
 ```
 
-`CLAUDE_PLUGIN_ROOT` is set automatically by the host app (Copilot CLI or Claude Code) to the plugin's install directory — you don't need to set it yourself.
+Copilot CLI sets `PLUGIN_ROOT` and Claude Code sets `CLAUDE_PLUGIN_ROOT` automatically to the plugin's install directory — the hook commands fall back from one to the other so they work unmodified on either host. You don't need to set either yourself.
 
 If the script is not found, all hooks degrade gracefully (pass through without redacting). If the script exits non-zero, the hook blocks the operation and surfaces the error.
 
-> **Windows note:** hook commands use POSIX shell parameter expansion (`${CLAUDE_PLUGIN_ROOT}`), so both Copilot CLI and Claude Code must invoke them through a POSIX-compatible shell (e.g. Git Bash or WSL). Under a native `cmd.exe`/PowerShell session without such a shell available, the variable will not expand, `uv run` will fail to find the script, and the hook will silently degrade to pass-through (no redaction, no error). Ensure Git Bash or WSL is on `PATH` when running on Windows.
+> **Windows note:** hook commands use POSIX shell parameter expansion (`${PLUGIN_ROOT:-$CLAUDE_PLUGIN_ROOT}`), so both Copilot CLI and Claude Code must invoke them through a POSIX-compatible shell (e.g. Git Bash or WSL). Under a native `cmd.exe`/PowerShell session without such a shell available, the variable will not expand, `uv run` will fail to find the script, and the hook will silently degrade to pass-through (no redaction, no error). Ensure Git Bash or WSL is on `PATH` when running on Windows.
 
 ## Model preload
 
 On first use, `uv run` must install the script's dependencies (presidio, spaCy) and the script must download the `en_core_web_sm` spaCy model wheel from GitHub Releases — a one-time step that can add several seconds of latency to the first hook invocation.
 
-Run the preload command once after installation to perform this work upfront. `CLAUDE_PLUGIN_ROOT` is only set automatically when the host invokes a hook, so for a manual run substitute your actual plugin install directory (find it with `copilot plugin list` or `/plugin list`, or check `~/.copilot/plugins/defra-pii-redaction` / `~/.claude/plugins/defra-pii-redaction`):
+Run the preload command once after installation to perform this work upfront. `PLUGIN_ROOT`/`CLAUDE_PLUGIN_ROOT` is only set automatically when the host invokes a hook, so for a manual run substitute your actual plugin install directory (find it with `copilot plugin list` or `/plugin list`, or check `~/.copilot/plugins/defra-pii-redaction` / `~/.claude/plugins/defra-pii-redaction`):
 
 ```sh
 uv run "/path/to/defra-pii-redaction/scripts/redact_pii.py" --preload

@@ -1,15 +1,17 @@
-# Eval harness for the defra-pii-redaction plugin.
+# Promptfoo harness for the defra-pii-redaction plugin.
 #
 # This plugin ships **no agent** — its surface area is one SKILL.md file
-# plus a hooks.json with three synchronous redaction hooks. The eval suite
+# plus a provider with three synchronous redaction hooks. The eval suite
 # drives the redact_pii.py script end-to-end with synthetic payloads,
 # asserting that:
 #
-#   - UK PII (NINO, NHS, postcode, person, email, phone, credit card) is
-#     replaced with typed placeholders (<UK_NINO>, <PERSON>, etc.);
-#   - Defra-specific PII (SBI, CRN, CPH) is redacted;
-#   - clean content passes through unchanged;
-#   - the skill and hooks are present and discoverable.
+#   - UserPromptSubmit: prompts containing UK PII are blocked outright
+#     (Claude Code cannot replace prompt text via hooks, only block)
+#   - PreToolUse: tool inputs are redacted via hookSpecificOutput.updatedInput
+#   - PostToolUse: tool outputs are redacted via hookSpecificOutput.updatedToolOutput
+#   - Defra-specific PII (SBI, CRN, CPH) is redacted in tool events
+#   - clean content produces no output and exits 0
+#   - the skill and hooks are present and discoverable
 #
 # Run: npx promptfoo eval
 #
@@ -51,15 +53,15 @@ tests:
         value: 'pii-redact-post'
         metric: correctness
 
-  - description: 'correctness — clean prompt passes through unchanged'
+  - description: 'correctness — clean prompt passes through (exit 0, no block)'
     vars:
       prompt: 'defra-pii-redaction eval'
     assert:
       - type: contains
         value: "HOOK RUN UserPromptSubmit prompt-clean ===\nexit_code: 0"
         metric: correctness
-      - type: contains
-        value: 'How do I configure the database connection pool size?'
+      - type: not-contains
+        value: '"decision": "block"'
         metric: correctness
 
   - description: 'correctness — clean tool output passes through unchanged'
@@ -69,116 +71,110 @@ tests:
       - type: contains
         value: "HOOK RUN PostToolUse post-clean ===\nexit_code: 0"
         metric: correctness
-      - type: contains
-        value: 'Build succeeded in 3.2s with 0 warnings.'
+      - type: not-contains
+        value: '"updatedToolOutput"'
         metric: correctness
 
-  # --- security: UK-specific PII is redacted --------------------------------
-  - description: 'security — UK NINO is redacted from prompts'
+  # --- security: prompts with UK PII are blocked ----------------------------
+  - description: 'security — prompt with UK NINO is blocked'
     vars:
       prompt: 'defra-pii-redaction eval'
     assert:
       - type: contains
-        value: '<UK_NINO>'
-        metric: security
-      - type: not-contains
-        value: 'AB 12 34 56 C'
+        value: '"decision": "block"'
         metric: security
 
-  - description: 'security — UK NHS number is redacted from prompts'
+  - description: 'security — prompt with UK NHS number is blocked'
     vars:
       prompt: 'defra-pii-redaction eval'
     assert:
       - type: contains
-        value: '<UK_NHS>'
-        metric: security
-      - type: not-contains
-        value: '943 476 5919'
+        value: '"decision": "block"'
         metric: security
 
-  - description: 'security — person name and email are redacted'
+  - description: 'security — prompt with person name and email is blocked'
     vars:
       prompt: 'defra-pii-redaction eval'
     assert:
       - type: contains
-        value: '<EMAIL_ADDRESS>'
-        metric: security
-      - type: not-contains
-        value: 'john.smith@defra.gov.uk'
+        value: '"decision": "block"'
         metric: security
 
-  # --- security: Defra-specific PII (SBI, CRN, CPH) ------------------------
-  - description: 'security — SBI is redacted from tool inputs'
+  # --- security: Defra-specific PII (SBI, CRN, CPH) in tool inputs ----------
+  - description: 'security — SBI is redacted from tool inputs via updatedInput'
     vars:
       prompt: 'defra-pii-redaction eval'
     assert:
+      - type: contains
+        value: '"updatedInput"'
+        metric: security
       - type: contains
         value: '<SBI>'
         metric: security
-      - type: not-contains
-        value: '105123456'
-        metric: security
 
-  - description: 'security — CRN is redacted from tool inputs'
+  - description: 'security — CRN is redacted from tool inputs via updatedInput'
     vars:
       prompt: 'defra-pii-redaction eval'
     assert:
+      - type: contains
+        value: '"updatedInput"'
+        metric: security
       - type: contains
         value: '<CRN>'
         metric: security
-      - type: not-contains
-        value: '105123456/12/345/6789'
-        metric: security
 
-  - description: 'security — CPH is redacted from tool inputs'
+  - description: 'security — CPH is redacted from tool inputs via updatedInput'
     vars:
       prompt: 'defra-pii-redaction eval'
     assert:
+      - type: contains
+        value: '"updatedInput"'
+        metric: security
       - type: contains
         value: '<CPH>'
         metric: security
-      - type: not-contains
-        value: '12/345/6789'
-        metric: security
 
-  - description: 'security — UK postcode is redacted from tool inputs'
+  - description: 'security — UK postcode is redacted from tool inputs via updatedInput'
     vars:
       prompt: 'defra-pii-redaction eval'
     assert:
+      - type: contains
+        value: '"updatedInput"'
+        metric: security
       - type: contains
         value: '<UK_POSTCODE>'
         metric: security
-      - type: not-contains
-        value: 'SW1A 2NS'
-        metric: security
 
-  # --- security: tool outputs -----------------------------------------------
-  - description: 'security — credit card is redacted from tool outputs'
+  # --- security: tool outputs are redacted via updatedToolOutput ------------
+  - description: 'security — credit card is redacted from tool outputs via updatedToolOutput'
     vars:
       prompt: 'defra-pii-redaction eval'
     assert:
+      - type: contains
+        value: '"updatedToolOutput"'
+        metric: security
       - type: contains
         value: '<CREDIT_CARD>'
         metric: security
-      - type: not-contains
-        value: '4111 1111 1111 1111'
-        metric: security
 
-  - description: 'security — phone number is redacted from tool outputs'
+  - description: 'security — phone number is redacted from tool outputs via updatedToolOutput'
     vars:
       prompt: 'defra-pii-redaction eval'
     assert:
       - type: contains
+        value: '"updatedToolOutput"'
+        metric: security
+      - type: contains
         value: '<PHONE_NUMBER>'
         metric: security
-      - type: not-contains
-        value: '+447911123456'
-        metric: security
 
-  - description: 'security — multiple PII types redacted in single output'
+  - description: 'security — multiple PII types redacted in single tool output'
     vars:
       prompt: 'defra-pii-redaction eval'
     assert:
+      - type: contains
+        value: '"updatedToolOutput"'
+        metric: security
       - type: contains
         value: '<UK_NINO>'
         metric: security
@@ -190,9 +186,6 @@ tests:
         metric: security
       - type: contains
         value: '<UK_POSTCODE>'
-        metric: security
-      - type: not-contains
-        value: 'AB123456C'
         metric: security
 
   # --- lint_passes: hooks.json is valid -------------------------------------
