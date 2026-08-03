@@ -282,7 +282,6 @@ def _detect_event(payload: dict[str, Any]) -> str | None:
         return "PostToolUse"
     if "tool_input" in payload and payload.get("tool_name") not in _WRITE_TOOLS:
         return "PreToolUse"
-
     return None
 
 
@@ -294,7 +293,6 @@ def _handle_user_prompt_submit(
     """Handle UserPromptSubmit event. Block prompt if PII detected."""
     prompt = payload.get("prompt", "")
     redacted = _redact_text(prompt, analyzer, anonymizer)
-
     if redacted != prompt:
         return {
             "decision": "block",
@@ -305,7 +303,6 @@ def _handle_user_prompt_submit(
                 "or other personal data."
             ),
         }
-
     return None
 
 
@@ -317,7 +314,6 @@ def _handle_pre_tool_use(
     """Handle PreToolUse event. Redact tool input if PII detected."""
     tool_input = payload.get("tool_input", {})
     redacted_input = _redact_value(tool_input, analyzer, anonymizer)
- 
     if redacted_input != tool_input:
         return {
             "hookSpecificOutput": {
@@ -326,7 +322,6 @@ def _handle_pre_tool_use(
                 "updatedInput": redacted_input,
             }
         }
- 
     return None
 
 
@@ -338,7 +333,6 @@ def _handle_post_tool_use(
     """Handle PostToolUse event. Redact tool output if PII detected."""
     tool_response = payload.get("tool_response", {})
     redacted_response = _redact_value(tool_response, analyzer, anonymizer)
-
     if redacted_response != tool_response:
         return {
             "hookSpecificOutput": {
@@ -346,7 +340,6 @@ def _handle_post_tool_use(
                 "updatedToolOutput": redacted_response,
             }
         }
-
     return None
 
 

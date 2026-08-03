@@ -31,15 +31,6 @@ Log structured fields by **identifier** (e.g. `userId`, `caseRef`), not by the u
 
 The companion hook `pii-scan` runs on every `Write` / `Edit` and warns when a PII pattern is detected in a changed file. It is async (warning only) so it does not block legitimate fixture data.
 
-#### `defra-pii-redaction` plugin
-
-The `defra-pii-redaction` plugin (`plugins/defra-pii-redaction`) is a newer, more thorough alternative to relying on `pii-scan` alone. Where `pii-scan` only warns on files touched by `Write` / `Edit`, `defra-pii-redaction` intercepts **every** LLM interaction — prompts, tool inputs, and tool outputs — and actively redacts UK PII before it reaches or leaves the model, rather than just flagging it after the fact. Benefits over the file-scan approach:
-
-- **Covers all traffic, not just edited files** — prompts and tool call data that never touch `Write` / `Edit` (e.g. read results, terminal output, API responses) are also scanned and redacted.
-- **Redacts rather than just warns** — matched PII is replaced before it leaves the boundary, so there's no reliance on a human noticing a warning and fixing it.
-- **Configurable redaction logic** via a Python script (`scripts/redact_pii.py`), making it easier to tune or extend the UK PII pattern set in one place.
-- **Defense in depth** — use it alongside `pii-scan` (which still catches PII being written into source/fixture files) rather than as a straight replacement.
-
 ### Unsafe template patterns
 
 For Nunjucks (frontend), Razor (.NET), and Jinja2 (Python):
