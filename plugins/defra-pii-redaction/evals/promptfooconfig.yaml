@@ -1,0 +1,209 @@
+# Promptfoo harness for the defra-pii-redaction plugin.
+#
+# This plugin ships **no agent** — its surface area is one SKILL.md file
+# plus a provider with three synchronous redaction hooks. The eval suite
+# drives the redact_pii.py script end-to-end with synthetic payloads,
+# asserting that:
+#
+#   - UserPromptSubmit: prompts containing UK PII are blocked outright
+#     (Claude Code cannot replace prompt text via hooks, only block)
+#   - PreToolUse: tool inputs are redacted via hookSpecificOutput.updatedInput
+#   - PostToolUse: tool outputs are redacted via hookSpecificOutput.updatedToolOutput
+#   - Defra-specific PII (SBI, CRN, CPH) is redacted in tool events
+#   - clean content produces no output and exits 0
+#   - the skill and hooks are present and discoverable
+#
+# Run: npx promptfoo eval
+#
+# Metric names follow ../../docs/design/eval_taxonomy.md:
+#   correctness, security, lint_passes.
+
+description: defra-pii-redaction plugin eval
+
+providers:
+  - id: exec:node ./run-copilot.mjs
+    label: copilot-cli-defra-pii-redaction
+  - id: exec:node ./run-claude.mjs
+    label: claude-code-defra-pii-redaction
+
+prompts:
+  - '{{prompt}}'
+
+tests:
+  # --- correctness: skill + hooks are loaded and discoverable ---------------
+  - description: 'correctness — PII redaction skill loads'
+    vars:
+      prompt: 'defra-pii-redaction eval'
+    assert:
+      - type: contains
+        value: 'skills/defra-pii-redaction/SKILL.md'
+        metric: correctness
+
+  - description: 'correctness — all three hooks defined in catalogue'
+    vars:
+      prompt: 'defra-pii-redaction eval'
+    assert:
+      - type: contains
+        value: 'pii-redact-prompt'
+        metric: correctness
+      - type: contains
+        value: 'pii-redact-pre'
+        metric: correctness
+      - type: contains
+        value: 'pii-redact-post'
+        metric: correctness
+
+  - description: 'correctness — clean prompt passes through (exit 0, no block)'
+    vars:
+      prompt: 'defra-pii-redaction eval'
+    assert:
+      - type: contains
+        value: "HOOK RUN UserPromptSubmit prompt-clean ===\nexit_code: 0"
+        metric: correctness
+      - type: not-contains
+        value: '"decision": "block"'
+        metric: correctness
+
+  - description: 'correctness — clean tool output passes through unchanged'
+    vars:
+      prompt: 'defra-pii-redaction eval'
+    assert:
+      - type: contains
+        value: "HOOK RUN PostToolUse post-clean ===\nexit_code: 0"
+        metric: correctness
+      - type: not-contains
+        value: '"updatedToolOutput"'
+        metric: correctness
+
+  # --- security: prompts with UK PII are blocked ----------------------------
+  - description: 'security — prompt with UK NINO is blocked'
+    vars:
+      prompt: 'defra-pii-redaction eval'
+    assert:
+      - type: contains
+        value: '"decision": "block"'
+        metric: security
+
+  - description: 'security — prompt with UK NHS number is blocked'
+    vars:
+      prompt: 'defra-pii-redaction eval'
+    assert:
+      - type: contains
+        value: '"decision": "block"'
+        metric: security
+
+  - description: 'security — prompt with person name and email is blocked'
+    vars:
+      prompt: 'defra-pii-redaction eval'
+    assert:
+      - type: contains
+        value: '"decision": "block"'
+        metric: security
+
+  # --- security: Defra-specific PII (SBI, CRN, CPH) in tool inputs ----------
+  - description: 'security — SBI is redacted from tool inputs via updatedInput'
+    vars:
+      prompt: 'defra-pii-redaction eval'
+    assert:
+      - type: contains
+        value: '"updatedInput"'
+        metric: security
+      - type: contains
+        value: '<SBI>'
+        metric: security
+
+  - description: 'security — CRN is redacted from tool inputs via updatedInput'
+    vars:
+      prompt: 'defra-pii-redaction eval'
+    assert:
+      - type: contains
+        value: '"updatedInput"'
+        metric: security
+      - type: contains
+        value: '<CRN>'
+        metric: security
+
+  - description: 'security — CPH is redacted from tool inputs via updatedInput'
+    vars:
+      prompt: 'defra-pii-redaction eval'
+    assert:
+      - type: contains
+        value: '"updatedInput"'
+        metric: security
+      - type: contains
+        value: '<CPH>'
+        metric: security
+
+  - description: 'security — UK postcode is redacted from tool inputs via updatedInput'
+    vars:
+      prompt: 'defra-pii-redaction eval'
+    assert:
+      - type: contains
+        value: '"updatedInput"'
+        metric: security
+      - type: contains
+        value: '<UK_POSTCODE>'
+        metric: security
+
+  # --- security: tool outputs are redacted via updatedToolOutput ------------
+  - description: 'security — credit card is redacted from tool outputs via updatedToolOutput'
+    vars:
+      prompt: 'defra-pii-redaction eval'
+    assert:
+      - type: contains
+        value: '"updatedToolOutput"'
+        metric: security
+      - type: contains
+        value: '<CREDIT_CARD>'
+        metric: security
+
+  - description: 'security — phone number is redacted from tool outputs via updatedToolOutput'
+    vars:
+      prompt: 'defra-pii-redaction eval'
+    assert:
+      - type: contains
+        value: '"updatedToolOutput"'
+        metric: security
+      - type: contains
+        value: '<PHONE_NUMBER>'
+        metric: security
+
+  - description: 'security — multiple PII types redacted in single tool output'
+    vars:
+      prompt: 'defra-pii-redaction eval'
+    assert:
+      - type: contains
+        value: '"updatedToolOutput"'
+        metric: security
+      - type: contains
+        value: '<UK_NINO>'
+        metric: security
+      - type: contains
+        value: '<UK_NHS>'
+        metric: security
+      - type: contains
+        value: '<SBI>'
+        metric: security
+      - type: contains
+        value: '<UK_POSTCODE>'
+        metric: security
+
+  # --- lint_passes: hooks.json is valid -------------------------------------
+  - description: 'lint_passes — hooks.json parses and defines status messages'
+    vars:
+      prompt: 'defra-pii-redaction eval'
+    assert:
+      - type: contains
+        value: 'HOOKS DEFINED'
+        metric: lint_passes
+      - type: contains
+        value: 'pii-redact-prompt: redacting PII from prompt...'
+        metric: lint_passes
+      - type: contains
+        value: 'pii-redact-pre: redacting PII from tool input...'
+        metric: lint_passes
+      - type: contains
+        value: 'pii-redact-post: redacting PII from tool output...'
+        metric: lint_passes
+
+outputPath: ./output.json

@@ -22,24 +22,32 @@
     "evals:frontend": "npm run evals:frontend:fixture:install && npm run evals:setup && node scripts/evals.mjs eval frontend-developer copilot-cli-frontend-developer",
     "evals:frontend:claude": "npm run evals:frontend:fixture:install && npm run evals:setup && node scripts/evals.mjs eval frontend-developer claude-code-frontend-developer",
     "evals:frontend:view": "node scripts/evals.mjs view frontend-developer",
-    "evals:frontend:clean": "node scripts/evals.mjs clean frontend-developer"
-  },
-  "overrides": {
-    "fast-uri": "3.1.2",
-    "hono": "4.12.23",
-    "ip-address": "10.2.0",
-    "qs": "6.15.2"
+    "evals:frontend:clean": "node scripts/evals.mjs clean frontend-developer",
+    "evals:pii": "npm run evals:setup && node scripts/evals.mjs eval defra-pii-redaction copilot-cli-defra-pii-redaction",
+    "evals:pii:claude": "npm run evals:setup && node scripts/evals.mjs eval defra-pii-redaction claude-code-defra-pii-redaction",
+    "evals:pii:view": "node scripts/evals.mjs view defra-pii-redaction",
+    "evals:pii:clean": "node scripts/evals.mjs clean defra-pii-redaction"
   },
   "dependencies": {
-    "ajv": "8.18.0",
+    "ajv": "8.20.0",
     "ajv-formats": "3.0.1",
     "gray-matter": "4.0.3"
   },
   "devDependencies": {
-    "@eslint/js": "9.13.0",
-    "eslint": "9.13.0",
-    "globals": "15.11.0",
-    "prettier": "3.3.3",
-    "promptfoo": "0.121.9"
+    "@eslint/js": "9.39.4",
+    "eslint": "9.39.4",
+    "globals": "17.7.0",
+    "prettier": "3.9.6",
+    "promptfoo": "0.121.19"
+  },
+  "overrides": {
+    "@hono/node-server": "2.0.10",
+    "adm-zip": "0.6.0",
+    "fast-uri": "3.1.4",
+    "hono": "4.12.27",
+    "ip-address": "10.2.0",
+    "qs": "6.15.2",
+    "sharp": "0.35.3",
+    "esbuild": "0.28.1"
   }
 }

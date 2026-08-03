@@ -10,8 +10,26 @@
 // fixture failure, so new fixtures get gated from their first appearance.
 
 import { readFileSync, existsSync } from 'node:fs'
-import { dirname, resolve, join } from 'node:path'
+import { dirname, resolve, join, relative, isAbsolute } from 'node:path'
 import { fileURLToPath } from 'node:url'
+
+/**
+ * Resolve `filePath` and ensure it does not escape the current working
+ * directory. Prevents an LLM-driven CLI invocation from reading or
+ * overwriting arbitrary files via a path-traversal argument.
+ *
+ * @param {string} filePath - Untrusted path supplied via CLI argument.
+ * @returns {string} The resolved, validated absolute path.
+ */
+function safePath(filePath) {
+  const baseDir = process.cwd()
+  const resolved = resolve(baseDir, filePath)
+  const rel = relative(baseDir, resolved)
+  if (rel.startsWith('..') || isAbsolute(rel)) {
+    throw new Error(`path '${filePath}' is outside the allowed directory`)
+  }
+  return resolved
+}
 
 /**
  * Build a per-prompt success map from a parsed promptfoo result object.
@@ -76,17 +94,27 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
   const scriptDir = dirname(fileURLToPath(import.meta.url))
   const baselinePath = baselineArg ?? join(scriptDir, 'baseline', 'promptfoo-results.json')
 
-  if (!existsSync(resolve(newPath))) {
+  let resolvedNewPath
+  let resolvedBaselinePath
+  try {
+    resolvedNewPath = safePath(newPath)
+    resolvedBaselinePath = safePath(baselinePath)
+  } catch (err) {
+    console.error(`::error::${err.message}`)
+    process.exit(2)
+  }
+
+  if (!existsSync(resolvedNewPath)) {
     console.error(`::error::New results file not found: ${newPath}`)
     process.exit(2)
   }
-  if (!existsSync(baselinePath)) {
+  if (!existsSync(resolvedBaselinePath)) {
     console.error(`::error::Baseline file not found: ${baselinePath}`)
     process.exit(2)
   }
 
-  const baseline = buildPromptPassMap(JSON.parse(readFileSync(baselinePath, 'utf8')))
-  const fresh = buildPromptPassMap(JSON.parse(readFileSync(newPath, 'utf8')))
+  const baseline = buildPromptPassMap(JSON.parse(readFileSync(resolvedBaselinePath, 'utf8')))
+  const fresh = buildPromptPassMap(JSON.parse(readFileSync(resolvedNewPath, 'utf8')))
 
   const regressions = findRegressions(baseline, fresh)
 

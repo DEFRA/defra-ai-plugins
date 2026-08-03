@@ -1,0 +1,10 @@
+{
+  "name": "defra-pii-redaction-eval-fixture",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Minimal fixture used by the defra-pii-redaction eval suite to exercise hooks end-to-end. Not published.",
+  "license": "OGL-UK-3.0",
+  "scripts": {
+    "test": "node -e \"console.log('fixture smoke ok')\""
+  }
+}

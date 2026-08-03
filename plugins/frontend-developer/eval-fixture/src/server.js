@@ -66,13 +66,9 @@ const createServer = async () => {
 
 export { createServer }
 
-const start = async () => {
+// Don't auto-start the server during tests
+if (process.env.NODE_ENV !== 'test') {
   const server = await createServer()
   await server.start()
   console.log(`Server running on ${server.info.uri}`)
-}
-
-// Don't auto-start the server during tests
-if (process.env.NODE_ENV !== 'test') {
-  start()
 }
