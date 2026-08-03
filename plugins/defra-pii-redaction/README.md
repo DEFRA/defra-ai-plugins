@@ -12,10 +12,10 @@ Unlike the advisory `pii-scan` hook in `defra-shared` (which warns after a file 
 
 **Three hooks (all synchronous, blocking):**
 
-| Hook                | Event              | Matcher       | What it does                                                                                      |
-| ------------------- | ------------------ | ------------- | ------------------------------------------------------------------------------------------------- |
-| `pii-redact-prompt` | `UserPromptSubmit` | (all prompts) | Blocks prompts that contain PII — Claude Code cannot replace prompt text, only block it           |
-| `pii-redact-pre`    | `PreToolUse`       | (all tools)   | Redacts PII from tool inputs before the tool executes (via `hookSpecificOutput.updatedInput`)     |
+| Hook                | Event              | Matcher       | What it does                                                                                           |
+| ------------------- | ------------------ | ------------- | ------------------------------------------------------------------------------------------------------ |
+| `pii-redact-prompt` | `UserPromptSubmit` | (all prompts) | Blocks prompts that contain PII — Claude Code cannot replace prompt text, only block it                |
+| `pii-redact-pre`    | `PreToolUse`       | (all tools)   | Redacts PII from tool inputs before the tool executes (via `hookSpecificOutput.updatedInput`)          |
 | `pii-redact-post`   | `PostToolUse`      | (all tools)   | Redacts PII from tool outputs before they reach the model (via `hookSpecificOutput.updatedToolOutput`) |
 
 ### UserPromptSubmit behaviour

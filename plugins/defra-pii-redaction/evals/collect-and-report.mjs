@@ -70,19 +70,25 @@ export const FIXTURES = [
   {
     label: 'pre-sbi',
     event: 'PreToolUse',
-    payload: () => ({ tool_input: { content: `The farmer SBI is ${b64('MTA1MTIzNDU2')} for this holding` } }),
+    payload: () => ({
+      tool_input: { content: `The farmer SBI is ${b64('MTA1MTIzNDU2')} for this holding` }
+    }),
     expectedPlaceholders: ['<SBI>']
   },
   {
     label: 'pre-crn',
     event: 'PreToolUse',
-    payload: () => ({ tool_input: { query: `Look up CRN ${b64('MTA1MTIzNDU2LzEyLzM0NS82Nzg5')} in the system` } }),
+    payload: () => ({
+      tool_input: { query: `Look up CRN ${b64('MTA1MTIzNDU2LzEyLzM0NS82Nzg5')} in the system` }
+    }),
     expectedPlaceholders: ['<CRN>']
   },
   {
     label: 'pre-cph',
     event: 'PreToolUse',
-    payload: () => ({ tool_input: { content: `County Parish Holding: CPH ${b64('MTIvMzQ1LzY3ODk=')} is registered` } }),
+    payload: () => ({
+      tool_input: { content: `County Parish Holding: CPH ${b64('MTIvMzQ1LzY3ODk=')} is registered` }
+    }),
     expectedPlaceholders: ['<CPH>']
   },
   {
@@ -97,13 +103,21 @@ export const FIXTURES = [
   {
     label: 'post-credit-card',
     event: 'PostToolUse',
-    payload: () => ({ tool_response: { stdout: `Payment processed with card ${b64('NDExMSAxMTExIDExMTEgMTExMQ==')}` } }),
+    payload: () => ({
+      tool_response: {
+        stdout: `Payment processed with card ${b64('NDExMSAxMTExIDExMTEgMTExMQ==')}`
+      }
+    }),
     expectedPlaceholders: ['<CREDIT_CARD>']
   },
   {
     label: 'post-phone',
     event: 'PostToolUse',
-    payload: () => ({ tool_response: { stdout: `Contact the helpline on ${b64('KzQ0NzkxMTEyMzQ1Ng==')} for assistance` } }),
+    payload: () => ({
+      tool_response: {
+        stdout: `Contact the helpline on ${b64('KzQ0NzkxMTEyMzQ1Ng==')} for assistance`
+      }
+    }),
     expectedPlaceholders: ['<PHONE_NUMBER>']
   },
   {
