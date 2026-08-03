@@ -15,9 +15,16 @@ Contract:
   stdout — same JSON structure with PII replaced by typed placeholders
   exit 0 — always (redaction failures pass through unredacted rather than blocking)
 
-Usage:
-  uv run redact_pii.py             # hook mode (reads stdin, writes stdout)
-  uv run redact_pii.py --preload   # download spaCy model and exit
+Click Commands:
+  redact-command  Process stdin payload and redact PII (default when no subcommand)
+  preload         Download spaCy model and warm up engines
+  warn            Check for PII in stdin payload and emit warnings (pass-through mode)
+
+Examples:
+  uv run redact_pii.py                  # hook mode (default)
+  uv run redact_pii.py redact-command   # explicit hook mode
+  uv run redact_pii.py preload          # preload spaCy model
+  uv run redact_pii.py warn             # check for PII and warn
 """
 
 import hashlib
@@ -29,6 +36,7 @@ import zipfile
 from pathlib import Path
 from typing import Any
 
+import click
 import presidio_analyzer
 import presidio_analyzer.predefined_recognizers
 import presidio_anonymizer
@@ -251,7 +259,7 @@ def _download_and_validate_wheel() -> None:
         sys.path.insert(0, str(extract_dir))
 
 
-def load_model() -> None:
+def _load_model_internal() -> None:
     print("Warming up presidio engines...", file=sys.stderr)
 
     _download_and_validate_wheel()
@@ -277,12 +285,83 @@ def _detect_event(payload: dict[str, Any]) -> str | None:
     return None
 
 
-def main() -> None:
-    load_model()
+def _handle_user_prompt_submit(
+    payload: dict[str, Any],
+    analyzer: presidio_analyzer.AnalyzerEngine,
+    anonymizer: presidio_anonymizer.AnonymizerEngine,
+) -> dict[str, Any] | None:
+    """Handle UserPromptSubmit event. Block prompt if PII detected."""
+    prompt = payload.get("prompt", "")
+    redacted = _redact_text(prompt, analyzer, anonymizer)
+    if redacted != prompt:
+        return {
+            "decision": "block",
+            "reason": (
+                "Prompt contains personal information (PII). "
+                "Please rephrase without including names, email addresses, "
+                "NI numbers, NHS numbers, phone numbers, postcodes, "
+                "or other personal data."
+            ),
+        }
+    return None
 
-    if "--preload" in sys.argv:
-        sys.stdout.write("Preload complete.\n")
-        sys.exit(0)
+
+def _handle_pre_tool_use(
+    payload: dict[str, Any],
+    analyzer: presidio_analyzer.AnalyzerEngine,
+    anonymizer: presidio_anonymizer.AnonymizerEngine,
+) -> dict[str, Any] | None:
+    """Handle PreToolUse event. Redact tool input if PII detected."""
+    tool_input = payload.get("tool_input", {})
+    redacted_input = _redact_value(tool_input, analyzer, anonymizer)
+    if redacted_input != tool_input:
+        return {
+            "hookSpecificOutput": {
+                "hookEventName": "PreToolUse",
+                "permissionDecision": "allow",
+                "updatedInput": redacted_input,
+            }
+        }
+    return None
+
+
+def _handle_post_tool_use(
+    payload: dict[str, Any],
+    analyzer: presidio_analyzer.AnalyzerEngine,
+    anonymizer: presidio_anonymizer.AnonymizerEngine,
+) -> dict[str, Any] | None:
+    """Handle PostToolUse event. Redact tool output if PII detected."""
+    tool_response = payload.get("tool_response", {})
+    redacted_response = _redact_value(tool_response, analyzer, anonymizer)
+    if redacted_response != tool_response:
+        return {
+            "hookSpecificOutput": {
+                "hookEventName": "PostToolUse",
+                "updatedToolOutput": redacted_response,
+            }
+        }
+    return None
+
+
+@click.group(invoke_without_command=True)
+@click.pass_context
+def cli(ctx: click.Context) -> None:
+    """PII redaction hook for Claude Code / GitHub Copilot."""
+    if ctx.invoked_subcommand is None:
+        redact_command()
+
+
+@cli.command()
+def preload() -> None:
+    """Download spaCy model and warm up engines, then exit."""
+    _load_model_internal()
+    sys.stdout.write("Preload complete.\n")
+
+
+@cli.command()
+def warn() -> None:
+    """Check for PII in stdin payload and warn (pass-through mode)."""
+    _load_model_internal()
 
     raw = sys.stdin.read()
 
@@ -292,19 +371,31 @@ def main() -> None:
         sys.stdout.write(raw)
         sys.exit(0)
 
-    if "--warn" in sys.argv:
-        try:
-            found = warn_payload(payload)
-            if found:
-                types = ", ".join(found)
-                sys.stderr.write(
-                    f"pii-warn: possible PII detected ({types})."
-                    " Review and redact before logging or persisting."
-                    " See skill defra-security-pii.\n"
-                )
-        except Exception as e:
-            sys.stderr.write(f"ERROR: PII warning check failed: {e}\n")
+    try:
+        found = warn_payload(payload)
+        if found:
+            types = ", ".join(found)
+            sys.stderr.write(
+                f"pii-warn: possible PII detected ({types})."
+                " Review and redact before logging or persisting."
+                " See skill defra-security-pii.\n"
+            )
+    except Exception as e:
+        sys.stderr.write(f"ERROR: PII warning check failed: {e}\n")
 
+    sys.stdout.write(raw)
+
+
+@cli.command()
+def redact_command() -> None:
+    """Process stdin payload and redact PII (default mode)."""
+    _load_model_internal()
+
+    raw = sys.stdin.read()
+
+    try:
+        payload: dict[str, Any] = json.loads(raw)
+    except json.JSONDecodeError:
         sys.stdout.write(raw)
         sys.exit(0)
 
@@ -312,58 +403,26 @@ def main() -> None:
     if event is None:
         sys.exit(0)
 
+    handlers = {
+        "UserPromptSubmit": _handle_user_prompt_submit,
+        "PreToolUse": _handle_pre_tool_use,
+        "PostToolUse": _handle_post_tool_use,
+    }
+
     try:
         analyzer = _build_analyzer()
         anonymizer = _build_anonymizer()
 
-        if event == "UserPromptSubmit":
-            prompt = payload.get("prompt", "")
-            redacted = _redact_text(prompt, analyzer, anonymizer)
-            if redacted != prompt:
-                # Claude Code cannot replace prompt text via hooks — block the
-                # prompt so PII never reaches the model.
-                output: dict[str, Any] = {
-                    "decision": "block",
-                    "reason": (
-                        "Prompt contains personal information (PII). "
-                        "Please rephrase without including names, email addresses, "
-                        "NI numbers, NHS numbers, phone numbers, postcodes, "
-                        "or other personal data."
-                    ),
-                }
-                sys.stdout.write(json.dumps(output))
-
-        elif event == "PreToolUse":
-            tool_input = payload.get("tool_input", {})
-            redacted_input = _redact_value(tool_input, analyzer, anonymizer)
-            if redacted_input != tool_input:
-                output = {
-                    "hookSpecificOutput": {
-                        "hookEventName": "PreToolUse",
-                        "permissionDecision": "allow",
-                        "updatedInput": redacted_input,
-                    }
-                }
-                sys.stdout.write(json.dumps(output))
-
-        elif event == "PostToolUse":
-            tool_response = payload.get("tool_response", {})
-            redacted_response = _redact_value(tool_response, analyzer, anonymizer)
-            if redacted_response != tool_response:
-                output = {
-                    "hookSpecificOutput": {
-                        "hookEventName": "PostToolUse",
-                        "updatedToolOutput": redacted_response,
-                    }
-                }
+        handler = handlers.get(event)
+        if handler:
+            output = handler(payload, analyzer, anonymizer)
+            if output:
                 sys.stdout.write(json.dumps(output))
 
     except Exception as e:
         sys.stderr.write(f"ERROR: Redaction failed: {e}\n")
         sys.exit(1)
 
-    sys.exit(0)
-
 
 if __name__ == "__main__":
-    main()
+    cli()
