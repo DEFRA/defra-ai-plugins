@@ -272,7 +272,27 @@ def _load_model_internal() -> None:
 # Tools that write content to disk. Redacting their inputs would corrupt the
 # files being written; the content is already in Claude's context before the
 # tool is called, so intercepting it here adds no protection.
-_WRITE_TOOLS: frozenset[str] = frozenset({"Write", "Edit", "NotebookEdit"})
+# "create"/"edit" are Copilot CLI's equivalents of Claude's Write/Edit/NotebookEdit
+# (see the hooks reference's Claude-tool-name mapping).
+_WRITE_TOOLS: frozenset[str] = frozenset({"Write", "Edit", "NotebookEdit", "create", "edit"})
+
+
+def _normalize_payload(payload: dict[str, Any]) -> dict[str, Any]:
+    """Normalize Copilot CLI's camelCase hook payload ("toolName", "toolArgs",
+    "toolResult") to Claude Code's shape ("tool_name", "tool_input",
+    "tool_response") so the rest of the script only has to deal with one
+    contract. Claude Code payloads pass through unchanged.
+    """
+    if "toolResult" in payload:
+        return {**payload, "tool_response": payload["toolResult"], "_copilot": True}
+    if "toolArgs" in payload:
+        return {
+            **payload,
+            "tool_name": payload.get("toolName"),
+            "tool_input": payload["toolArgs"],
+            "_copilot": True,
+        }
+    return payload
 
 
 def _detect_event(payload: dict[str, Any]) -> str | None:
@@ -314,15 +334,17 @@ def _handle_pre_tool_use(
     """Handle PreToolUse event. Redact tool input if PII detected."""
     tool_input = payload.get("tool_input", {})
     redacted_input = _redact_value(tool_input, analyzer, anonymizer)
-    if redacted_input != tool_input:
-        return {
-            "hookSpecificOutput": {
-                "hookEventName": "PreToolUse",
-                "permissionDecision": "allow",
-                "updatedInput": redacted_input,
-            }
+    if redacted_input == tool_input:
+        return None
+    if payload.get("_copilot"):
+        return {"modifiedArgs": redacted_input}
+    return {
+        "hookSpecificOutput": {
+            "hookEventName": "PreToolUse",
+            "permissionDecision": "allow",
+            "updatedInput": redacted_input,
         }
-    return None
+    }
 
 
 def _handle_post_tool_use(
@@ -333,14 +355,16 @@ def _handle_post_tool_use(
     """Handle PostToolUse event. Redact tool output if PII detected."""
     tool_response = payload.get("tool_response", {})
     redacted_response = _redact_value(tool_response, analyzer, anonymizer)
-    if redacted_response != tool_response:
-        return {
-            "hookSpecificOutput": {
-                "hookEventName": "PostToolUse",
-                "updatedToolOutput": redacted_response,
-            }
+    if redacted_response == tool_response:
+        return None
+    if payload.get("_copilot"):
+        return {"modifiedResult": redacted_response}
+    return {
+        "hookSpecificOutput": {
+            "hookEventName": "PostToolUse",
+            "updatedToolOutput": redacted_response,
         }
-    return None
+    }
 
 
 @click.group(invoke_without_command=True)
@@ -398,6 +422,8 @@ def redact_command() -> None:
     except json.JSONDecodeError:
         sys.stdout.write(raw)
         sys.exit(0)
+
+    payload = _normalize_payload(payload)
 
     event = _detect_event(payload)
     if event is None:

@@ -82,11 +82,21 @@ Notes that diverge from "skills call tools, agent aggregates":
 | ------------------ | --------------------------------------------------------------- | ----------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | frontend-developer | `plugins/frontend-developer/agents/frontend-developer.agent.md` | view, edit, create, glob, grep, bash, **task**, skill | `govuk-form`, `govuk-component`, `vitest-unit-test`, `pre-commit-review` (own plugin); `defra-branching`, `defra-commit-messages`, `defra-quality-gates`, `defra-security-pii`, `defra-accessibility` (defra-shared) |
 | ticket-writer      | `plugins/ticket-writer/agents/ticket-writer.agent.md`           | view, edit, create, glob, grep, bash, skill           | `story-ticket`, `task-ticket` (own plugin); `defra-branching`, `defra-commit-messages`, `defra-security-pii`, `defra-accessibility`, `defra-quality-gates` (defra-shared)                                            |
+| ticket-writer      | `plugins/ticket-writer/agents/ticket-writer.md`                 | Read, Edit, Write, Glob, Grep, Bash, Skill            | Same as above — Claude Code entry point, same prompt body as the Copilot agent with Claude Code tool names                                                                                                          |
 
 `frontend-developer` is the only agent that declares the `task` tool
 (`plugins/frontend-developer/agents/frontend-developer.agent.md:3`); the agent
 prompt does not explicitly delegate to sub-agents, so `task` is currently
 declared-but-unused for sub-agent delegation.
+
+`ticket-writer` is the only agent with both a Copilot (`.agent.md`) and a
+Claude Code (`.md`) entry point (`plugins/ticket-writer/agents/`). The
+Copilot `tools` array used Copilot CLI tool names (`view`, `edit`, `create`,
+`glob`, `grep`, `bash`, `skill`); Claude Code does not recognise those names
+and errors when a subagent's `tools` list has no resolvable entries, so the
+Claude Code file declares the equivalent real tool names (`Read`, `Edit`,
+`Write`, `Glob`, `Grep`, `Bash`, `Skill`) instead. `frontend-developer` has no
+Claude Code entry point yet.
 
 ### Skills
 
@@ -230,4 +240,8 @@ declared-but-unused for sub-agent delegation.
 - **Cross-CLI portability.** Skill files are format-shared with Claude Code
   (see `scripts/validate-frontmatter.mjs:9-12` distinguishing
   `copilot-agent` vs `claude-agent` formats). The Copilot agent file format
-  (`.agent.md` with required `tools` array) is Copilot-specific.
+  (`.agent.md` with required `tools` array) is Copilot-specific. `ticket-writer`
+  is the one plugin that also ships a `claude-agent` entry point
+  (`plugins/ticket-writer/agents/ticket-writer.md`) so the agent itself works
+  unmodified under Claude Code, not just its skills — the two files share the
+  same prompt body and differ only in the `tools` array's naming convention.

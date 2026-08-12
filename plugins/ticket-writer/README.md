@@ -11,6 +11,13 @@ A custom agent (**`ticket-writer`**) backed by two skills:
 
 At the start of every session the agent lists the available skills and asks whether to use the built-in default templates or a custom template file you provide.
 
+This plugin ships **two entry points for the same agent**, so it works natively on either CLI:
+
+- [`agents/ticket-writer.agent.md`](agents/ticket-writer.agent.md) — Copilot CLI (`tools` uses Copilot's tool names: `view`, `edit`, `create`, `glob`, `grep`, `bash`, `skill`)
+- [`agents/ticket-writer.md`](agents/ticket-writer.md) — Claude Code (`tools` uses Claude Code's tool names: `Read`, `Edit`, `Write`, `Glob`, `Grep`, `Bash`, `Skill`)
+
+Both files share the same prompt body; only the `tools` array's naming convention differs, since Claude Code errors on a subagent whose `tools` list has no entries it recognises. When editing the workflow or standards sections, update both files together.
+
 ## Prerequisite plugin
 
 This plugin declares **`defra-shared`** as a dependency in [`plugin.json`](plugin.json) and **must be installed alongside it**. The agent references the shared skills (`defra-branching`, `defra-commit-messages`, `defra-security-pii`, `defra-accessibility`, `defra-quality-gates`) by name in its workflow, and the guardrail hooks shipped by `defra-shared` (`branch-guard`, `commit-message-format`, `secret-scan`, `pii-scan`) are the enforcement layer for those standards when the agent saves or commits ticket files.
