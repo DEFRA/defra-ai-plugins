@@ -1,6 +1,6 @@
 # Agents and skills in this repo
 
-This repo ships three GitHub Copilot CLI plugins under `plugins/`. Each plugin
+This repo ships five GitHub Copilot CLI plugins under `plugins/`. Each plugin
 is independent; one is shared and referenced by the others. This doc maps the
 abstractions and the wiring between them. Source files are authoritative — the
 file paths cited below are the audit trail.
@@ -90,21 +90,28 @@ declared-but-unused for sub-agent delegation.
 
 ### Skills
 
-| Skill                 | File                                                              | Owning plugin       | Called by                                                                                                                                                                           |
-| --------------------- | ----------------------------------------------------------------- | ------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| defra-accessibility   | `plugins/defra-shared/skills/defra-accessibility/SKILL.md`        | defra-shared        | frontend-developer agent, ticket-writer agent                                                                                                                                       |
-| defra-pii-redaction   | `plugins/defra-pii-redaction/skills/defra-pii-redaction/SKILL.md` | defra-pii-redaction | Loaded as context when the pii-redaction hooks are installed; describes the redaction contract                                                                                      |
-| defra-branching       | `plugins/defra-shared/skills/defra-branching/SKILL.md`            | defra-shared        | frontend-developer agent, ticket-writer agent; also cited by name in `defra-shared/hooks/hooks.json` branch-guard error                                                             |
-| defra-commit-messages | `plugins/defra-shared/skills/defra-commit-messages/SKILL.md`      | defra-shared        | frontend-developer agent, ticket-writer agent; cited by `commit-message-format` hook                                                                                                |
-| defra-quality-gates   | `plugins/defra-shared/skills/defra-quality-gates/SKILL.md`        | defra-shared        | frontend-developer agent, ticket-writer agent; cited by `coverage-floor` hook                                                                                                       |
-| defra-security-pii    | `plugins/defra-shared/skills/defra-security-pii/SKILL.md`         | defra-shared        | frontend-developer agent, ticket-writer agent; cited by `secret-scan` and `pii-scan` hooks                                                                                          |
-| frontend-tech-stack   | `plugins/frontend-developer/skills/frontend-tech-stack/SKILL.md`  | frontend-developer  | Not named in the agent prompt; surfaced deterministically by the `UserPromptSubmit` hook in `plugins/frontend-developer/hooks/hooks.json` when the prompt mentions a forbidden tech |
-| govuk-component       | `plugins/frontend-developer/skills/govuk-component/SKILL.md`      | frontend-developer  | frontend-developer agent (workflow step 4)                                                                                                                                          |
-| govuk-form            | `plugins/frontend-developer/skills/govuk-form/SKILL.md`           | frontend-developer  | frontend-developer agent (workflow step 3)                                                                                                                                          |
-| pre-commit-review     | `plugins/frontend-developer/skills/pre-commit-review/SKILL.md`    | frontend-developer  | frontend-developer agent (workflow step 7)                                                                                                                                          |
-| vitest-unit-test      | `plugins/frontend-developer/skills/vitest-unit-test/SKILL.md`     | frontend-developer  | frontend-developer agent (workflow step 5)                                                                                                                                          |
-| story-ticket          | `plugins/ticket-writer/skills/story-ticket/SKILL.md`              | ticket-writer       | ticket-writer agent (workflow step 3)                                                                                                                                               |
-| task-ticket           | `plugins/ticket-writer/skills/task-ticket/SKILL.md`               | ticket-writer       | ticket-writer agent (workflow step 3)                                                                                                                                               |
+| Skill                 | File                                                              | Owning plugin        | Called by                                                                                                                                                                           |
+| --------------------- | ----------------------------------------------------------------- | -------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| defra-accessibility   | `plugins/defra-shared/skills/defra-accessibility/SKILL.md`        | defra-shared         | frontend-developer agent, ticket-writer agent                                                                                                                                       |
+| defra-pii-redaction   | `plugins/defra-pii-redaction/skills/defra-pii-redaction/SKILL.md` | defra-pii-redaction  | Loaded as context when the pii-redaction hooks are installed; describes the redaction contract                                                                                      |
+| defra-branching       | `plugins/defra-shared/skills/defra-branching/SKILL.md`            | defra-shared         | frontend-developer agent, ticket-writer agent; also cited by name in `defra-shared/hooks/hooks.json` branch-guard error                                                             |
+| defra-commit-messages | `plugins/defra-shared/skills/defra-commit-messages/SKILL.md`      | defra-shared         | frontend-developer agent, ticket-writer agent; cited by `commit-message-format` hook                                                                                                |
+| defra-quality-gates   | `plugins/defra-shared/skills/defra-quality-gates/SKILL.md`        | defra-shared         | frontend-developer agent, ticket-writer agent; cited by `coverage-floor` hook                                                                                                       |
+| defra-security-pii    | `plugins/defra-shared/skills/defra-security-pii/SKILL.md`         | defra-shared         | frontend-developer agent, ticket-writer agent; cited by `secret-scan` and `pii-scan` hooks                                                                                          |
+| frontend-tech-stack   | `plugins/frontend-developer/skills/frontend-tech-stack/SKILL.md`  | frontend-developer   | Not named in the agent prompt; surfaced deterministically by the `UserPromptSubmit` hook in `plugins/frontend-developer/hooks/hooks.json` when the prompt mentions a forbidden tech |
+| govuk-component       | `plugins/frontend-developer/skills/govuk-component/SKILL.md`      | frontend-developer   | frontend-developer agent (workflow step 4)                                                                                                                                          |
+| govuk-form            | `plugins/frontend-developer/skills/govuk-form/SKILL.md`           | frontend-developer   | frontend-developer agent (workflow step 3)                                                                                                                                          |
+| pre-commit-review     | `plugins/frontend-developer/skills/pre-commit-review/SKILL.md`    | frontend-developer   | frontend-developer agent (workflow step 7)                                                                                                                                          |
+| vitest-unit-test      | `plugins/frontend-developer/skills/vitest-unit-test/SKILL.md`     | frontend-developer   | frontend-developer agent (workflow step 5)                                                                                                                                          |
+| story-ticket          | `plugins/ticket-writer/skills/story-ticket/SKILL.md`              | ticket-writer        | ticket-writer agent (workflow step 3)                                                                                                                                               |
+| task-ticket           | `plugins/ticket-writer/skills/task-ticket/SKILL.md`               | ticket-writer        | ticket-writer agent (workflow step 3)                                                                                                                                               |
+| ixd-start             | `plugins/interaction-designer/skills/ixd-start/SKILL.md`          | interaction-designer | Invoked directly by the designer (`/ixd-start`); composes the six other `ixd-*` leaf skills below via in-context slash invocation                                                   |
+| ixd-read-corpus       | `plugins/interaction-designer/skills/ixd-read-corpus/SKILL.md`    | interaction-designer | `start` orchestrator (Phase 2); also directly invokable                                                                                                                             |
+| ixd-frame-policy      | `plugins/interaction-designer/skills/ixd-frame-policy/SKILL.md`   | interaction-designer | `start` orchestrator (Phase 3); also directly invokable                                                                                                                             |
+| ixd-map-journey       | `plugins/interaction-designer/skills/ixd-map-journey/SKILL.md`    | interaction-designer | `start` orchestrator (Phase 4); also directly invokable                                                                                                                             |
+| ixd-spec-page         | `plugins/interaction-designer/skills/ixd-spec-page/SKILL.md`      | interaction-designer | `start` orchestrator (Phase 5, and the Phase 7 revision loop); also directly invokable, including `--all` batch mode (direct-surface only)                                          |
+| ixd-preview-spec      | `plugins/interaction-designer/skills/ixd-preview-spec/SKILL.md`   | interaction-designer | `start` orchestrator (Phase 6, and re-rendering in the Phase 7 revision loop); also directly invokable                                                                              |
+| ixd-wrap-up           | `plugins/interaction-designer/skills/ixd-wrap-up/SKILL.md`        | interaction-designer | `start` orchestrator (Phase 8); also directly invokable; textually suggests `frontend-developer`'s `govuk-form` skill as an optional handoff (see § 4)                              |
 
 ### Wiring diagram
 
@@ -143,6 +150,24 @@ declared-but-unused for sub-agent delegation.
    │     (branch-guard lives in defra-shared)  │       │
    └───────────────────────────────────────────┘       │
                                                        │
+   ┌───────────────────────────────────────────┐      │
+   │ interaction-designer (no agent)           │      │
+   │                                           │      │
+   │   skill: ixd-start (orchestrator) ──► loads: │   │
+   │     ixd-read-corpus                       │      │
+   │     ixd-frame-policy                      │      │
+   │     ixd-map-journey                       │      │
+   │     ixd-spec-page                         │      │
+   │     ixd-preview-spec                      │      │
+   │     ixd-wrap-up                           │      │
+   │                                           │      │
+   │   ixd-wrap-up ···► frontend-developer's   │      │  (does not reference
+   │     govuk-form (named, never invoked;     │      │   defra-shared)
+   │     textual-only, not a declared dep)     │      │
+   │                                           │      │
+   │   (no hooks)                              │      │
+   └───────────────────────────────────────────┘      │
+                                                       │
    ┌───────────────────────────────────────────┐       │
    │ ticket-writer                             │───────┘
    │                                           │
@@ -160,8 +185,24 @@ declared-but-unused for sub-agent delegation.
   (`plugins/frontend-developer/agents/frontend-developer.agent.md:3`) but does
   not name a sub-agent anywhere in the prompt. `ticket-writer` does not declare
   `task` at all.
-- **Skill → skill**: none. A `grep` across all `SKILL.md` files shows no skill
-  body references another skill by name.
+- **Skill → skill (within a plugin)**: `interaction-designer`'s orchestrator
+  skill (`ixd-start`) composes its six other `ixd-*` leaf skills via in-context
+  slash invocation (`plugins/interaction-designer/skills/ixd-start/SKILL.md`) —
+  the only skill-to-skill composition in the repo. It works because
+  `interaction-designer` has no agent; the skill itself plays the
+  orchestrating role an agent would elsewhere. Each leaf still writes its own
+  per-stage entry to `DESIGN_HISTORY.md` so the chain survives session loss.
+- **Skill → skill (cross-plugin, textual)**: `interaction-designer`'s
+  `ixd-wrap-up` skill names `frontend-developer`'s `/frontend-developer:govuk-form`
+  skill by name as an optional handoff, one line, only surfaced — never
+  invoked — after a page spec is written
+  (`plugins/interaction-designer/skills/ixd-wrap-up/SKILL.md`). This is a soft,
+  designer-initiated suggestion, not a functional dependency, so
+  `interaction-designer/plugin.json` does not declare `frontend-developer` in
+  `dependencies` (that field is scoped to agent-prompt references — see § 6 —
+  and this plugin has no agent). `validate-cross-plugin-refs.mjs` does not scan
+  skill bodies, only agent prompts, so this reference is unenforced; it holds by
+  convention only.
 - **Hook → skill**: one-way and textual. The hooks in
   `plugins/defra-shared/hooks/hooks.json` emit error messages of the form
   `"See skill defra-branching"` so the agent can recover the rule from a
