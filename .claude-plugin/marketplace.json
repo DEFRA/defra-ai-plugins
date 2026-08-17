@@ -27,6 +27,12 @@
       "source": "./plugins/frontend-developer"
     },
     {
+      "name": "interaction-designer",
+      "description": "Walks Defra interaction designers from a verbal brief through to a journey doc, page spec, and HTML preview. Six leaf skills plus one orchestrator, two invocation surfaces.",
+      "version": "0.1.0",
+      "source": "./plugins/interaction-designer"
+    },
+    {
       "name": "ticket-writer",
       "description": "Creates well-structured JIRA tickets (stories and tasks) for any team. Ships default templates for user-facing stories and technical tasks, with support for custom templates at runtime.",
       "version": "0.1.0",

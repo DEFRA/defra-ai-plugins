@@ -1,0 +1,189 @@
+/*
+ * Defra preview theme — overrides on top of govuk-frontend@6.1.0
+ *
+ * Hand-written from the live digital.defra.gov.uk bundle on 2026-05-15,
+ * kept reviewable rather than minified-and-extracted. Loaded by the
+ * Defra brand mode of `preview-spec` *in addition to*
+ * govuk-frontend.min.css — the GOV.UK Design System provides every
+ * component body; this file overlays the Defra chrome and the
+ * Helvetica/Arial font stack the Defra branding guidance mandates for
+ * non-GOV.UK services.
+ *
+ * Two greens are in play, both sourced from the live CSS:
+ *   #00a33b — Defra Green (per branding guidance; used on service-name)
+ *   #008531 — darker green (used for service-nav bg + footer top border)
+ *
+ * Branding rules this enforces:
+ *   - Helvetica/Arial font stacks, NOT GDS Transport
+ *   - Defra header (with the Defra logo) instead of GOV.UK header
+ *   - Defra footer instead of GOV.UK footer
+ *   - Defra green sparingly — service-name text, footer accent border
+ */
+
+/* --- Font override -------------------------------------------------
+ * govuk-frontend re-asserts font-family on every component class, so a
+ * single body-level override does not propagate. Mirror Defra's own
+ * approach: re-override each class.
+ */
+
+body,
+.govuk-body,
+.govuk-body-m,
+.govuk-body-s,
+.govuk-body-l,
+.govuk-body-lead,
+.govuk-heading-xl,
+.govuk-heading-l,
+.govuk-heading-m,
+.govuk-heading-s,
+.govuk-caption-xl,
+.govuk-caption-l,
+.govuk-caption-m,
+.govuk-label,
+.govuk-hint,
+.govuk-fieldset__legend,
+.govuk-button,
+.govuk-link,
+.govuk-input,
+.govuk-textarea,
+.govuk-select,
+.govuk-radios__label,
+.govuk-checkboxes__label,
+.govuk-details__summary,
+.govuk-details__text,
+.govuk-tag,
+.govuk-phase-banner__content,
+.govuk-warning-text,
+.govuk-inset-text,
+.govuk-error-summary__title,
+.govuk-error-summary__body,
+.govuk-list,
+p {
+  font-family: Helvetica, Arial, sans-serif;
+}
+
+/* --- Defra header --------------------------------------------------
+ * The thick #008531 bottom border is the Defra Green accent band — sits
+ * directly between the white header and the page content, giving the
+ * preview an unmistakable "Defra service" identity without inventing
+ * service-navigation content the spec hasn't described. Matches the
+ * "Defra green sparingly, in headers or navigation borders" rule from
+ * the branding guidance.
+ */
+
+.defra-header {
+  background-color: #fff;
+  border-bottom: 40px solid #008531;
+}
+
+/* Three-column grid with `1fr auto 1fr` so the service-name sits in
+ * the visual centre of the container regardless of logo width. The
+ * empty 1fr right column balances the empty space to the left of the
+ * logo, so removing the search box (which the live source has in
+ * column 3) doesn't push the title off-centre.
+ */
+.defra-header__inner {
+  align-items: center;
+  display: grid;
+  gap: 24px;
+  grid-template-columns: 1fr auto 1fr;
+  margin: 0 auto;
+  max-width: 960px;
+  padding: 12px 15px;
+}
+
+.defra-header__brand-group {
+  display: contents;
+}
+
+/* The logo is loaded as a sibling <img src="defra-logo.svg"> from the same
+   previews/ directory — the SVG stays opaque to the HTML, the img element
+   carries the class and the sizing. `justify-self: start` anchors the
+   logo to the left edge of its 1fr column. */
+.defra-header__logo {
+  display: block;
+  height: 60px;
+  justify-self: start;
+  width: auto;
+}
+
+.defra-header__service-name {
+  color: #00a33b;
+  font-family: Arial, sans-serif;
+  font-size: 22px;
+  font-weight: 700;
+  justify-self: center;
+  line-height: 1.2;
+  text-decoration: none;
+}
+
+.defra-header__service-name:link,
+.defra-header__service-name:visited {
+  color: #00a33b;
+}
+
+.defra-header__service-name:hover {
+  color: #00a33b;
+  text-decoration: underline;
+  text-decoration-thickness: 3px;
+  text-underline-offset: 0.15em;
+}
+
+.defra-header__service-name:focus {
+  background-color: #fd0;
+  outline: 3px solid #fd0;
+  outline-offset: 2px;
+  text-decoration: none;
+}
+
+/* Mobile: smaller logo, smaller service name, simpler 2-col grid */
+@media (max-width: 640px) {
+  .defra-header__logo {
+    height: 40px;
+  }
+  .defra-header__service-name {
+    font-size: 16px;
+  }
+  .defra-header__inner {
+    gap: 12px;
+    grid-template-columns: auto 1fr;
+  }
+}
+
+/* --- Phase banner spacing -----------------------------------------
+ * The phase banner sits directly below the green accent band of the
+ * header. Without this, it butts against the border with no breathing
+ * room.
+ */
+
+.govuk-phase-banner {
+  margin-top: 15px;
+}
+
+/* --- Defra footer -------------------------------------------------- */
+
+.defra-footer {
+  background-color: #f3f2f1;
+  border-top: 10px solid #008531;
+  padding-bottom: 25px;
+  padding-top: 25px;
+}
+
+.defra-footer__meta {
+  align-items: flex-start;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  justify-content: flex-start;
+}
+
+.defra-footer__meta-item {
+  width: 100%;
+}
+
+.defra-footer__licence-description {
+  color: #0b0c0c;
+  font-family: Arial, sans-serif;
+  font-size: 16px;
+  line-height: 1.25;
+}

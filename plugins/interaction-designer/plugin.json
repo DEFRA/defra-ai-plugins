@@ -1,0 +1,15 @@
+{
+  "$schema": "../../schemas/plugin.schema.json",
+  "name": "interaction-designer",
+  "description": "Walks Defra interaction designers from a verbal brief through to a journey doc, page spec, and HTML preview. Six leaf skills plus one orchestrator, two invocation surfaces.",
+  "version": "0.1.0",
+  "author": {
+    "name": "Defra",
+    "email": "AICapabilitiesEnablement@defra.gov.uk"
+  },
+  "license": "OGL-UK-3.0",
+  "homepage": "https://github.com/DEFRA/defra-ai-plugins/tree/main/plugins/interaction-designer",
+  "repository": "https://github.com/DEFRA/defra-ai-plugins",
+  "category": "productivity",
+  "keywords": ["defra", "gds", "govuk", "interaction-design", "service-design"]
+}
