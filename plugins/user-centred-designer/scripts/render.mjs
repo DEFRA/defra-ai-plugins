@@ -38,16 +38,29 @@ import { resolve } from 'node:path'
 import { chromium } from 'playwright'
 
 function parseArgs(argv) {
-  const args = { scale: 2, png: null, pdf: null, input: null, allowNetwork: false }
-  for (let i = 0; i < argv.length; i++) {
-    const a = argv[i]
-    if (a === '--allow-network') args.allowNetwork = true
-    else if (a === '--png') args.png = argv[++i]
-    else if (a === '--pdf') args.pdf = argv[++i]
-    else if (a === '--scale') args.scale = Number(argv[++i])
-    else if (!a.startsWith('--') && !args.input) args.input = a
+  const parsed = { scale: 2, png: null, pdf: null, input: null, allowNetwork: false }
+  let i = 0
+  while (i < argv.length) {
+    const arg = argv[i]
+    i += 1
+    if (arg === '--allow-network') {
+      parsed.allowNetwork = true
+    } else if (arg === '--png') {
+      parsed.png = argv[i]
+      i += 1
+    } else if (arg === '--pdf') {
+      parsed.pdf = argv[i]
+      i += 1
+    } else if (arg === '--scale') {
+      parsed.scale = Number(argv[i])
+      i += 1
+    } else if (!arg.startsWith('--') && !parsed.input) {
+      parsed.input = arg
+    } else {
+      // Ignore anything unrecognised; the input check below reports usage errors.
+    }
   }
-  return args
+  return parsed
 }
 
 const args = parseArgs(process.argv.slice(2))
@@ -82,7 +95,9 @@ try {
     // by house style; a render should never reach the network.
     await page.route('**/*', (route) => {
       const url = route.request().url()
-      if (url.startsWith('file://')) return route.continue()
+      if (url.startsWith('file://')) {
+        return route.continue()
+      }
       console.warn(`Blocked non-local request during render: ${url}`)
       return route.abort()
     })
