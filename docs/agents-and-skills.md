@@ -1,6 +1,6 @@
 # Agents and skills in this repo
 
-This repo ships three GitHub Copilot CLI plugins under `plugins/`. Each plugin
+This repo ships the GitHub Copilot CLI plugins under `plugins/`. Each plugin
 is independent; one is shared and referenced by the others. This doc maps the
 abstractions and the wiring between them. Source files are authoritative — the
 file paths cited below are the audit trail.
@@ -71,7 +71,10 @@ Notes that diverge from "skills call tools, agent aggregates":
   validator is what keeps the prompt and the manifest in sync. Copilot CLI
   does not auto-install dependencies — the user installs both plugins in the
   order documented in each plugin's README.
-- `defra-shared` has **no agent** — only skills + hooks. It is consumed by the
+- `defra-shared` and `user-centred-designer` have **no agent** — `defra-shared` is
+  skills + hooks, `user-centred-designer` is skills only, loaded by the host CLI on
+  description match (`plugins/user-centred-designer/plugin.json`).
+- `defra-shared` has only skills + hooks. It is consumed by the
   other plugins' agents (`plugins/defra-shared/plugin.json`).
 
 ## 3. Inventory and invocation map
@@ -90,21 +93,24 @@ declared-but-unused for sub-agent delegation.
 
 ### Skills
 
-| Skill                 | File                                                              | Owning plugin       | Called by                                                                                                                                                                           |
-| --------------------- | ----------------------------------------------------------------- | ------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| defra-accessibility   | `plugins/defra-shared/skills/defra-accessibility/SKILL.md`        | defra-shared        | frontend-developer agent, ticket-writer agent                                                                                                                                       |
-| defra-pii-redaction   | `plugins/defra-pii-redaction/skills/defra-pii-redaction/SKILL.md` | defra-pii-redaction | Loaded as context when the pii-redaction hooks are installed; describes the redaction contract                                                                                      |
-| defra-branching       | `plugins/defra-shared/skills/defra-branching/SKILL.md`            | defra-shared        | frontend-developer agent, ticket-writer agent; also cited by name in `defra-shared/hooks/hooks.json` branch-guard error                                                             |
-| defra-commit-messages | `plugins/defra-shared/skills/defra-commit-messages/SKILL.md`      | defra-shared        | frontend-developer agent, ticket-writer agent; cited by `commit-message-format` hook                                                                                                |
-| defra-quality-gates   | `plugins/defra-shared/skills/defra-quality-gates/SKILL.md`        | defra-shared        | frontend-developer agent, ticket-writer agent; cited by `coverage-floor` hook                                                                                                       |
-| defra-security-pii    | `plugins/defra-shared/skills/defra-security-pii/SKILL.md`         | defra-shared        | frontend-developer agent, ticket-writer agent; cited by `secret-scan` and `pii-scan` hooks                                                                                          |
-| frontend-tech-stack   | `plugins/frontend-developer/skills/frontend-tech-stack/SKILL.md`  | frontend-developer  | Not named in the agent prompt; surfaced deterministically by the `UserPromptSubmit` hook in `plugins/frontend-developer/hooks/hooks.json` when the prompt mentions a forbidden tech |
-| govuk-component       | `plugins/frontend-developer/skills/govuk-component/SKILL.md`      | frontend-developer  | frontend-developer agent (workflow step 4)                                                                                                                                          |
-| govuk-form            | `plugins/frontend-developer/skills/govuk-form/SKILL.md`           | frontend-developer  | frontend-developer agent (workflow step 3)                                                                                                                                          |
-| pre-commit-review     | `plugins/frontend-developer/skills/pre-commit-review/SKILL.md`    | frontend-developer  | frontend-developer agent (workflow step 7)                                                                                                                                          |
-| vitest-unit-test      | `plugins/frontend-developer/skills/vitest-unit-test/SKILL.md`     | frontend-developer  | frontend-developer agent (workflow step 5)                                                                                                                                          |
-| story-ticket          | `plugins/ticket-writer/skills/story-ticket/SKILL.md`              | ticket-writer       | ticket-writer agent (workflow step 3)                                                                                                                                               |
-| task-ticket           | `plugins/ticket-writer/skills/task-ticket/SKILL.md`               | ticket-writer       | ticket-writer agent (workflow step 3)                                                                                                                                               |
+| Skill                              | File                                                                               | Owning plugin         | Called by                                                                                                                                                                              |
+| ---------------------------------- | ---------------------------------------------------------------------------------- | --------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| defra-accessibility                | `plugins/defra-shared/skills/defra-accessibility/SKILL.md`                         | defra-shared          | frontend-developer agent, ticket-writer agent                                                                                                                                          |
+| defra-pii-redaction                | `plugins/defra-pii-redaction/skills/defra-pii-redaction/SKILL.md`                  | defra-pii-redaction   | Loaded as context when the pii-redaction hooks are installed; describes the redaction contract                                                                                         |
+| defra-branching                    | `plugins/defra-shared/skills/defra-branching/SKILL.md`                             | defra-shared          | frontend-developer agent, ticket-writer agent; also cited by name in `defra-shared/hooks/hooks.json` branch-guard error                                                                |
+| defra-commit-messages              | `plugins/defra-shared/skills/defra-commit-messages/SKILL.md`                       | defra-shared          | frontend-developer agent, ticket-writer agent; cited by `commit-message-format` hook                                                                                                   |
+| defra-quality-gates                | `plugins/defra-shared/skills/defra-quality-gates/SKILL.md`                         | defra-shared          | frontend-developer agent, ticket-writer agent; cited by `coverage-floor` hook                                                                                                          |
+| defra-security-pii                 | `plugins/defra-shared/skills/defra-security-pii/SKILL.md`                          | defra-shared          | frontend-developer agent, ticket-writer agent; cited by `secret-scan` and `pii-scan` hooks                                                                                             |
+| frontend-tech-stack                | `plugins/frontend-developer/skills/frontend-tech-stack/SKILL.md`                   | frontend-developer    | Not named in the agent prompt; surfaced deterministically by the `UserPromptSubmit` hook in `plugins/frontend-developer/hooks/hooks.json` when the prompt mentions a forbidden tech    |
+| govuk-component                    | `plugins/frontend-developer/skills/govuk-component/SKILL.md`                       | frontend-developer    | frontend-developer agent (workflow step 4)                                                                                                                                             |
+| govuk-form                         | `plugins/frontend-developer/skills/govuk-form/SKILL.md`                            | frontend-developer    | frontend-developer agent (workflow step 3)                                                                                                                                             |
+| pre-commit-review                  | `plugins/frontend-developer/skills/pre-commit-review/SKILL.md`                     | frontend-developer    | frontend-developer agent (workflow step 7)                                                                                                                                             |
+| vitest-unit-test                   | `plugins/frontend-developer/skills/vitest-unit-test/SKILL.md`                      | frontend-developer    | frontend-developer agent (workflow step 5)                                                                                                                                             |
+| story-ticket                       | `plugins/ticket-writer/skills/story-ticket/SKILL.md`                               | ticket-writer         | ticket-writer agent (workflow step 3)                                                                                                                                                  |
+| task-ticket                        | `plugins/ticket-writer/skills/task-ticket/SKILL.md`                                | ticket-writer         | ticket-writer agent (workflow step 3)                                                                                                                                                  |
+| defra-doc-style                    | `plugins/user-centred-designer/skills/defra-doc-style/SKILL.md`                    | user-centred-designer | No agent in this plugin — loaded by the host CLI on description match or explicit invocation; single source of writing and visual rules for the other two user-centred-designer skills |
+| defra-service-designer             | `plugins/user-centred-designer/skills/defra-service-designer/SKILL.md`             | user-centred-designer | No agent in this plugin — loaded by the host CLI; defers writing and visual rules to defra-doc-style                                                                                   |
+| defra-interaction-content-designer | `plugins/user-centred-designer/skills/defra-interaction-content-designer/SKILL.md` | user-centred-designer | No agent in this plugin — loaded by the host CLI; defers writing and visual rules to defra-doc-style                                                                                   |
 
 ### Wiring diagram
 
