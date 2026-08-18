@@ -153,7 +153,9 @@ async function main() {
   await render(args)
 }
 
-main().catch((err) => {
+try {
+  await main()
+} catch (err) {
   console.error(err.message ?? err)
   process.exit(1)
-})
+}
