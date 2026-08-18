@@ -31,6 +31,12 @@
       "description": "Creates well-structured JIRA tickets (stories and tasks) for any team. Ships default templates for user-facing stories and technical tasks, with support for custom templates at runtime.",
       "version": "0.1.0",
       "source": "plugins/ticket-writer"
+    },
+    {
+      "name": "user-centred-designer",
+      "description": "User-centred design skills for Defra: service blueprints and journey maps, document and presentation standards (GOV.UK content design, Defra visual standards), and interaction and content design for CDP frontends. No agent, skills only, built from the AI Capability and Enablement team's delivery work.",
+      "version": "0.1.0",
+      "source": "plugins/user-centred-designer"
     }
   ]
 }

@@ -1,0 +1,24 @@
+{
+  "$schema": "../../schemas/plugin.schema.json",
+  "name": "user-centred-designer",
+  "description": "User-centred design skills for Defra: service blueprints and journey maps, document and presentation standards (GOV.UK content design, Defra visual standards), and interaction and content design for CDP frontends. No agent, skills only, built from the AI Capability and Enablement team's delivery work.",
+  "version": "0.1.0",
+  "author": {
+    "name": "Defra",
+    "email": "AICapabilitiesEnablement@defra.gov.uk"
+  },
+  "license": "OGL-UK-3.0",
+  "homepage": "https://github.com/DEFRA/defra-ai-plugins/tree/main/plugins/user-centred-designer",
+  "repository": "https://github.com/DEFRA/defra-ai-plugins",
+  "category": "productivity",
+  "keywords": [
+    "ucd",
+    "design",
+    "service-design",
+    "content-design",
+    "govuk",
+    "gds",
+    "accessibility",
+    "blueprint"
+  ]
+}
