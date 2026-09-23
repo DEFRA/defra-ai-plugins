@@ -41,9 +41,15 @@ if (result.error) {
   )
   process.exit(1)
 }
-const output = `${result.stdout ?? ''}${result.stderr ?? ''}`
+// Only stdout is the answer. Warnings on stderr must not be able to pass or
+// fail an assertion, so they are shown only when the run fails.
+if (result.status !== 0) {
+  console.error(`claude exited with code ${result.status}: ${result.stderr ?? ''}`)
+  process.exit(1)
+}
+const output = result.stdout ?? ''
 if (output.trim() === '') {
-  console.error(`claude returned nothing (exit code ${result.status})`)
+  console.error('claude returned nothing')
   process.exit(1)
 }
 process.stdout.write(output)
