@@ -200,4 +200,4 @@ Do NOT open a public issue for security vulnerabilities. See
 ## Questions
 
 Open an issue tagged `question` or contact the AI dev team at
-`AICapabilitiesEnablement@defra.gov.uk`.
+`AICapabilityAndEnablement@defra.gov.uk`.

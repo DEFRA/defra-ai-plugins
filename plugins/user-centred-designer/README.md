@@ -92,4 +92,4 @@ the agent works.
 
 ## Contact
 
-AICapabilitiesEnablement@defra.gov.uk, or #ask-ace on Defra Slack.
+AICapabilityAndEnablement@defra.gov.uk, or #ask-ace on Defra Slack.
