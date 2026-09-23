@@ -6,6 +6,7 @@
 //
 // Prerequisites:
 //   - Claude Code CLI installed and signed in
+//   - On Windows with an npm install, CLAUDE_BIN set to claude.exe (see below)
 //
 // The plugin is loaded with --plugin-dir, so nothing needs installing.
 // Pin the model to keep results comparable. Override with CLAUDE_MODEL=<id>.
@@ -24,26 +25,25 @@ const pluginDir =
   process.env.CLAUDE_PLUGIN_DIR ?? resolve(dirname(fileURLToPath(import.meta.url)), '..')
 const model = process.env.CLAUDE_MODEL ?? 'claude-sonnet-5'
 
-// The prompt goes in on stdin, not as an argument, so no shell ever reads it.
-// Windows needs a shell to start claude.cmd, and the shell joins arguments
-// with spaces, so the plugin path is quoted.
-const onWindows = process.platform === 'win32'
+// The prompt goes in on stdin, so a prompt starting with '-' is never read as
+// a flag. No shell is used. If Windows cannot start claude because npm
+// installed it as a .cmd file, set CLAUDE_BIN to the full path of claude.exe.
+const binary = process.env.CLAUDE_BIN ?? 'claude'
 const result = spawnSync(
-  'claude',
-  [
-    '-p',
-    '--model',
-    model,
-    '--output-format',
-    'text',
-    '--plugin-dir',
-    onWindows ? `"${pluginDir}"` : pluginDir
-  ],
-  { encoding: 'utf8', input: prompt, shell: onWindows }
+  binary,
+  ['-p', '--model', model, '--output-format', 'text', '--plugin-dir', pluginDir],
+  { encoding: 'utf8', input: prompt }
 )
 
 if (result.error) {
-  console.error(`could not start claude: ${result.error.message}`)
+  console.error(
+    `could not start ${binary}: ${result.error.message}. Set CLAUDE_BIN to its full path.`
+  )
   process.exit(1)
 }
-process.stdout.write(`${result.stdout ?? ''}${result.stderr ?? ''}`)
+const output = `${result.stdout ?? ''}${result.stderr ?? ''}`
+if (output.trim() === '') {
+  console.error(`claude returned nothing (exit code ${result.status})`)
+  process.exit(1)
+}
+process.stdout.write(output)

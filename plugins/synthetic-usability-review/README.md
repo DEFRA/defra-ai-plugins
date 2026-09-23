@@ -64,6 +64,8 @@ cd plugins/synthetic-usability-review/evals
 npx promptfoo eval
 ```
 
+On Windows, if Claude Code was installed with npm, set `CLAUDE_BIN` to the full path of `claude.exe` first.
+
 They do not test whether it finds real problems, because that needs a browser. The best check is your own: run it on a service where you already know the problems, and see what it finds and what it misses.
 
 ## Recommended companions
