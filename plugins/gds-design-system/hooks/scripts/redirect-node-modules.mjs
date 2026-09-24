@@ -83,45 +83,45 @@ function collect(args, keys) {
   return found
 }
 
-/**
- * Decide whether a tool call reads the guidance-shaped part of
- * node_modules/govuk-frontend (templates, macros, macro option tables), and if
- * so, build the deny decision that points at the reference file instead.
- *
- * Accepts both host payload shapes directly — Claude Code's
- * `tool_input` and Copilot CLI's `toolArgs` — and decides on the argument
- * values, never on the tool name, so new tools in either host are covered
- * without a hook change.
- *
- * @param {object} input - The hook payload as sent by the host.
- * @returns {{ permissionDecision: 'deny', permissionDecisionReason: string, hookSpecificOutput: { hookEventName: 'PreToolUse', permissionDecision: 'deny', permissionDecisionReason: string } } | null} The deny decision, or `null` to allow.
- */
-export function check(input) {
-  // Copilot sends toolName/toolArgs; Claude Code sends tool_name/tool_input.
-  const args = input?.tool_input ?? input?.toolArgs ?? {}
-
-  let hit = null
-
+function findPathHit(args) {
   for (const value of collect(args, PATH_KEYS)) {
     if (TEMPLATE_FILE.test(value)) {
-      hit = hit || targetFor(value)
+      const hit = targetFor(value)
+      if (hit) {
+        return hit
+      }
     }
   }
+  return null
+}
 
+function findPatternHit(args) {
   for (const value of collect(args, PATTERN_KEYS)) {
-    hit = hit || targetFor(value)
+    const hit = targetFor(value)
+    if (hit) {
+      return hit
+    }
   }
+  return null
+}
 
+function findCommandHit(args) {
   for (const value of collect(args, COMMAND_KEYS)) {
     if (commandReadsPackage(value)) {
-      hit = hit || targetFor(value)
+      const hit = targetFor(value)
+      if (hit) {
+        return hit
+      }
     }
   }
+  return null
+}
 
-  if (!hit) {
-    return null
-  }
+function findHit(args) {
+  return findPathHit(args) || findPatternHit(args) || findCommandHit(args)
+}
 
+function buildDenial(hit) {
   const where = `the ${SKILL} skill, references/${hit.file}`
   const subject = hit.component
     ? `The \`${hit.component}\` component is documented in ${where}.`
@@ -155,6 +155,31 @@ export function check(input) {
       permissionDecisionReason: reason
     }
   }
+}
+
+/**
+ * Decide whether a tool call reads the guidance-shaped part of
+ * node_modules/govuk-frontend (templates, macros, macro option tables), and if
+ * so, build the deny decision that points at the reference file instead.
+ *
+ * Accepts both host payload shapes directly — Claude Code's
+ * `tool_input` and Copilot CLI's `toolArgs` — and decides on the argument
+ * values, never on the tool name, so new tools in either host are covered
+ * without a hook change.
+ *
+ * @param {object} input - The hook payload as sent by the host.
+ * @returns {{ permissionDecision: 'deny', permissionDecisionReason: string, hookSpecificOutput: { hookEventName: 'PreToolUse', permissionDecision: 'deny', permissionDecisionReason: string } } | null} The deny decision, or `null` to allow.
+ */
+export function check(input) {
+  // Copilot sends toolName/toolArgs; Claude Code sends tool_name/tool_input.
+  const args = input?.tool_input ?? input?.toolArgs ?? {}
+  const hit = findHit(args)
+
+  if (!hit) {
+    return null
+  }
+
+  return buildDenial(hit)
 }
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
