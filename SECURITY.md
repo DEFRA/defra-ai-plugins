@@ -6,7 +6,7 @@ If you find a security vulnerability in this repository — in a plugin, in the 
 
 Instead, email the Defra AI dev team at:
 
-> **AICapabilitiesEnablement@defra.gov.uk**
+> **AICapabilityAndEnablement@defra.gov.uk**
 
 Use a subject line that begins with `[SECURITY] defra-ai-plugins`.
 

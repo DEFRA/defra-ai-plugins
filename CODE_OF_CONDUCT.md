@@ -28,7 +28,7 @@ Examples of unacceptable behaviour:
 
 ## Enforcement
 
-Instances of abusive, harassing, or otherwise unacceptable behaviour may be reported by emailing the Defra AI dev team at **AICapabilitiesEnablement@defra.gov.uk**. All complaints will be reviewed and investigated promptly and fairly.
+Instances of abusive, harassing, or otherwise unacceptable behaviour may be reported by emailing the Defra AI dev team at **AICapabilityAndEnablement@defra.gov.uk**. All complaints will be reviewed and investigated promptly and fairly.
 
 All maintainers are obliged to respect the privacy and security of the reporter.
 
