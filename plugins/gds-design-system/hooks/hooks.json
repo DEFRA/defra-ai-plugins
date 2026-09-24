@@ -1,0 +1,17 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Read|Grep|Glob|Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/hooks/scripts/redirect-node-modules.mjs\"",
+            "statusMessage": "gds-node-modules-guard: checking for node_modules/govuk-frontend reads...",
+            "async": false
+          }
+        ]
+      }
+    ]
+  }
+}

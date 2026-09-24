@@ -71,9 +71,11 @@ Notes that diverge from "skills call tools, agent aggregates":
   validator is what keeps the prompt and the manifest in sync. Copilot CLI
   does not auto-install dependencies — the user installs both plugins in the
   order documented in each plugin's README.
-- `defra-shared` and `user-centred-designer` have **no agent** — `defra-shared` is
-  skills + hooks, `user-centred-designer` is skills only, loaded by the host CLI on
-  description match (`plugins/user-centred-designer/plugin.json`).
+- `defra-shared`, `user-centred-designer` and `gds-design-system` have **no
+  agent** — `defra-shared` and `gds-design-system` are skills + a guard hook,
+  `user-centred-designer` is skills only, all loaded by the host CLI on
+  description match (`plugins/user-centred-designer/plugin.json`,
+  `plugins/gds-design-system/plugin.json`).
 - `defra-shared` has only skills + hooks. It is consumed by the
   other plugins' agents (`plugins/defra-shared/plugin.json`).
 
@@ -111,6 +113,10 @@ declared-but-unused for sub-agent delegation.
 | defra-doc-style                    | `plugins/user-centred-designer/skills/defra-doc-style/SKILL.md`                    | user-centred-designer | No agent in this plugin — loaded by the host CLI on description match or explicit invocation; single source of writing and visual rules for the other two user-centred-designer skills |
 | defra-service-designer             | `plugins/user-centred-designer/skills/defra-service-designer/SKILL.md`             | user-centred-designer | No agent in this plugin — loaded by the host CLI; defers writing and visual rules to defra-doc-style                                                                                   |
 | defra-interaction-content-designer | `plugins/user-centred-designer/skills/defra-interaction-content-designer/SKILL.md` | user-centred-designer | No agent in this plugin — loaded by the host CLI; defers writing and visual rules to defra-doc-style                                                                                   |
+| gds-patterns                       | `plugins/gds-design-system/skills/gds-patterns/SKILL.md`                           | gds-design-system     | No agent in this plugin — loaded by the host CLI; entry point before gds-components, per gds-journey-builder's build order                                                             |
+| gds-components                     | `plugins/gds-design-system/skills/gds-components/SKILL.md`                         | gds-design-system     | No agent in this plugin — loaded by the host CLI; also the target of the `PreToolUse` guard hook that redirects reads of node_modules/govuk-frontend                                   |
+| gds-journey-builder                | `plugins/gds-design-system/skills/gds-journey-builder/SKILL.md`                    | gds-design-system     | No agent in this plugin — loaded by the host CLI; routes to gds-patterns, gds-components and gds-prototype-kit in build order                                                          |
+| gds-prototype-kit                  | `plugins/gds-design-system/skills/gds-prototype-kit/SKILL.md`                      | gds-design-system     | No agent in this plugin — loaded by the host CLI                                                                                                                                       |
 
 ### Wiring diagram
 

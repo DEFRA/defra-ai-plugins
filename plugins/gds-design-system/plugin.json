@@ -1,0 +1,24 @@
+{
+  "$schema": "../../schemas/plugin.schema.json",
+  "name": "gds-design-system",
+  "description": "GOV.UK Design System depth for agents building user journeys. Every component, pattern and style from the Design System, with the full Nunjucks macro API, as offline reference files — so agents stop reading node_modules for template code and start following the guidance on how components are meant to be used. Includes GOV.UK Prototype Kit plumbing and end-to-end journey assembly. Skills and a guard hook, no agent.",
+  "version": "0.1.0",
+  "author": {
+    "name": "Defra",
+    "email": "AICapabilitiesEnablement@defra.gov.uk"
+  },
+  "license": "OGL-UK-3.0",
+  "homepage": "https://github.com/DEFRA/defra-ai-plugins/tree/main/plugins/gds-design-system",
+  "repository": "https://github.com/DEFRA/defra-ai-plugins",
+  "category": "productivity",
+  "keywords": [
+    "govuk",
+    "gds",
+    "design-system",
+    "govuk-frontend",
+    "prototype-kit",
+    "nunjucks",
+    "accessibility",
+    "service-design"
+  ]
+}
