@@ -17,3 +17,10 @@ plugins/*/eval-fixture/
 # code blocks inside list items in this file. Re-evaluate when prettier
 # is upgraded.
 CONTRIBUTING.md
+
+# Mechanically generated from alphagov/govuk-design-system and govuk-frontend
+# by scripts/generate.mjs. check.yml diffs a fresh regeneration against these
+# files byte-for-byte; reformatting them here would make every regeneration
+# look like drift.
+plugins/gds-design-system/skills/gds-components/references/
+plugins/gds-design-system/skills/gds-patterns/references/
