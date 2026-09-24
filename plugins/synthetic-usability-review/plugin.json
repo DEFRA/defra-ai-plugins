@@ -1,0 +1,24 @@
+{
+  "$schema": "../../schemas/plugin.schema.json",
+  "name": "synthetic-usability-review",
+  "description": "Checks a working service for usability problems before testing with real people. It tries real jobs as the people who use the service, checks every screen against Nielsen's usability heuristics, Microsoft's Guidelines for Human-AI Interaction and the GOV.UK Design System, and writes a plain English report. Not a replacement for research with real people.",
+  "version": "0.1.0",
+  "author": {
+    "name": "Defra",
+    "email": "AICapabilityAndEnablement@defra.gov.uk"
+  },
+  "license": "OGL-UK-3.0",
+  "homepage": "https://github.com/DEFRA/defra-ai-plugins/tree/main/plugins/synthetic-usability-review",
+  "repository": "https://github.com/DEFRA/defra-ai-plugins",
+  "category": "testing",
+  "keywords": [
+    "ucd",
+    "usability",
+    "heuristic-evaluation",
+    "user-research",
+    "accessibility",
+    "govuk",
+    "gds",
+    "ai"
+  ]
+}

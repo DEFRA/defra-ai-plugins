@@ -33,6 +33,12 @@
       "source": "plugins/gds-design-system"
     },
     {
+      "name": "synthetic-usability-review",
+      "description": "Checks a working service for usability problems before testing with real people. It tries real jobs as the people who use the service, checks every screen against Nielsen's usability heuristics, Microsoft's Guidelines for Human-AI Interaction and the GOV.UK Design System, and writes a plain English report. Not a replacement for research with real people.",
+      "version": "0.1.0",
+      "source": "plugins/synthetic-usability-review"
+    },
+    {
       "name": "ticket-writer",
       "description": "Creates well-structured JIRA tickets (stories and tasks) for any team. Ships default templates for user-facing stories and technical tasks, with support for custom templates at runtime.",
       "version": "0.1.0",
